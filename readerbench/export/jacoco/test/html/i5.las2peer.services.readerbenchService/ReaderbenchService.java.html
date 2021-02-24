@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReaderbenchService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">readerbench</a> &gt; <a href="index.source.html" class="el_package">i5.las2peer.services.readerbenchService</a> &gt; <span class="el_source">ReaderbenchService.java</span></div><h1>ReaderbenchService.java</h1><pre class="source lang-java linenums">package i5.las2peer.services.readerbenchService;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import i5.las2peer.api.Context;
+import i5.las2peer.api.security.UserAgent;
+import i5.las2peer.restMapper.RESTService;
+import i5.las2peer.restMapper.annotations.ServicePath;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Contact;
+import io.swagger.annotations.Info;
+import io.swagger.annotations.License;
+import io.swagger.annotations.SwaggerDefinition;
+import net.minidev.json.JSONObject;
+
+// TODO Describe your own service
+/**
+ * las2peer-Template-Service
+ * 
+ * This is a template for a very basic las2peer service that uses the las2peer WebConnector for RESTful access to it.
+ * 
+ * Note: If you plan on using Swagger you should adapt the information below in the SwaggerDefinition annotation to suit
+ * your project. If you do not intend to provide a Swagger documentation of your service API, the entire Api and
+ * SwaggerDefinition annotation should be removed.
+ * 
+ */
+// TODO Adjust the following configuration
+@Api
+@SwaggerDefinition(
+		info = @Info(
+				title = &quot;las2peer Template Service&quot;,
+				version = &quot;1.0.0&quot;,
+				description = &quot;A las2peer Template Service for demonstration purposes.&quot;,
+				termsOfService = &quot;http://your-terms-of-service-url.com&quot;,
+				contact = @Contact(
+						name = &quot;John Doe&quot;,
+						url = &quot;provider.com&quot;,
+						email = &quot;john.doe@provider.com&quot;),
+				license = @License(
+						name = &quot;your software license name&quot;,
+						url = &quot;http://your-software-license-url.com&quot;)))
+@ServicePath(&quot;/template&quot;)
+// TODO Your own service class
+<span class="fc" id="L68">public class ReaderbenchService extends RESTService {</span>
+
+	/**
+	 * Template of a get function.
+	 * 
+	 * @return Returns an HTTP response with the username as string content.
+	 */
+	@GET
+	@Path(&quot;/get&quot;)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(
+			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
+			notes = &quot;REPLACE THIS WITH YOUR NOTES TO THE FUNCTION&quot;)
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
+	public Response getTemplate() {
+<span class="fc" id="L86">		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();</span>
+<span class="fc" id="L87">		String name = userAgent.getLoginName();</span>
+<span class="fc" id="L88">		return Response.ok().entity(name).build();</span>
+	}
+
+	/**
+	 * Template of a post function.
+	 * 
+	 * @param myInput The post input the user will provide.
+	 * @return Returns an HTTP response with plain text string content derived from the path input param.
+	 */
+	@POST
+	@Path(&quot;/post/{input}&quot;)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
+	@ApiOperation(
+			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
+			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
+	public Response postTemplate(@PathParam(&quot;input&quot;) String myInput) {
+<span class="fc" id="L108">		String returnString = &quot;&quot;;</span>
+<span class="fc" id="L109">		returnString += &quot;Input &quot; + myInput;</span>
+<span class="fc" id="L110">		return Response.ok().entity(returnString).build();</span>
+	}
+
+	// TODO your own service methods, e. g. for RMI
+	
+	@GET
+	@Path(&quot;/getRbStatus&quot;)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiOperation(
+			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
+			notes = &quot;REPLACE THIS WITH YOUR NOTES TO THE FUNCTION&quot;)
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
+	public Response getRbStatus() {
+		try {
+			//Creating a HttpClient object
+<span class="nc" id="L128">			CloseableHttpClient httpclient = HttpClients.createDefault();</span>
+			//Creating a HttpGet object
+<span class="nc" id="L130">		    HttpGet httpget = new HttpGet(&quot;http://localhost:6006/api/v1/isalive &quot;);</span>
+		
+		    //Printing the method used
+<span class="nc" id="L133">		    System.out.println(&quot;Request Type: &quot;+httpget.getMethod());</span>
+		
+		   //Executing the Get request
+<span class="nc" id="L136">		   HttpResponse response = httpclient.execute(httpget);</span>
+<span class="nc" id="L137">		   return Response.ok().entity(response.getEntity().getContent().toString()).build();</span>
+<span class="nc" id="L138">		}catch (IOException e) {</span>
+			// TODO Auto-generated catch block
+<span class="nc" id="L140">			e.printStackTrace();</span>
+<span class="nc" id="L141">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+		}
+	}
+	
+	@POST
+	@Path(&quot;/textual-complexity&quot;)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
+	@ApiOperation(
+			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
+			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
+	public Response textualComplexityPost(String body) {
+<span class="nc" id="L156">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L157">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
+<span class="nc" id="L158">		j.put(&quot;text&quot;, body);</span>
+		try {
+<span class="nc" id="L160">			StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L161">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L162">	        HttpPost request = new HttpPost(&quot;http://localhost:6006/api/v1/register&quot;);</span>
+<span class="nc" id="L163">	        request.setEntity(entity);</span>
+<span class="nc" id="L164">	        HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L165">			return Response.ok().entity(response.getEntity().getContent().toString()).build();</span>
+<span class="nc" id="L166">		}catch (IOException e) {</span>
+			// TODO Auto-generated catch block
+<span class="nc" id="L168">			e.printStackTrace();</span>
+<span class="nc" id="L169">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
