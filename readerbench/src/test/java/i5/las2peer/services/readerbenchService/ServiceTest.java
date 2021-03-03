@@ -32,7 +32,7 @@ public class ServiceTest {
 		private static UserAgentImpl testAgent;
 		private static final String testPass = "adamspass";
 
-		private static final String mainPath = "template/";
+		private static final String mainPath = "readerbench/";
 
 		/**
 		 * Called before a test starts.
@@ -131,5 +131,57 @@ public class ServiceTest {
 				Assert.fail(e.toString());
 			}
 		}
-
+		
+		/**
+		 * 
+		 * Tests if the RB-Controller is living.
+		 * 
+		 */
+		/*
+		@Test
+		public void testLive() {
+			try {
+				MiniClient client = new MiniClient();
+				client.setConnectorEndpoint(connector.getHttpEndpoint());
+				client.setLogin(testAgent.getIdentifier(), testPass);
+				
+				ClientResponse result = client.sendRequest("GET", mainPath + "getRbStatus", "");
+				Assert.assertEquals(200, result.getHttpCode());
+				Assert.assertEquals("Alive", result.getResponse().trim());// YOUR RESULT VALUE HERE
+				System.out.println("Result of 'testRBStatus': " + result.getResponse().trim());
+			} catch (Exception e) {
+				e.printStackTrace();
+				Assert.fail(e.toString());
+			}
+		}
+		*/
+		/*
+		/**
+		 * 
+		 * Test the textualComplexityPost method that consumes one path parameter which we give the value "testInput" in this test.
+		 * 
+		 
+		@Test
+		public void textualcomplexity() {
+			try {
+				MiniClient client = new MiniClient();
+				client.setConnectorEndpoint(connector.getHttpEndpoint());
+				client.setLogin(testAgent.getIdentifier(), testPass);
+				
+				// testInput is the pathParam
+				ClientResponse result = client.sendRequest("POST", mainPath + "textual-complexity", "A young knight rode through the forest. "
+						+ "The knight was unfamiliar with the country. Suddenly, a dragon appeared. The dragon was kidnapping a beautiful princess. "
+						+ "The knight wanted to free the princess. The knight wanted to marry the princess. The knight hurried after the dragon. "
+						+ "They fought for life and death. Soon, the knight's armor was completely scorched. At last, the knight killed the dragon. "
+						+ "The knight freed the princess. The princess was very thankful to the knight. She married the knight.");
+				Assert.assertEquals(200, result.getHttpCode());
+				// "testInput" name is part of response
+				//Assert.assertTrue(result.getResponse().trim().contains("testInput"));
+				System.out.println("Result of 'testPost': " + result.getResponse().trim());
+			} catch (Exception e) {
+				e.printStackTrace();
+				Assert.fail(e.toString());
+			}
+		}
+*/
 	}

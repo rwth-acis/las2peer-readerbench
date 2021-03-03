@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-alpine
+FROM openjdk:14-jdk-alpine
 
 ENV LAS2PEER_PORT=9011
 ENV DATABASE_NAME=SBF
@@ -6,6 +6,7 @@ ENV DATABASE_HOST=mobsos-mysql.mobsos
 ENV DATABASE_PORT=3306
 ENV DATABASE_USER=root
 ENV DATABASE_PASSWORD=root
+ENV RB_API_URL=http://localhost:6006
 
 RUN apk add --update bash mysql-client apache-ant tzdata curl && rm -f /var/cache/apk/*
 ENV TZ=Europe/Berlin
@@ -20,7 +21,7 @@ RUN chmod -R a+rwx /src
 RUN chmod +x /src/docker-entrypoint.sh
 # run the rest as unprivileged user
 USER las2peer
-RUN ant jar startscripts
+#RUN gradle startscripts
 
 EXPOSE $LAS2PEER_PORT
 ENTRYPOINT ["/src/docker-entrypoint.sh"]

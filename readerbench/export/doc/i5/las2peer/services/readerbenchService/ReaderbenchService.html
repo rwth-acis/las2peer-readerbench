@@ -19,7 +19,7 @@
 <script type="text/javascript" src="../../../../script-dir/jquery-ui.js"></script>
 </head>
 <body class="class-declaration">
-<script type="text/javascript">var data = {"i0":10,"i1":10,"i2":10,"i3":10};
+<script type="text/javascript">var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -153,26 +153,38 @@ extends i5.las2peer.restMapper.RESTService</pre>
 <tbody>
 <tr class="altColor" id="i0">
 <td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getRbStatus()">getRbStatus</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#feedback(java.lang.String)">feedback</a></span>&#8203;(java.lang.String&nbsp;text)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i1">
+<td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getRbStatus()">getRbStatus</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor" id="i2">
+<td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getSrvStatus()">getSrvStatus</a></span>()</code></th>
+<td class="colLast">
+<div class="block">Template of a get function.</div>
+</td>
+</tr>
+<tr class="rowColor" id="i3">
 <td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getTemplate()">getTemplate</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Template of a get function.</div>
 </td>
 </tr>
-<tr class="altColor" id="i2">
+<tr class="altColor" id="i4">
 <td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#postTemplate(java.lang.String)">postTemplate</a></span>&#8203;(java.lang.String&nbsp;myInput)</code></th>
 <td class="colLast">
 <div class="block">Template of a post function.</div>
 </td>
 </tr>
-<tr class="rowColor" id="i3">
+<tr class="rowColor" id="i5">
 <td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#textualComplexityPost(java.lang.String)">textualComplexityPost</a></span>&#8203;(java.lang.String&nbsp;body)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#textualcomplexity(java.lang.String)">textualcomplexity</a></span>&#8203;(java.lang.String&nbsp;body)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -261,20 +273,42 @@ java.lang.String&nbsp;myInput)</span></div>
 </li>
 <li class="blockList">
 <section class="detail">
+<h3><a id="getSrvStatus()">getSrvStatus</a></h3>
+<div class="memberSignature"><span class="annotations">@GET
+@Path("/getSrvStatus")
+@Produces("application/json")
+</span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">getSrvStatus</span>()</div>
+<div class="block">Template of a get function.</div>
+<dl>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>Returns an HTTP response with the username as string content.</dd>
+</dl>
+</section>
+</li>
+<li class="blockList">
+<section class="detail">
 <h3><a id="getRbStatus()">getRbStatus</a></h3>
 <div class="memberSignature"><span class="annotations">@GET
 @Path("/getRbStatus")
-@Produces("text/plain")
 </span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">getRbStatus</span>()</div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="textualComplexityPost(java.lang.String)">textualComplexityPost</a></h3>
+<h3><a id="textualcomplexity(java.lang.String)">textualcomplexity</a></h3>
 <div class="memberSignature"><span class="annotations">@POST
 @Path("/textual-complexity")
 @Produces("text/plain")
-</span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">textualComplexityPost</span>&#8203;(<span class="arguments">java.lang.String&nbsp;body)</span></div>
+</span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">textualcomplexity</span>&#8203;(<span class="arguments">java.lang.String&nbsp;body)</span></div>
+</section>
+</li>
+<li class="blockList">
+<section class="detail">
+<h3><a id="feedback(java.lang.String)">feedback</a></h3>
+<div class="memberSignature"><span class="annotations">@POST
+@Path("/feedback")
+@Produces("text/plain")
+</span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">feedback</span>&#8203;(<span class="arguments">java.lang.String&nbsp;text)</span></div>
 </section>
 </li>
 </ul>
