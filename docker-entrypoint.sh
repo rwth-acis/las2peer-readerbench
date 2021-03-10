@@ -13,24 +13,12 @@ export SERVICE_VERSION=$(awk -F "=" '/service.version/ {print $2}' gradle.proper
 export SERVICE_NAME=$(awk -F "=" '/service.name/ {print $2}' gradle.properties)
 export SERVICE_CLASS=$(awk -F "=" '/service.class/ {print $2}' gradle.properties)
 export SERVICE=${SERVICE_NAME}.${SERVICE_CLASS}@${SERVICE_VERSION}
-export CREATE_DB_SQL='RB.sql'
+export CREATE_DB_SQL='SBF.sql'
 
 function set_in_service_config {
     sed -i "s?${1}[[:blank:]]*=.*?${1}=${2}?g" ${SERVICE_PROPERTY_FILE}
 }
 
-set_in_service_config databaseName ${DATABASE_NAME}
-set_in_service_config databaseHost ${DATABASE_HOST}
-set_in_service_config databasePort ${DATABASE_PORT}
-set_in_service_config databaseUser ${DATABASE_USER}
-set_in_service_config databasePassword ${DATABASE_PASSWORD}
-
-# ensure the database is ready
-while ! mysqladmin ping -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} --silent; do
-    echo "Waiting for mysql at ${DATABASE_HOST}:${DATABASE_PORT}..."
-    sleep 1
-done
-echo "${DATABASE_HOST}:${DATABASE_PORT} is available. Continuing..."
 
 # set defaults for optional service parameters
 [[ -z "${SERVICE_PASSPHRASE}" ]] && export SERVICE_PASSPHRASE='sbf'
