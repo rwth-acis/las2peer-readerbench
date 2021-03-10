@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"i5.las2peer.services.readerbenchService"}]
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"i5.las2peer.services.readerbenchService"},{"l":"i5.las2peer.services.readerbenchService.model"}]
