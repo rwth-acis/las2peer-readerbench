@@ -26,11 +26,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.google.gson.Gson;
+
 import i5.las2peer.api.Context;
 import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
+import i5.las2peer.services.readerbenchService.model.MessageInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -40,6 +43,8 @@ import io.swagger.annotations.Info;
 import io.swagger.annotations.License;
 import io.swagger.annotations.SwaggerDefinition;
 import net.minidev.json.JSONObject;
+
+
 
 // TODO Describe your own service
 /**
@@ -135,7 +140,7 @@ public class ReaderbenchService extends RESTService {
 					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
 	public Response getSrvStatus() {
 		JSONObject j = new JSONObject();
-		j.put("text", "alive---------------");
+		j.put("text", "service alive");
 		j.put("closeContext", true);
 		String status = "alive---------------";
 		return Response.ok().entity(j).build();
@@ -153,21 +158,26 @@ public class ReaderbenchService extends RESTService {
 					code = HttpURLConnection.HTTP_OK,
 					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
 	public Response getRbStatus() {
+		JSONObject j = new JSONObject();
+		System.out.println("Breakpoint--------getRbStatus from Service--------------------------");
 		try {
 			//Creating a HttpClient object
 			CloseableHttpClient httpclient = HttpClients.createDefault();
 			//Creating a HttpGet object
-		    HttpGet httpget = new HttpGet("http://localhost:6006/api/v1/isalive");
+		    HttpGet httpget = new HttpGet("http://192.168.56.1:6006/api/v1/isalive");
 		
 		    //Printing the method used
-		    System.out.println("Request Type: "+httpget.getMethod());
+		    System.out.println("Request Type: "+ httpget.getMethod());
 		
 		   //Executing the Get request
 		   HttpResponse response = httpclient.execute(httpget);
 		   HttpEntity entity = response.getEntity();
 		   String result = EntityUtils.toString(entity);
 		   System.out.println("................"+result);
-		   return Response.ok().entity(result).build();
+		   JSONObject j1 = new JSONObject();
+		   j1.put("text", result);
+		   j1.put("closeContext", true);
+		   return Response.ok().entity(j1).build();
 		}catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -176,8 +186,8 @@ public class ReaderbenchService extends RESTService {
 	}
 	
 	@POST
-	@Path("/textual-complexity")
-	@Produces(MediaType.TEXT_PLAIN)
+	@Path("/textual_complexity")
+	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 			value = { @ApiResponse(
 					code = HttpURLConnection.HTTP_OK,
@@ -186,19 +196,28 @@ public class ReaderbenchService extends RESTService {
 			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
 			notes = "Example method that returns a phrase containing the received input.")
 	public Response textualcomplexity(String body) {
+		Gson gson = new Gson();
+		MessageInfo m = gson.fromJson(body, MessageInfo.class);
+		System.out.println("Got message: " + m.msg() + " From Bot " + m.botName());
+		String arr[] = m.msg().split(" ", 3);
+		String text = arr[2];
 		JSONObject j = new JSONObject();
 		j.put("language", "en");
-		j.put("text", body);
+		System.out.println("Breakpoint--------1------------------"+ body);
+		j.put("text", text);
 		try {
 			StringEntity entity = new StringEntity(j.toString());
 			HttpClient httpClient = HttpClientBuilder.create().build();
-	        HttpPost request = new HttpPost("http://localhost:6006/api/v1/textual-complexity");
+	        HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/textual-complexity");
 	        request.setEntity(entity);
 	        HttpResponse response = httpClient.execute(request);
 	        HttpEntity entity2 = response.getEntity();
-		    String result = EntityUtils.toString(entity2);
-		    System.out.println("................"+result);
-		    return Response.ok().entity(result).build();
+			String result = EntityUtils.toString(entity2);
+		    System.out.println("................result computed from readerbench................");
+		    JSONObject j1 = new JSONObject();
+		    j1.put("text", result);
+		    j1.put("closeContext", true);
+		    return Response.ok().entity(j1).build();
 		}catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -224,7 +243,7 @@ public class ReaderbenchService extends RESTService {
 		try {
 			StringEntity entity = new StringEntity(j.toString());
 			HttpClient httpClient = HttpClientBuilder.create().build();
-	        HttpPost request = new HttpPost("http://localhost:6006/api/v1/text-similarity");
+	        HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/text-similarity");
 	        request.setEntity(entity);
 	        HttpResponse response = httpClient.execute(request);
 	        HttpEntity entity2 = response.getEntity();
@@ -240,7 +259,7 @@ public class ReaderbenchService extends RESTService {
 	*/
 	@POST
 	@Path("/feedback")
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 			value = { @ApiResponse(
 					code = HttpURLConnection.HTTP_OK,
@@ -248,19 +267,29 @@ public class ReaderbenchService extends RESTService {
 	@ApiOperation(
 			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
 			notes = "Example method that returns a phrase containing the received input.")
-	public Response feedback(String text) {
+	public Response feedback(String body) {
+		Gson gson = new Gson();
+		MessageInfo m = gson.fromJson(body, MessageInfo.class);
+		System.out.println("Got message: " + m.msg() + " From Bot" + m.botName());
+		String arr[] = m.msg().split(" ", 3);
+		String text = arr[2];
+		System.out.println("Breakpoint--------1------------------"+ body);
 		JSONObject j = new JSONObject();
+		j.put("language", "en");
 		j.put("text", text);
 		try {
 			StringEntity entity = new StringEntity(j.toString());
 			HttpClient httpClient = HttpClientBuilder.create().build();
-	        HttpPost request = new HttpPost("http://localhost:6006/api/v1/feedback");
+	        HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/feedback");
 	        request.setEntity(entity);
 	        HttpResponse response = httpClient.execute(request);
 	        HttpEntity entity2 = response.getEntity();
 		    String result = EntityUtils.toString(entity2);
-		    System.out.println("................"+result);
-		    return Response.ok().entity(result).build();
+		    System.out.println("................result computed from readerbench................");
+		    JSONObject j1 = new JSONObject();
+		    j1.put("text", result);
+			j1.put("closeContext", true);
+			return Response.ok().entity(j1).build();
 		}catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
