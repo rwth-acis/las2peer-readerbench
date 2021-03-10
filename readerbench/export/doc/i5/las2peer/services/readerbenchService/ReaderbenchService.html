@@ -42,6 +42,7 @@ loadScripts(document, 'script');</script>
 <!--   -->
 </a>
 <ul class="navList" title="Navigation">
+<li><a href="../../../../index.html">Overview</a></li>
 <li><a href="package-summary.html">Package</a></li>
 <li class="navBarCell1Rev">Class</li>
 <li><a href="package-tree.html">Tree</a></li>
@@ -153,7 +154,7 @@ extends i5.las2peer.restMapper.RESTService</pre>
 <tbody>
 <tr class="altColor" id="i0">
 <td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#feedback(java.lang.String)">feedback</a></span>&#8203;(java.lang.String&nbsp;text)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#feedback(java.lang.String)">feedback</a></span>&#8203;(java.lang.String&nbsp;body)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i1">
@@ -290,6 +291,7 @@ java.lang.String&nbsp;myInput)</span></div>
 <h3><a id="getRbStatus()">getRbStatus</a></h3>
 <div class="memberSignature"><span class="annotations">@GET
 @Path("/getRbStatus")
+@Produces("application/json")
 </span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">getRbStatus</span>()</div>
 </section>
 </li>
@@ -297,8 +299,8 @@ java.lang.String&nbsp;myInput)</span></div>
 <section class="detail">
 <h3><a id="textualcomplexity(java.lang.String)">textualcomplexity</a></h3>
 <div class="memberSignature"><span class="annotations">@POST
-@Path("/textual-complexity")
-@Produces("text/plain")
+@Path("/textual_complexity")
+@Produces("application/json")
 </span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">textualcomplexity</span>&#8203;(<span class="arguments">java.lang.String&nbsp;body)</span></div>
 </section>
 </li>
@@ -307,8 +309,8 @@ java.lang.String&nbsp;myInput)</span></div>
 <h3><a id="feedback(java.lang.String)">feedback</a></h3>
 <div class="memberSignature"><span class="annotations">@POST
 @Path("/feedback")
-@Produces("text/plain")
-</span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">feedback</span>&#8203;(<span class="arguments">java.lang.String&nbsp;text)</span></div>
+@Produces("application/json")
+</span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">feedback</span>&#8203;(<span class="arguments">java.lang.String&nbsp;body)</span></div>
 </section>
 </li>
 </ul>
@@ -330,6 +332,7 @@ java.lang.String&nbsp;myInput)</span></div>
 <!--   -->
 </a>
 <ul class="navList" title="Navigation">
+<li><a href="../../../../index.html">Overview</a></li>
 <li><a href="package-summary.html">Package</a></li>
 <li class="navBarCell1Rev">Class</li>
 <li><a href="package-tree.html">Tree</a></li>

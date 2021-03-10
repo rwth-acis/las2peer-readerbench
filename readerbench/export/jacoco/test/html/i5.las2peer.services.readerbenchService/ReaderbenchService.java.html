@@ -26,11 +26,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.google.gson.Gson;
+
 import i5.las2peer.api.Context;
 import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.api.logging.MonitoringEvent;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
+import i5.las2peer.services.readerbenchService.model.MessageInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -40,6 +43,8 @@ import io.swagger.annotations.Info;
 import io.swagger.annotations.License;
 import io.swagger.annotations.SwaggerDefinition;
 import net.minidev.json.JSONObject;
+
+
 
 // TODO Describe your own service
 /**
@@ -68,9 +73,9 @@ import net.minidev.json.JSONObject;
 						url = &quot;https://github.com/Karlydiamond214/las2peer-readerbench&quot;)))
 @ServicePath(&quot;/readerbench&quot;)
 // TODO Your own service class
-<span class="fc" id="L71">public class ReaderbenchService extends RESTService {</span>
+<span class="fc" id="L76">public class ReaderbenchService extends RESTService {</span>
 	
-<span class="fc" id="L73">	private final static List&lt;String&gt; SUPPORTED_FUNCTIONS = Arrays.asList(&quot;textual coomplexity&quot;,</span>
+<span class="fc" id="L78">	private final static List&lt;String&gt; SUPPORTED_FUNCTIONS = Arrays.asList(&quot;textual coomplexity&quot;,</span>
 			&quot;Sentiment&quot;);
 
 	/**
@@ -89,9 +94,9 @@ import net.minidev.json.JSONObject;
 					code = HttpURLConnection.HTTP_OK,
 					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
 	public Response getTemplate() {
-<span class="fc" id="L92">		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();</span>
-<span class="fc" id="L93">		String name = userAgent.getLoginName();</span>
-<span class="fc" id="L94">		return Response.ok().entity(name).build();</span>
+<span class="fc" id="L97">		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();</span>
+<span class="fc" id="L98">		String name = userAgent.getLoginName();</span>
+<span class="fc" id="L99">		return Response.ok().entity(name).build();</span>
 	}
 
 	/**
@@ -111,9 +116,9 @@ import net.minidev.json.JSONObject;
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
 	public Response postTemplate(@PathParam(&quot;input&quot;) String myInput) {
-<span class="fc" id="L114">		String returnString = &quot;&quot;;</span>
-<span class="fc" id="L115">		returnString += &quot;Input &quot; + myInput;</span>
-<span class="fc" id="L116">		return Response.ok().entity(returnString).build();</span>
+<span class="fc" id="L119">		String returnString = &quot;&quot;;</span>
+<span class="fc" id="L120">		returnString += &quot;Input &quot; + myInput;</span>
+<span class="fc" id="L121">		return Response.ok().entity(returnString).build();</span>
 	}
 
 	// TODO your own service methods, e. g. for RMI
@@ -134,16 +139,17 @@ import net.minidev.json.JSONObject;
 					code = HttpURLConnection.HTTP_OK,
 					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
 	public Response getSrvStatus() {
-<span class="nc" id="L137">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L138">		j.put(&quot;text&quot;, &quot;alive---------------&quot;);</span>
-<span class="nc" id="L139">		j.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L140">		String status = &quot;alive---------------&quot;;</span>
-<span class="nc" id="L141">		return Response.ok().entity(j).build();</span>
+<span class="nc" id="L142">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L143">		j.put(&quot;text&quot;, &quot;service alive&quot;);</span>
+<span class="nc" id="L144">		j.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L145">		String status = &quot;alive---------------&quot;;</span>
+<span class="nc" id="L146">		return Response.ok().entity(j).build();</span>
 	}
 
 	
 	@GET
 	@Path(&quot;/getRbStatus&quot;)
+	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;REPLACE THIS WITH YOUR NOTES TO THE FUNCTION&quot;)
@@ -152,32 +158,36 @@ import net.minidev.json.JSONObject;
 					code = HttpURLConnection.HTTP_OK,
 					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
 	public Response getRbStatus() {
+<span class="nc" id="L161">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L162">		System.out.println(&quot;Breakpoint--------getRbStatus from Service--------------------------&quot;);</span>
 		try {
 			//Creating a HttpClient object
-<span class="nc" id="L157">			CloseableHttpClient httpclient = HttpClients.createDefault();</span>
+<span class="nc" id="L165">			CloseableHttpClient httpclient = HttpClients.createDefault();</span>
 			//Creating a HttpGet object
-<span class="nc" id="L159">		    HttpGet httpget = new HttpGet(&quot;http://localhost:6006/api/v1/isalive&quot;);</span>
+<span class="nc" id="L167">		    HttpGet httpget = new HttpGet(&quot;http://192.168.56.1:6006/api/v1/isalive&quot;);</span>
 		
 		    //Printing the method used
-<span class="nc" id="L162">		    System.out.println(&quot;Request Type: &quot;+httpget.getMethod());</span>
+<span class="nc" id="L170">		    System.out.println(&quot;Request Type: &quot;+ httpget.getMethod());</span>
 		
 		   //Executing the Get request
-<span class="nc" id="L165">		   HttpResponse response = httpclient.execute(httpget);</span>
-<span class="nc" id="L166">		   HttpEntity entity = response.getEntity();</span>
-<span class="nc" id="L167">		   String result = EntityUtils.toString(entity);</span>
-<span class="nc" id="L168">		   String responseContentType = MediaType.APPLICATION_JSON;</span>
-<span class="nc" id="L169">		   System.out.println(&quot;................&quot;+result);</span>
-<span class="nc" id="L170">		   return Response.ok().type(responseContentType).entity(result).build();</span>
-<span class="nc" id="L171">		}catch (IOException e) {</span>
+<span class="nc" id="L173">		   HttpResponse response = httpclient.execute(httpget);</span>
+<span class="nc" id="L174">		   HttpEntity entity = response.getEntity();</span>
+<span class="nc" id="L175">		   String result = EntityUtils.toString(entity);</span>
+<span class="nc" id="L176">		   System.out.println(&quot;................&quot;+result);</span>
+<span class="nc" id="L177">		   JSONObject j1 = new JSONObject();</span>
+<span class="nc" id="L178">		   j1.put(&quot;text&quot;, result);</span>
+<span class="nc" id="L179">		   j1.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L180">		   return Response.ok().entity(j1).build();</span>
+<span class="nc" id="L181">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-<span class="nc" id="L173">			e.printStackTrace();</span>
-<span class="nc" id="L174">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+<span class="nc" id="L183">			e.printStackTrace();</span>
+<span class="nc" id="L184">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
 		}
 	}
 	
 	@POST
-	@Path(&quot;/textual-complexity&quot;)
-	@Produces(MediaType.TEXT_PLAIN)
+	@Path(&quot;/textual_complexity&quot;)
+	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 			value = { @ApiResponse(
 					code = HttpURLConnection.HTTP_OK,
@@ -186,23 +196,32 @@ import net.minidev.json.JSONObject;
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
 	public Response textualcomplexity(String body) {
-<span class="nc" id="L189">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L190">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
-<span class="nc" id="L191">		j.put(&quot;text&quot;, body);</span>
+<span class="nc" id="L199">		Gson gson = new Gson();</span>
+<span class="nc" id="L200">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
+<span class="nc" id="L201">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot&quot; + m.botName());</span>
+<span class="nc" id="L202">		String arr[] = m.msg().split(&quot; &quot;, 3);</span>
+<span class="nc" id="L203">		String text = arr[2];</span>
+<span class="nc" id="L204">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L205">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
+<span class="nc" id="L206">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
+<span class="nc" id="L207">		j.put(&quot;text&quot;, text);</span>
 		try {
-<span class="nc" id="L193">			StringEntity entity = new StringEntity(j.toString());</span>
-<span class="nc" id="L194">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
-<span class="nc" id="L195">	        HttpPost request = new HttpPost(&quot;http://localhost:6006/api/v1/textual-complexity&quot;);</span>
-<span class="nc" id="L196">	        request.setEntity(entity);</span>
-<span class="nc" id="L197">	        HttpResponse response = httpClient.execute(request);</span>
-<span class="nc" id="L198">	        HttpEntity entity2 = response.getEntity();</span>
-<span class="nc" id="L199">		    String result = EntityUtils.toString(entity2);</span>
-<span class="nc" id="L200">		    System.out.println(&quot;................&quot;+result);</span>
-<span class="nc" id="L201">		    return Response.ok().entity(result).build();</span>
-<span class="nc" id="L202">		}catch (IOException e) {</span>
+<span class="nc" id="L209">			StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L210">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L211">	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/textual-complexity&quot;);</span>
+<span class="nc" id="L212">	        request.setEntity(entity);</span>
+<span class="nc" id="L213">	        HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L214">	        HttpEntity entity2 = response.getEntity();</span>
+<span class="nc" id="L215">			String result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L216">		    System.out.println(&quot;................result computed from readerbench................&quot;);</span>
+<span class="nc" id="L217">		    JSONObject j1 = new JSONObject();</span>
+<span class="nc" id="L218">		    j1.put(&quot;text&quot;, result);</span>
+<span class="nc" id="L219">		    j1.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L220">		    return Response.ok().entity(j1).build();</span>
+<span class="nc" id="L221">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-<span class="nc" id="L204">			e.printStackTrace();</span>
-<span class="nc" id="L205">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+<span class="nc" id="L223">			e.printStackTrace();</span>
+<span class="nc" id="L224">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
 		}
 	}
 	/*
@@ -224,7 +243,7 @@ import net.minidev.json.JSONObject;
 		try {
 			StringEntity entity = new StringEntity(j.toString());
 			HttpClient httpClient = HttpClientBuilder.create().build();
-	        HttpPost request = new HttpPost(&quot;http://localhost:6006/api/v1/text-similarity&quot;);
+	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/text-similarity&quot;);
 	        request.setEntity(entity);
 	        HttpResponse response = httpClient.execute(request);
 	        HttpEntity entity2 = response.getEntity();
@@ -240,7 +259,7 @@ import net.minidev.json.JSONObject;
 	*/
 	@POST
 	@Path(&quot;/feedback&quot;)
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
 	@ApiResponses(
 			value = { @ApiResponse(
 					code = HttpURLConnection.HTTP_OK,
@@ -248,23 +267,33 @@ import net.minidev.json.JSONObject;
 	@ApiOperation(
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
-	public Response feedback(String text) {
-<span class="nc" id="L252">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L253">		j.put(&quot;text&quot;, text);</span>
+	public Response feedback(String body) {
+<span class="nc" id="L271">		Gson gson = new Gson();</span>
+<span class="nc" id="L272">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
+<span class="nc" id="L273">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot&quot; + m.botName());</span>
+<span class="nc" id="L274">		String arr[] = m.msg().split(&quot; &quot;, 3);</span>
+<span class="nc" id="L275">		String text = arr[2];</span>
+<span class="nc" id="L276">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
+<span class="nc" id="L277">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L278">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
+<span class="nc" id="L279">		j.put(&quot;text&quot;, text);</span>
 		try {
-<span class="nc" id="L255">			StringEntity entity = new StringEntity(j.toString());</span>
-<span class="nc" id="L256">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
-<span class="nc" id="L257">	        HttpPost request = new HttpPost(&quot;http://localhost:6006/api/v1/feedback&quot;);</span>
-<span class="nc" id="L258">	        request.setEntity(entity);</span>
-<span class="nc" id="L259">	        HttpResponse response = httpClient.execute(request);</span>
-<span class="nc" id="L260">	        HttpEntity entity2 = response.getEntity();</span>
-<span class="nc" id="L261">		    String result = EntityUtils.toString(entity2);</span>
-<span class="nc" id="L262">		    System.out.println(&quot;................&quot;+result);</span>
-<span class="nc" id="L263">		    return Response.ok().entity(result).build();</span>
-<span class="nc" id="L264">		}catch (IOException e) {</span>
+<span class="nc" id="L281">			StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L282">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L283">	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/feedback&quot;);</span>
+<span class="nc" id="L284">	        request.setEntity(entity);</span>
+<span class="nc" id="L285">	        HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L286">	        HttpEntity entity2 = response.getEntity();</span>
+<span class="nc" id="L287">		    String result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L288">		    System.out.println(&quot;................result computed from readerbench................&quot;);</span>
+<span class="nc" id="L289">		    JSONObject j1 = new JSONObject();</span>
+<span class="nc" id="L290">		    j1.put(&quot;text&quot;, result);</span>
+<span class="nc" id="L291">			j1.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L292">			return Response.ok().entity(j1).build();</span>
+<span class="nc" id="L293">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-<span class="nc" id="L266">			e.printStackTrace();</span>
-<span class="nc" id="L267">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+<span class="nc" id="L295">			e.printStackTrace();</span>
+<span class="nc" id="L296">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
 		}
 	}
 
