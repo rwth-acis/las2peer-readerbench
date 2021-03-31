@@ -14,38 +14,40 @@ public class MessageInfo {
 	String text;
 	String intent;
 	String email;
+	String category;
 	boolean contextOn;
 	public MessageInfo(String msg, String botName,	String channel,	
-			String text, String intent, String email)
-<span class="nc" id="L20">	{</span>
-<span class="nc" id="L21">		this.msg = msg;</span>
-<span class="nc" id="L22">		this.botName = botName;</span>
-<span class="nc" id="L23">		this.channel= channel;</span>
-<span class="nc" id="L24">		this.text = text;</span>
-<span class="nc" id="L25">		this.intent = intent;</span>
-<span class="nc" id="L26">		this.email = email;</span>
-<span class="nc" id="L27">		this.contextOn = contextOn;</span>
-<span class="nc" id="L28">	}</span>
+			String text, String intent, String email, String category, boolean contextOn)
+<span class="nc" id="L21">	{</span>
+<span class="nc" id="L22">		this.msg = msg;</span>
+<span class="nc" id="L23">		this.botName = botName;</span>
+<span class="nc" id="L24">		this.channel= channel;</span>
+<span class="nc" id="L25">		this.text = text;</span>
+<span class="nc" id="L26">		this.intent = intent;</span>
+<span class="nc" id="L27">		this.email = email;</span>
+<span class="nc" id="L28">		this.category = category;</span>
+<span class="nc" id="L29">		this.contextOn = contextOn;</span>
+<span class="nc" id="L30">	}</span>
 	public String msg() {
-<span class="nc" id="L30">		return this.msg;</span>
+<span class="nc" id="L32">		return this.msg;</span>
 	}
 	public String botName() {
-<span class="nc" id="L33">		return this.botName;</span>
+<span class="nc" id="L35">		return this.botName;</span>
 	}
 	public String channel() {
-<span class="nc" id="L36">		return this.channel;</span>
+<span class="nc" id="L38">		return this.channel;</span>
 	}
 	public String text() {
-<span class="nc" id="L39">		return this.text;</span>
+<span class="nc" id="L41">		return this.text;</span>
 	}
 	public String intent() {
-<span class="nc" id="L42">		return this.intent;</span>
+<span class="nc" id="L44">		return this.intent;</span>
 	}
 	public String email() {
-<span class="nc" id="L45">		return this.email;</span>
+<span class="nc" id="L47">		return this.email;</span>
 	}
 	public boolean contextOn() {
-<span class="nc" id="L48">		return this.contextOn;</span>
+<span class="nc" id="L50">		return this.contextOn;</span>
 	}
 	
 	

@@ -365,8 +365,8 @@ public class ReaderbenchService extends RESTService {
 				String category = context.getAsString("category");
 				String level = context.getAsString("level");
 				JSONObject result = (JSONObject) p.parse(context.getAsString("result"));
-				String res1 = selectIndices(category, level, result);
-				res1+="\n";
+				JSONArray Indices = selectIndices(category, level, result);
+				String res1="\n";
 				res1+="Um ein weitere level für die Kategorie "+ context.getAsString("category")
 				+ " auswählen schreib: neue Level\n"
 				+"Um die indizen eine neue Kategorie anzuschauen, schreib: neue Kategorie\n"
@@ -420,7 +420,7 @@ public class ReaderbenchService extends RESTService {
 			return Response.ok().entity(chatResponse).build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			chatResponse.appendField("text", "Sorry, a problem occured 🙁");
+			chatResponse.appendField("text", "Sorry, a problem occured ");
 			return Response.ok(chatResponse).build();
 		}
 	}

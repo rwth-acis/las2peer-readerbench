@@ -2,7 +2,10 @@
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.*;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -16,6 +19,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import java.util.*;
+import java.util.HashSet;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -42,7 +46,10 @@ import io.swagger.annotations.Contact;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.License;
 import io.swagger.annotations.SwaggerDefinition;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import net.minidev.json.parser.JSONParser;
+import net.minidev.json.parser.ParseException;
 
 
 
@@ -73,10 +80,12 @@ import net.minidev.json.JSONObject;
 						url = &quot;https://github.com/Karlydiamond214/las2peer-readerbench&quot;)))
 @ServicePath(&quot;/readerbench&quot;)
 // TODO Your own service class
-<span class="fc" id="L76">public class ReaderbenchService extends RESTService {</span>
-	
-<span class="fc" id="L78">	private final static List&lt;String&gt; SUPPORTED_FUNCTIONS = Arrays.asList(&quot;textual coomplexity&quot;,</span>
+<span class="fc" id="L83">public class ReaderbenchService extends RESTService {</span>
+
+<span class="fc" id="L85">	private final static List&lt;String&gt; SUPPORTED_FUNCTIONS = Arrays.asList(&quot;textual coomplexity&quot;,</span>
 			&quot;Sentiment&quot;);
+
+<span class="fc" id="L88">	private static HashMap&lt;String, Object&gt; ContextInfo = new HashMap&lt;String, Object&gt;();</span>
 
 	/**
 	 * Template of a get function.
@@ -94,9 +103,9 @@ import net.minidev.json.JSONObject;
 					code = HttpURLConnection.HTTP_OK,
 					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
 	public Response getTemplate() {
-<span class="fc" id="L97">		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();</span>
-<span class="fc" id="L98">		String name = userAgent.getLoginName();</span>
-<span class="fc" id="L99">		return Response.ok().entity(name).build();</span>
+<span class="fc" id="L106">		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();</span>
+<span class="fc" id="L107">		String name = userAgent.getLoginName();</span>
+<span class="fc" id="L108">		return Response.ok().entity(name).build();</span>
 	}
 
 	/**
@@ -116,13 +125,13 @@ import net.minidev.json.JSONObject;
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
 	public Response postTemplate(@PathParam(&quot;input&quot;) String myInput) {
-<span class="fc" id="L119">		String returnString = &quot;&quot;;</span>
-<span class="fc" id="L120">		returnString += &quot;Input &quot; + myInput;</span>
-<span class="fc" id="L121">		return Response.ok().entity(returnString).build();</span>
+<span class="fc" id="L128">		String returnString = &quot;&quot;;</span>
+<span class="fc" id="L129">		returnString += &quot;Input &quot; + myInput;</span>
+<span class="fc" id="L130">		return Response.ok().entity(returnString).build();</span>
 	}
 
 	// TODO your own service methods, e. g. for RMI
-	
+
 	/**
 	 * Template of a get function.
 	 * 
@@ -139,14 +148,14 @@ import net.minidev.json.JSONObject;
 					code = HttpURLConnection.HTTP_OK,
 					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
 	public Response getSrvStatus() {
-<span class="nc" id="L142">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L143">		j.put(&quot;text&quot;, &quot;service alive&quot;);</span>
-<span class="nc" id="L144">		j.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L145">		String status = &quot;alive---------------&quot;;</span>
-<span class="nc" id="L146">		return Response.ok().entity(j).build();</span>
+<span class="nc" id="L151">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L152">		j.put(&quot;text&quot;, &quot;service alive&quot;);</span>
+<span class="nc" id="L153">		j.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L154">		String status = &quot;alive---------------&quot;;</span>
+<span class="nc" id="L155">		return Response.ok().entity(j).build();</span>
 	}
 
-	
+
 	@GET
 	@Path(&quot;/getRbStatus&quot;)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -158,71 +167,34 @@ import net.minidev.json.JSONObject;
 					code = HttpURLConnection.HTTP_OK,
 					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
 	public Response getRbStatus() {
-<span class="nc" id="L161">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L162">		System.out.println(&quot;Breakpoint--------getRbStatus from Service--------------------------&quot;);</span>
+<span class="nc" id="L170">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L171">		System.out.println(&quot;Breakpoint--------getRbStatus from Service--------------------------&quot;);</span>
 		try {
 			//Creating a HttpClient object
-<span class="nc" id="L165">			CloseableHttpClient httpclient = HttpClients.createDefault();</span>
+<span class="nc" id="L174">			CloseableHttpClient httpclient = HttpClients.createDefault();</span>
 			//Creating a HttpGet object
-<span class="nc" id="L167">		    HttpGet httpget = new HttpGet(&quot;http://192.168.56.1:6006/api/v1/isalive&quot;);</span>
-		
-		    //Printing the method used
-<span class="nc" id="L170">		    System.out.println(&quot;Request Type: &quot;+ httpget.getMethod());</span>
-		
-		   //Executing the Get request
-<span class="nc" id="L173">		   HttpResponse response = httpclient.execute(httpget);</span>
-<span class="nc" id="L174">		   HttpEntity entity = response.getEntity();</span>
-<span class="nc" id="L175">		   String result = EntityUtils.toString(entity);</span>
-<span class="nc" id="L176">		   System.out.println(&quot;................&quot;+result);</span>
-<span class="nc" id="L177">		   JSONObject j1 = new JSONObject();</span>
-<span class="nc" id="L178">		   j1.put(&quot;text&quot;, result);</span>
-<span class="nc" id="L179">		   j1.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L180">		   return Response.ok().entity(j1).build();</span>
-<span class="nc" id="L181">		}catch (IOException e) {</span>
+<span class="nc" id="L176">			HttpGet httpget = new HttpGet(&quot;http://192.168.56.1:6006/api/v1/isalive&quot;);</span>
+
+			//Printing the method used
+<span class="nc" id="L179">			System.out.println(&quot;Request Type: &quot;+ httpget.getMethod());</span>
+
+			//Executing the Get request
+<span class="nc" id="L182">			HttpResponse response = httpclient.execute(httpget);</span>
+<span class="nc" id="L183">			HttpEntity entity = response.getEntity();</span>
+<span class="nc" id="L184">			String result = EntityUtils.toString(entity);</span>
+<span class="nc" id="L185">			System.out.println(&quot;................&quot;+result);</span>
+<span class="nc" id="L186">			JSONObject j1 = new JSONObject();</span>
+<span class="nc" id="L187">			j1.put(&quot;text&quot;, result);</span>
+<span class="nc" id="L188">			j1.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L189">			return Response.ok().entity(j1).build();</span>
+<span class="nc" id="L190">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-<span class="nc" id="L183">			e.printStackTrace();</span>
-<span class="nc" id="L184">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+<span class="nc" id="L192">			e.printStackTrace();</span>
+<span class="nc" id="L193">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
 		}
 	}
-	
-	@POST
-	@Path(&quot;/textual_complexity&quot;)
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
-	@ApiOperation(
-			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
-			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
-	public Response textualcomplexity(String body) {
-<span class="nc" id="L199">		Gson gson = new Gson();</span>
-<span class="nc" id="L200">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
-<span class="nc" id="L201">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot &quot; + m.botName());</span>
-<span class="nc" id="L202">		String text = m.msg();</span>
-<span class="nc" id="L203">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L204">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
-<span class="nc" id="L205">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
-<span class="nc" id="L206">		j.put(&quot;text&quot;, text);</span>
-		try {
-<span class="nc" id="L208">			StringEntity entity = new StringEntity(j.toString());</span>
-<span class="nc" id="L209">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
-<span class="nc" id="L210">	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/textual-complexity&quot;);</span>
-<span class="nc" id="L211">	        request.setEntity(entity);</span>
-<span class="nc" id="L212">	        HttpResponse response = httpClient.execute(request);</span>
-<span class="nc" id="L213">	        HttpEntity entity2 = response.getEntity();</span>
-<span class="nc" id="L214">			String result = EntityUtils.toString(entity2);</span>
-<span class="nc" id="L215">		    System.out.println(&quot;................result computed from readerbench................&quot;);</span>
-<span class="nc" id="L216">		    JSONObject j1 = new JSONObject();</span>
-<span class="nc" id="L217">		    j1.put(&quot;text&quot;, result);</span>
-<span class="nc" id="L218">		    j1.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L219">		    return Response.ok().entity(j1).build();</span>
-<span class="nc" id="L220">		}catch (IOException e) {</span>
-			// TODO Auto-generated catch block
-<span class="nc" id="L222">			e.printStackTrace();</span>
-<span class="nc" id="L223">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
-		}
-	}
+
+
 	/*
 	@POST
 	@Path(&quot;/text-similarity&quot;)
@@ -255,7 +227,7 @@ import net.minidev.json.JSONObject;
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	*/
+	 */
 	@POST
 	@Path(&quot;/feedback&quot;)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -267,34 +239,305 @@ import net.minidev.json.JSONObject;
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
 	public Response feedback(String body) {
-<span class="nc" id="L270">		Gson gson = new Gson();</span>
-<span class="nc" id="L271">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
-<span class="nc" id="L272">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot&quot; + m.botName());</span>
-<span class="nc" id="L273">		String text = m.msg();</span>
-<span class="nc" id="L274">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
-<span class="nc" id="L275">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L276">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
-<span class="nc" id="L277">		j.put(&quot;text&quot;, text);</span>
+<span class="nc" id="L242">		Gson gson = new Gson();</span>
+<span class="nc" id="L243">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
+<span class="nc" id="L244">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot&quot; + m.botName());</span>
+<span class="nc" id="L245">		String text = m.msg();</span>
+<span class="nc" id="L246">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
+<span class="nc" id="L247">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L248">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
+<span class="nc" id="L249">		j.put(&quot;text&quot;, text);</span>
 		try {
-<span class="nc" id="L279">			StringEntity entity = new StringEntity(j.toString());</span>
-<span class="nc" id="L280">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
-<span class="nc" id="L281">	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/feedback&quot;);</span>
-<span class="nc" id="L282">	        request.setEntity(entity);</span>
-<span class="nc" id="L283">	        HttpResponse response = httpClient.execute(request);</span>
-<span class="nc" id="L284">	        HttpEntity entity2 = response.getEntity();</span>
-<span class="nc" id="L285">		    String result = EntityUtils.toString(entity2);</span>
-<span class="nc" id="L286">		    System.out.println(&quot;................result computed from readerbench................&quot;);</span>
-<span class="nc" id="L287">		    JSONObject j1 = new JSONObject();</span>
-<span class="nc" id="L288">		    j1.put(&quot;text&quot;, result);</span>
-<span class="nc" id="L289">			j1.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L290">			return Response.ok().entity(j1).build();</span>
-<span class="nc" id="L291">		}catch (IOException e) {</span>
+<span class="nc" id="L251">			StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L252">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L253">			HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/feedback&quot;);</span>
+<span class="nc" id="L254">			request.setEntity(entity);</span>
+<span class="nc" id="L255">			HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L256">			HttpEntity entity2 = response.getEntity();</span>
+<span class="nc" id="L257">			String result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L258">			System.out.println(&quot;................result computed from readerbench................&quot;);</span>
+
+
+
+
+<span class="nc" id="L263">			JSONObject j1 = new JSONObject();</span>
+<span class="nc" id="L264">			j1.put(&quot;text&quot;, result);</span>
+<span class="nc" id="L265">			j1.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L266">			return Response.ok().entity(j1).build();</span>
+<span class="nc" id="L267">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-<span class="nc" id="L293">			e.printStackTrace();</span>
-<span class="nc" id="L294">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+<span class="nc" id="L269">			e.printStackTrace();</span>
+<span class="nc" id="L270">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+		}
+	}
+
+	@POST
+	@Path(&quot;/textual_complexity&quot;)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
+	@ApiOperation(
+			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
+			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
+	public Response textualComplexity(String body) {
+<span class="nc" id="L285">		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
+<span class="nc" id="L286">		JSONObject chatResponse = new JSONObject();</span>
+<span class="nc" id="L287">		final long start = System.currentTimeMillis();</span>
+<span class="nc" id="L288">		JSONObject event = new JSONObject();</span>
+<span class="nc" id="L289">		System.out.println(&quot;Body &quot; + body);</span>
+		try {
+<span class="nc" id="L291">			JSONObject bodyJson = (JSONObject) p.parse(body);</span>
+			String text;
+<span class="nc" id="L293">			String email = bodyJson.getAsString(&quot;email&quot;);</span>
+<span class="nc" id="L294">			JSONObject context = getContext(email, p);</span>
+<span class="nc" id="L295">			String intent = bodyJson.getAsString(&quot;intent&quot;);</span>
+<span class="nc" id="L296">			JSONObject entities = (JSONObject) p.parse(bodyJson.getAsString(&quot;entities&quot;));</span>
+<span class="nc" id="L297">			event.put(&quot;task&quot;, &quot;textualComplexity&quot;);</span>
+
+
+<span class="nc bnc" id="L300" title="All 7 branches missed.">			switch (intent) {</span>
+			case &quot;quit&quot;:
+<span class="nc" id="L302">				chatResponse.put(&quot;text&quot;, &quot;Okay Aufwiedersehen. ðŸ™ƒ&quot;);</span>
+<span class="nc" id="L303">				chatResponse.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L304">				return Response.ok(chatResponse).build();</span>
+			case &quot;text&quot;:
+<span class="nc" id="L306">				text = bodyJson.getAsString(&quot;msg&quot;);</span>
+<span class="nc" id="L307">				JSONObject j = new JSONObject();</span>
+<span class="nc" id="L308">				j.put(&quot;language&quot;, &quot;en&quot;);</span>
+<span class="nc" id="L309">				j.put(&quot;text&quot;, text);</span>
+				try {
+<span class="nc" id="L311">					StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L312">					HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L313">					HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/textual-complexity&quot;);</span>
+<span class="nc" id="L314">					request.setEntity(entity);</span>
+<span class="nc" id="L315">					HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L316">					HttpEntity entity2 = response.getEntity();</span>
+<span class="nc" id="L317">					String result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L318">					context.put(&quot;result&quot;, result);</span>
+<span class="nc" id="L319">					System.out.println(&quot;................result computed from readerbench................&quot;);  </span>
+<span class="nc" id="L320">					chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L321">					String res = selectCategoryMsg();</span>
+<span class="nc" id="L322">					chatResponse.put(&quot;text&quot;,res);</span>
+<span class="nc" id="L323">					chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L324">					return Response.ok().entity(chatResponse).build();</span>
+<span class="nc" id="L325">				}catch (IOException e) {</span>
+					// TODO Auto-generated catch block
+<span class="nc" id="L327">					e.printStackTrace();</span>
+<span class="nc" id="L328">					throw new ChatException(</span>
+<span class="nc" id="L329">							e.getMessage()</span>
+							);
+				}
+
+
+			case &quot;kategorie&quot;:
+<span class="nc bnc" id="L335" title="All 2 branches missed.">				if(entities == null) {</span>
+<span class="nc" id="L336">					throw new ChatException(</span>
+							&quot;Aspekte wurde nicht erkannt. Bitte neue angeben&quot;
+							);
+
+				}
+				else {
+<span class="nc bnc" id="L342" title="All 2 branches missed.">					if (context.getAsString(&quot;category&quot;) != null) {</span>
+<span class="nc" id="L343">						context.remove(&quot;category&quot;);</span>
+					}
+<span class="nc" id="L345">					String category = entities.getAsString(&quot;category&quot;);</span>
+<span class="nc" id="L346">					context.put(&quot;category&quot;, category);</span>
+<span class="nc" id="L347">					ContextInfo.put(email, context);</span>
+				}
+<span class="nc" id="L349">				String res = selectLevelMsg();</span>
+<span class="nc" id="L350">				chatResponse.put(&quot;text&quot;,res);</span>
+<span class="nc" id="L351">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L352">				return Response.ok().entity(chatResponse).build();</span>
+			case &quot;level&quot;:
+<span class="nc bnc" id="L354" title="All 2 branches missed.">				if(entities == null) {</span>
+<span class="nc" id="L355">					throw new ChatException(</span>
+							&quot;Shicht wurde nicht erkannt. Bitte wieder angeben&quot;
+							);
+				}
+				else {
+<span class="nc bnc" id="L360" title="All 2 branches missed.">					if (context.getAsString(&quot;level&quot;) != null) {</span>
+<span class="nc" id="L361">						context.remove(&quot;level&quot;);</span>
+					}
+<span class="nc" id="L363">					String level = entities.getAsString(&quot;level&quot;);</span>
+				}
+<span class="nc" id="L365">				String category = context.getAsString(&quot;category&quot;);</span>
+<span class="nc" id="L366">				String level = context.getAsString(&quot;level&quot;);</span>
+<span class="nc" id="L367">				JSONObject result = (JSONObject) p.parse(context.getAsString(&quot;result&quot;));</span>
+<span class="nc" id="L368">				JSONArray Indices = selectIndices(category, level, result);</span>
+<span class="nc" id="L369">				String res1=&quot;\n&quot;;</span>
+<span class="nc" id="L370">				res1+=&quot;Um ein weitere level fÃ¼r die Kategorie &quot;+ context.getAsString(&quot;category&quot;)</span>
+				+ &quot; auswÃ¤hlen schreib: neue Level\n&quot;
+				+&quot;Um die indizen eine neue Kategorie anzuschauen, schreib: neue Kategorie\n&quot;
+				+&quot;Zum verlassen schreib einfach verlassen&quot;;
+<span class="nc" id="L374">				chatResponse.put(&quot;text&quot;,res1);</span>
+<span class="nc" id="L375">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L376">				return Response.ok().entity(chatResponse).build();</span>
+			case &quot;new_Category&quot;:
+<span class="nc bnc" id="L378" title="All 2 branches missed.">				if (context.getAsString(&quot;category&quot;) != null) {</span>
+<span class="nc" id="L379">					context.remove(&quot;category&quot;);</span>
+				}
+<span class="nc bnc" id="L381" title="All 2 branches missed.">				if (context.getAsString(&quot;level&quot;) != null) {</span>
+<span class="nc" id="L382">					context.remove(&quot;level&quot;);</span>
+				}
+<span class="nc" id="L384">				String res2 = selectCategoryMsg();</span>
+<span class="nc" id="L385">				chatResponse.put(&quot;text&quot;,res2);</span>
+<span class="nc" id="L386">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L387">				return Response.ok().entity(chatResponse).build();</span>
+			case &quot;new_Level&quot;:
+<span class="nc bnc" id="L389" title="All 2 branches missed.">				if (context.getAsString(&quot;level&quot;) != null) {</span>
+<span class="nc" id="L390">					context.remove(&quot;level&quot;);</span>
+				}
+<span class="nc" id="L392">				String res3 = selectLevelMsg();</span>
+<span class="nc" id="L393">				chatResponse.put(&quot;text&quot;,res3);</span>
+<span class="nc" id="L394">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L395">				return Response.ok().entity(chatResponse).build();</span>
+
+
+
+				/*case &quot;Diskursstruktur&quot;:
+			          category = &quot;DISCOURSE&quot;;
+			     case &quot;Morphologie&quot;:
+			          category = &quot;MORPHOLOGY&quot;;
+			     case &quot;Oberflaeche&quot;:
+			          category = &quot;SURFACE&quot;;
+			     case &quot;Syntax&quot;:
+			          category=&quot;SYNTAX&quot;;
+			     case &quot;Wortkomplexitaet&quot;:
+			          category=&quot;WORD&quot;;*/
+			default:
+<span class="nc" id="L410">				String res4 =&quot;Intent kÃ¶nnte nicht ermitteln werden. Bitte Prozess neue beginnen.&quot;;</span>
+<span class="nc" id="L411">				chatResponse.put(&quot;text&quot;,res4);</span>
+<span class="nc" id="L412">				chatResponse.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L413">				return Response.ok().entity(chatResponse).build();</span>
+			}
+
+		}
+<span class="nc" id="L417">		catch (ChatException e) {</span>
+<span class="nc" id="L418">			chatResponse.appendField(&quot;text&quot;, e.getMessage());</span>
+<span class="nc" id="L419">			chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L420">			return Response.ok().entity(chatResponse).build();</span>
+<span class="nc" id="L421">		} catch (Exception e) {</span>
+<span class="nc" id="L422">			e.printStackTrace();</span>
+<span class="nc" id="L423">			chatResponse.appendField(&quot;text&quot;, &quot;Sorry, a problem occured &quot;);</span>
+<span class="nc" id="L424">			return Response.ok(chatResponse).build();</span>
 		}
 	}
 
 
+	private String selectLevelMsg() {
+		// TODO Auto-generated method stub
+<span class="nc" id="L431">		Set&lt;String&gt; selection = new HashSet&lt;String&gt;();</span>
+<span class="nc" id="L432">		selection.add(&quot;Dukument: Dokumentbezogene Indizes&quot;);</span>
+<span class="nc" id="L433">		selection.add(&quot;Absatz:  Indizes bezogen auf den Absatz&quot;);</span>
+<span class="nc" id="L434">		selection.add(&quot;Satz: Satzbezogene Indizes&quot;);</span>
+
+
+<span class="nc" id="L437">		String response = &quot;Welche textlevel wÃ¼rdest du erst Ã¼berprÃ¼fen?\n&quot;</span>
+				+ &quot;Du kannst dir eine aussuchen: \n&quot;;
+
+<span class="nc" id="L440">		Iterator&lt;String&gt; it = selection.iterator();</span>
+<span class="nc" id="L441">		int i = 1;</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">		while(it.hasNext()){</span>
+<span class="nc" id="L443">			response += i + &quot;. &quot; + it.next() + &quot;\n&quot;;</span>
+<span class="nc" id="L444">			i++;</span>
+		}
+
+<span class="nc" id="L447">		response += &quot;Bitte level eingeben&quot;;</span>
+<span class="nc" id="L448">		return response;</span>
+	}
+	
+	/**
+	 * Filter Indices on Category and level
+	 * @param category categoryname for the Indices function will match it to
+	 * @param level levelname for the Indices function will match it to
+	 * @return Indicevalue as jsonarray
+	 * @throws ParseException
+	 */
+	private JSONArray selectIndices(String category, String level, JSONObject result) throws ParseException {
+		
+		// TODO Auto-generated method stub
+<span class="nc" id="L461">		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
+<span class="nc" id="L462">		JSONObject data = (JSONObject) result.get(&quot;data&quot;);</span>
+<span class="nc" id="L463">		JSONArray complexityIndices =(JSONArray) p.parse(data.getAsString(&quot;complexityIndices&quot;));</span>
+<span class="nc" id="L464">		JSONArray results = null;</span>
+<span class="nc bnc" id="L465" title="All 2 branches missed.">		for (Object item : complexityIndices) {</span>
+<span class="nc" id="L466">			JSONObject obj = (JSONObject) item;</span>
+
+<span class="nc bnc" id="L468" title="All 2 branches missed.">			if (obj.getAsString(&quot;category&quot;).matches(&quot;(?i).*&quot; + category + &quot;.*&quot;) ) {</span>
+<span class="nc" id="L469">				JSONArray valencesIndices =(JSONArray) p.parse(data.getAsString(&quot;valences&quot;));</span>
+<span class="nc bnc" id="L470" title="All 2 branches missed.">				for(Object item2 : valencesIndices) {</span>
+<span class="nc" id="L471">					JSONObject obj2 = (JSONObject) item2;</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">					if(obj2.getAsString(&quot;type&quot;).matches(&quot;(?i).*&quot; + level + &quot;.*&quot;)) {</span>
+<span class="nc" id="L473">						results.add(obj2);</span>
+					}
+<span class="nc" id="L475">				}</span>
+			}
+<span class="nc" id="L477">		}</span>
+<span class="nc" id="L478">		return results;</span>
+	}
+
+	private JSONObject getContext(String email, JSONParser p)
+			throws ParseException{
+		// TODO Auto-generated method stub
+<span class="nc" id="L484">		Object obj = ContextInfo.get(email);</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">		if (obj instanceof JSONObject) {</span>
+<span class="nc" id="L486">			JSONObject context = (JSONObject) (obj);</span>
+<span class="nc" id="L487">			return context;</span>
+		}
+<span class="nc" id="L489">		return new JSONObject();</span>
+	}
+
+	/**
+	 * function which extracts the category from the catagory types. If more than one row are provided a Chatexception is thrown
+	 * @param mensas Resultset containing the mensas as rows
+	 * @return Object containing the name and id of the mensa
+	 * @throws ChatException the error message contains a list of mensas in the set
+	 */
+	private String selectCategoryMsg()
+	{
+<span class="nc" id="L500">		Set&lt;String&gt; selection = new HashSet&lt;String&gt;();</span>
+<span class="nc" id="L501">		selection.add(&quot;Semantische Kohaesionsindizes: lokaler und globaler Zusammenhalt &quot;);</span>
+<span class="nc" id="L502">		selection.add(&quot;Diskursstruktur-Indizes:  Textorganisation&quot;);</span>
+<span class="nc" id="L503">		selection.add(&quot;Morphologische Indizes: Formen von WÃ¶rtern, insbesondere flektierte Formen&quot;);</span>
+<span class="nc" id="L504">		selection.add(&quot;Isochrony (Sprechrhythmus)&quot;);</span>
+<span class="nc" id="L505">		selection.add(&quot;Oberflaechenindizes: Form des Textes&quot;);</span>
+<span class="nc" id="L506">		selection.add(&quot;Syntaktische Indizes: Anordnung von WÃ¶rtern und Phrasen&quot;);</span>
+<span class="nc" id="L507">		selection.add(&quot;Wortkomplexitaetsindizes:  KomplexitÃ¤t von WÃ¶rtern Ã¼ber ihre Form hinaus&quot;);</span>
+
+<span class="nc" id="L509">		String response = &quot;Der Text wurde bearbeitet, welche aspecte der Text wÃ¼rdest du Ã¼berprÃ¼fen?\n&quot;</span>
+				+ &quot;Du kannst dir eine aussuchen: \n&quot;;
+
+<span class="nc" id="L512">		Iterator&lt;String&gt; it = selection.iterator();</span>
+<span class="nc" id="L513">		int i = 1;</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">		while(it.hasNext()){</span>
+<span class="nc" id="L515">			response += i + &quot;. &quot; + it.next() + &quot;\n&quot;;</span>
+<span class="nc" id="L516">			i++;</span>
+		}
+
+<span class="nc" id="L519">		response += &quot;Bitte Kategorie eingeben&quot;;</span>
+<span class="nc" id="L520">		return response;</span>
+	}
+
+	
+
+
+
+	/** Exceptions ,with messages, that should be returned in Chat */
+	protected static class ChatException extends Exception {
+
+		/**
+		 *
+		 */
+		private static final long serialVersionUID = 1L;
+
+		protected ChatException(String message) {
+<span class="nc" id="L536">			super(message);</span>
+			Context
+<span class="nc" id="L538">			.get()</span>
+<span class="nc" id="L539">			.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_ERROR_3, message);</span>
+<span class="nc" id="L540">		}</span>
+	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
