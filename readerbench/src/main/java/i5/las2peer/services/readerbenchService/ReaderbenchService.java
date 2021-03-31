@@ -46,6 +46,7 @@ import io.swagger.annotations.Contact;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.License;
 import io.swagger.annotations.SwaggerDefinition;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
@@ -80,11 +81,11 @@ import net.minidev.json.parser.ParseException;
 @ServicePath("/readerbench")
 // TODO Your own service class
 public class ReaderbenchService extends RESTService {
-	
+
 	private final static List<String> SUPPORTED_FUNCTIONS = Arrays.asList("textual coomplexity",
 			"Sentiment");
 
-	 private static HashMap<String, Object> ContextInfo = new HashMap<String, Object>();
+	private static HashMap<String, Object> ContextInfo = new HashMap<String, Object>();
 
 	/**
 	 * Template of a get function.
@@ -130,7 +131,7 @@ public class ReaderbenchService extends RESTService {
 	}
 
 	// TODO your own service methods, e. g. for RMI
-	
+
 	/**
 	 * Template of a get function.
 	 * 
@@ -154,7 +155,7 @@ public class ReaderbenchService extends RESTService {
 		return Response.ok().entity(j).build();
 	}
 
-	
+
 	@GET
 	@Path("/getRbStatus")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -172,28 +173,28 @@ public class ReaderbenchService extends RESTService {
 			//Creating a HttpClient object
 			CloseableHttpClient httpclient = HttpClients.createDefault();
 			//Creating a HttpGet object
-		    HttpGet httpget = new HttpGet("http://192.168.56.1:6006/api/v1/isalive");
-		
-		    //Printing the method used
-		    System.out.println("Request Type: "+ httpget.getMethod());
-		
-		   //Executing the Get request
-		   HttpResponse response = httpclient.execute(httpget);
-		   HttpEntity entity = response.getEntity();
-		   String result = EntityUtils.toString(entity);
-		   System.out.println("................"+result);
-		   JSONObject j1 = new JSONObject();
-		   j1.put("text", result);
-		   j1.put("closeContext", true);
-		   return Response.ok().entity(j1).build();
+			HttpGet httpget = new HttpGet("http://192.168.56.1:6006/api/v1/isalive");
+
+			//Printing the method used
+			System.out.println("Request Type: "+ httpget.getMethod());
+
+			//Executing the Get request
+			HttpResponse response = httpclient.execute(httpget);
+			HttpEntity entity = response.getEntity();
+			String result = EntityUtils.toString(entity);
+			System.out.println("................"+result);
+			JSONObject j1 = new JSONObject();
+			j1.put("text", result);
+			j1.put("closeContext", true);
+			return Response.ok().entity(j1).build();
 		}catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
-	
+
+
 	/*
 	@POST
 	@Path("/text-similarity")
@@ -226,7 +227,7 @@ public class ReaderbenchService extends RESTService {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	*/
+	 */
 	@POST
 	@Path("/feedback")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -249,18 +250,18 @@ public class ReaderbenchService extends RESTService {
 		try {
 			StringEntity entity = new StringEntity(j.toString());
 			HttpClient httpClient = HttpClientBuilder.create().build();
-	        HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/feedback");
-	        request.setEntity(entity);
-	        HttpResponse response = httpClient.execute(request);
-	        HttpEntity entity2 = response.getEntity();
-		    String result = EntityUtils.toString(entity2);
+			HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/feedback");
+			request.setEntity(entity);
+			HttpResponse response = httpClient.execute(request);
+			HttpEntity entity2 = response.getEntity();
+			String result = EntityUtils.toString(entity2);
 			System.out.println("................result computed from readerbench................");
 
-			
-			
 
-		    JSONObject j1 = new JSONObject();
-		    j1.put("text", result);
+
+
+			JSONObject j1 = new JSONObject();
+			j1.put("text", result);
 			j1.put("closeContext", true);
 			return Response.ok().entity(j1).build();
 		}catch (IOException e) {
@@ -282,119 +283,120 @@ public class ReaderbenchService extends RESTService {
 			notes = "Example method that returns a phrase containing the received input.")
 	public Response textualComplexity(String body) {
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-	    JSONObject chatResponse = new JSONObject();
-	    final long start = System.currentTimeMillis();
-	    JSONObject event = new JSONObject();
-	    System.out.println("Body " + body);
+		JSONObject chatResponse = new JSONObject();
+		final long start = System.currentTimeMillis();
+		JSONObject event = new JSONObject();
+		System.out.println("Body " + body);
 		try {
-			 JSONObject bodyJson = (JSONObject) p.parse(body);
-		     String text;
-		     String email = bodyJson.getAsString("email");
-		     JSONObject context = getContext(email, p);
-		     String intent = bodyJson.getAsString("intent");
-		     JSONObject entities = (JSONObject) p.parse(bodyJson.getAsString("entities"));
-		     event.put("task", "textualComplexity");
+			JSONObject bodyJson = (JSONObject) p.parse(body);
+			String text;
+			String email = bodyJson.getAsString("email");
+			JSONObject context = getContext(email, p);
+			String intent = bodyJson.getAsString("intent");
+			JSONObject entities = (JSONObject) p.parse(bodyJson.getAsString("entities"));
+			event.put("task", "textualComplexity");
 
-		     
-		     switch (intent) {
-			     case "quit":
-			          chatResponse.put("text", "Okay Aufwiedersehen. 🙃");
-			          chatResponse.put("closeContext", true);
-			          return Response.ok(chatResponse).build();
-			     case "text":
-			    	 text = bodyJson.getAsString("msg");
-			    	 JSONObject j = new JSONObject();
-			    	 j.put("language", "en");
-			    	 j.put("text", text);
-			    	 try {
-			    		 StringEntity entity = new StringEntity(j.toString());
-			 			HttpClient httpClient = HttpClientBuilder.create().build();
-			 	        HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/textual-complexity");
-			 	        request.setEntity(entity);
-			 	        HttpResponse response = httpClient.execute(request);
-			 	        HttpEntity entity2 = response.getEntity();
-			 			String result = EntityUtils.toString(entity2);
-			 			context.put("result", result);
-			 			System.out.println("................result computed from readerbench................");  
-			 			chatResponse.put("closeContext", false);
-			 			String res = selectCategoryMsg();
-			 			chatResponse.put("text",res);
-				    	chatResponse.put("closeContext", false);
-				    	return Response.ok().entity(chatResponse).build();
-			 		}catch (IOException e) {
-			 			// TODO Auto-generated catch block
-			 			e.printStackTrace();
-			 			throw new ChatException(
-			 					e.getMessage()
-			   		        );
-			 		}
-			 	
-			    	 
-			     case "kategorie":
-			    	 if(entities == null) {
-			    		 throw new ChatException(
-			    		          "Aspekte wurde nicht erkannt. Bitte neue angeben"
-			    		        );
-			    		 
-			    	 }
-			    	 else {
-			    		 if (context.getAsString("category") != null) {
-			    			 context.remove("category");
-			    		 }
-			    		 String category = entities.getAsString("category");
-			    		 context.put("category", category);
-			    		 ContextInfo.put(email, context);
-			    	 }
-			    	 String res = selectLevelMsg();
-			    	 chatResponse.put("text",res);
-			    	 chatResponse.put("closeContext", false);
-			    	 return Response.ok().entity(chatResponse).build();
-			     case "level":
-			    	 if(entities == null) {
-			    		 throw new ChatException(
-			    				 "Shicht wurde nicht erkannt. Bitte wieder angeben"
-			    				 );
-			    	 }
-			    	 else {
-			    		 if (context.getAsString("level") != null) {
-			    			 context.remove("level");
-			    		 }
-			    		 String level = entities.getAsString("level");
-			    	 }
-			    	 JSONObject category = (JSONObject) p.parse(context.getAsString("category"));
-				     JSONObject level = (JSONObject) p.parse(context.getAsString("level"));
-				     String res1 = selectIndices(category, level);
-				     res1+="\n";
-				     res1+="Um ein weitere level für die Kategorie "+ context.getAsString("category")
-				     	+ " auswählen schreib: neue Level\n"
-				     	+"Um die indizen eine neue Kategorie anzuschauen, schreib: neue Kategorie\n"
-				     	+"Zum verlassen schreib einfach verlassen";
-				     chatResponse.put("text",res1);
-				     chatResponse.put("closeContext", false);
-				     return Response.ok().entity(chatResponse).build();
-			     case "new_Category":
-			    	 if (context.getAsString("category") != null) {
-		    			 context.remove("category");
-		    		 }
-			    	 if (context.getAsString("level") != null) {
-		    			 context.remove("level");
-		    		 }
-			     	String res11 = selectCategoryMsg();
-		 			chatResponse.put("text",res11);
-			    	chatResponse.put("closeContext", false);
-			    	return Response.ok().entity(chatResponse).build();
-			     case "new_Level":
-			    	 if (context.getAsString("level") != null) {
-		    			 context.remove("level");
-		    		 }
-			    	 String res = selectLevelMsg();
-			    	 chatResponse.put("text",res);
-			    	 chatResponse.put("closeContext", false);
-			    	 return Response.ok().entity(chatResponse).build();
-			    	 
-			    	 
-			    		
-			     /*case "Diskursstruktur":
+
+			switch (intent) {
+			case "quit":
+				chatResponse.put("text", "Okay Aufwiedersehen. 🙃");
+				chatResponse.put("closeContext", true);
+				return Response.ok(chatResponse).build();
+			case "text":
+				text = bodyJson.getAsString("msg");
+				JSONObject j = new JSONObject();
+				j.put("language", "en");
+				j.put("text", text);
+				try {
+					StringEntity entity = new StringEntity(j.toString());
+					HttpClient httpClient = HttpClientBuilder.create().build();
+					HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/textual-complexity");
+					request.setEntity(entity);
+					HttpResponse response = httpClient.execute(request);
+					HttpEntity entity2 = response.getEntity();
+					String result = EntityUtils.toString(entity2);
+					context.put("result", result);
+					System.out.println("................result computed from readerbench................");  
+					chatResponse.put("closeContext", false);
+					String res = selectCategoryMsg();
+					chatResponse.put("text",res);
+					chatResponse.put("closeContext", false);
+					return Response.ok().entity(chatResponse).build();
+				}catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					throw new ChatException(
+							e.getMessage()
+							);
+				}
+
+
+			case "kategorie":
+				if(entities == null) {
+					throw new ChatException(
+							"Aspekte wurde nicht erkannt. Bitte neue angeben"
+							);
+
+				}
+				else {
+					if (context.getAsString("category") != null) {
+						context.remove("category");
+					}
+					String category = entities.getAsString("category");
+					context.put("category", category);
+					ContextInfo.put(email, context);
+				}
+				String res = selectLevelMsg();
+				chatResponse.put("text",res);
+				chatResponse.put("closeContext", false);
+				return Response.ok().entity(chatResponse).build();
+			case "level":
+				if(entities == null) {
+					throw new ChatException(
+							"Shicht wurde nicht erkannt. Bitte wieder angeben"
+							);
+				}
+				else {
+					if (context.getAsString("level") != null) {
+						context.remove("level");
+					}
+					String level = entities.getAsString("level");
+				}
+				String category = context.getAsString("category");
+				String level = context.getAsString("level");
+				JSONObject result = (JSONObject) p.parse(context.getAsString("result"));
+				String res1 = selectIndices(category, level, result);
+				res1+="\n";
+				res1+="Um ein weitere level für die Kategorie "+ context.getAsString("category")
+				+ " auswählen schreib: neue Level\n"
+				+"Um die indizen eine neue Kategorie anzuschauen, schreib: neue Kategorie\n"
+				+"Zum verlassen schreib einfach verlassen";
+				chatResponse.put("text",res1);
+				chatResponse.put("closeContext", false);
+				return Response.ok().entity(chatResponse).build();
+			case "new_Category":
+				if (context.getAsString("category") != null) {
+					context.remove("category");
+				}
+				if (context.getAsString("level") != null) {
+					context.remove("level");
+				}
+				String res2 = selectCategoryMsg();
+				chatResponse.put("text",res2);
+				chatResponse.put("closeContext", false);
+				return Response.ok().entity(chatResponse).build();
+			case "new_Level":
+				if (context.getAsString("level") != null) {
+					context.remove("level");
+				}
+				String res3 = selectLevelMsg();
+				chatResponse.put("text",res3);
+				chatResponse.put("closeContext", false);
+				return Response.ok().entity(chatResponse).build();
+
+
+
+				/*case "Diskursstruktur":
 			          category = "DISCOURSE";
 			     case "Morphologie":
 			          category = "MORPHOLOGY";
@@ -404,63 +406,36 @@ public class ReaderbenchService extends RESTService {
 			          category="SYNTAX";
 			     case "Wortkomplexitaet":
 			          category="WORD";*/
-			 }
-		     JSONObject category = (JSONObject) p.parse(context.getAsString("category"));
-		     JSONObject level = (JSONObject) p.parse(context.getAsString("level"));
-		     String result = selectIndices(category, level);
-		     return Response.ok().entity(chatResponse).build();
-		     }
+			default:
+				String res4 ="Intent könnte nicht ermitteln werden. Bitte Prozess neue beginnen.";
+				chatResponse.put("text",res4);
+				chatResponse.put("closeContext", true);
+				return Response.ok().entity(chatResponse).build();
+			}
+
+		}
 		catch (ChatException e) {
-		         chatResponse.appendField("text", e.getMessage());
-		         chatResponse.put("closeContext", false);
-		         return Response.ok().entity(chatResponse).build();
-		       } catch (Exception e) {
-		         e.printStackTrace();
-		         chatResponse.appendField("text", "Sorry, a problem occured 🙁");
-		         return Response.ok(chatResponse).build();
-		       }
+			chatResponse.appendField("text", e.getMessage());
+			chatResponse.put("closeContext", false);
+			return Response.ok().entity(chatResponse).build();
+		} catch (Exception e) {
+			e.printStackTrace();
+			chatResponse.appendField("text", "Sorry, a problem occured 🙁");
+			return Response.ok(chatResponse).build();
+		}
 	}
-			
+
 
 	private String selectLevelMsg() {
 		// TODO Auto-generated method stub
-		return null;
-	}
+		Set<String> selection = new HashSet<String>();
+		selection.add("Dukument: Dokumentbezogene Indizes");
+		selection.add("Absatz:  Indizes bezogen auf den Absatz");
+		selection.add("Satz: Satzbezogene Indizes");
 
-	private String selectIndices(JSONObject category, JSONObject level) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	private JSONObject getContext(String email, JSONParser p)
-			throws ParseException{
-		// TODO Auto-generated method stub
-		 Object obj = ContextInfo.get(email);
-		 if (obj instanceof JSONObject) {
-			 JSONObject context = (JSONObject) (obj);
-			 return context;
-		    }
-		 return new JSONObject();
-	}
-
-	/**
-   * function which extracts the category from the catagory types. If more than one row are provided a Chatexception is thrown
-   * @param mensas Resultset containing the mensas as rows
-   * @return Object containing the name and id of the mensa
-   * @throws ChatException the error message contains a list of mensas in the set
-   */
-  private String selectCategoryMsg()
-    throws ChatException, SQLException {
-	  	Set<String> selection = new HashSet<String>();
-		selection.add("Semantische Kohaesionsindizes: lokaler und globaler Zusammenhalt ");
-		selection.add("Diskursstruktur-Indizes:  Textorganisation");
-		selection.add("Morphologische Indizes: Formen von Wörtern, insbesondere flektierte Formen");
-		selection.add("Isochrony (Sprechrhythmus)");
-		selection.add("Oberflaechenindizes: Form des Textes");
-		selection.add("Syntaktische Indizes: Anordnung von Wörtern und Phrasen");
-		selection.add("Wortkomplexitaetsindizes:  Komplexität von Wörtern über ihre Form hinaus");
-		
-		String response = "Der Text wurde bearbeitet, welche aspecte der Text würdest du überprüfen: \n";
+		String response = "Welche textlevel würdest du erst überprüfen?\n"
+				+ "Du kannst dir eine aussuchen: \n";
 
 		Iterator<String> it = selection.iterator();
 		int i = 1;
@@ -468,48 +443,100 @@ public class ReaderbenchService extends RESTService {
 			response += i + ". " + it.next() + "\n";
 			i++;
 		}
+
+		response += "Bitte level eingeben";
+		return response;
+	}
+	
+	/**
+	 * Filter Indices on Category and level
+	 * @param category categoryname for the Indices function will match it to
+	 * @param level levelname for the Indices function will match it to
+	 * @return Indicevalue as jsonarray
+	 * @throws ParseException
+	 */
+	private JSONArray selectIndices(String category, String level, JSONObject result) throws ParseException {
 		
-		response += "Bitte Kategorie eingeben";
-    	throw new ChatException(response);
+		// TODO Auto-generated method stub
+		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONObject data = (JSONObject) result.get("data");
+		JSONArray complexityIndices =(JSONArray) p.parse(data.getAsString("complexityIndices"));
+		JSONArray results = null;
+		for (Object item : complexityIndices) {
+			JSONObject obj = (JSONObject) item;
+
+			if (obj.getAsString("category").matches("(?i).*" + category + ".*") ) {
+				JSONArray valencesIndices =(JSONArray) p.parse(data.getAsString("valences"));
+				for(Object item2 : valencesIndices) {
+					JSONObject obj2 = (JSONObject) item2;
+					if(obj2.getAsString("type").matches("(?i).*" + level + ".*")) {
+						results.add(obj2);
+					}
+				}
+			}
+		}
+		return results;
 	}
 
-	 /**
-   * Retrieves an Category from a list of categories
-   * @param categoryname categoryname for the menuitem function will match it to
-   * @return Indicevalue as json
-   * @throws IOException
-   * @throws ChatException
-   */
-  private JSONObject extractCategoryFromIndices(
-    String categoryname, JSONObject IndiceResults
-  ) 
-    throws IOException, ChatException {
-	JSONObject indices;
-    for (Object item : indices) {
-      JSONObject obj = (JSONObject) item;
+	private JSONObject getContext(String email, JSONParser p)
+			throws ParseException{
+		// TODO Auto-generated method stub
+		Object obj = ContextInfo.get(email);
+		if (obj instanceof JSONObject) {
+			JSONObject context = (JSONObject) (obj);
+			return context;
+		}
+		return new JSONObject();
+	}
 
-      if (
-        obj.getAsString("category").matches("(?i).*" + categoryname + ".*") 
-      ) return obj;
-    }
+	/**
+	 * function which extracts the category from the catagory types. If more than one row are provided a Chatexception is thrown
+	 * @param mensas Resultset containing the mensas as rows
+	 * @return Object containing the name and id of the mensa
+	 * @throws ChatException the error message contains a list of mensas in the set
+	 */
+	private String selectCategoryMsg()
+	{
+		Set<String> selection = new HashSet<String>();
+		selection.add("Semantische Kohaesionsindizes: lokaler und globaler Zusammenhalt ");
+		selection.add("Diskursstruktur-Indizes:  Textorganisation");
+		selection.add("Morphologische Indizes: Formen von Wörtern, insbesondere flektierte Formen");
+		selection.add("Isochrony (Sprechrhythmus)");
+		selection.add("Oberflaechenindizes: Form des Textes");
+		selection.add("Syntaktische Indizes: Anordnung von Wörtern und Phrasen");
+		selection.add("Wortkomplexitaetsindizes:  Komplexität von Wörtern über ihre Form hinaus");
 
-    throw new ChatException("Could not find a results for " + categoryname + "ðŸ’�\n ");
-  }	
+		String response = "Der Text wurde bearbeitet, welche aspecte der Text würdest du überprüfen?\n"
+				+ "Du kannst dir eine aussuchen: \n";
+
+		Iterator<String> it = selection.iterator();
+		int i = 1;
+		while(it.hasNext()){
+			response += i + ". " + it.next() + "\n";
+			i++;
+		}
+
+		response += "Bitte Kategorie eingeben";
+		return response;
+	}
+
+	
 
 
-  /** Exceptions ,with messages, that should be returned in Chat */
-  protected static class ChatException extends Exception {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 1L;
+	/** Exceptions ,with messages, that should be returned in Chat */
+	protected static class ChatException extends Exception {
 
-    protected ChatException(String message) {
-      super(message);
-      Context
-        .get()
-        .monitorEvent(MonitoringEvent.SERVICE_CUSTOM_ERROR_3, message);
-    }
-  }
+		/**
+		 *
+		 */
+		private static final long serialVersionUID = 1L;
+
+		protected ChatException(String message) {
+			super(message);
+			Context
+			.get()
+			.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_ERROR_3, message);
+		}
+	}
 }
