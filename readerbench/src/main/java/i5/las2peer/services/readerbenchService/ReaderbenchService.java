@@ -199,8 +199,7 @@ public class ReaderbenchService extends RESTService {
 		Gson gson = new Gson();
 		MessageInfo m = gson.fromJson(body, MessageInfo.class);
 		System.out.println("Got message: " + m.msg() + " From Bot " + m.botName());
-		String arr[] = m.msg().split(" ", 3);
-		String text = arr[2];
+		String text = m.msg();
 		JSONObject j = new JSONObject();
 		j.put("language", "en");
 		System.out.println("Breakpoint--------1------------------"+ body);
@@ -263,7 +262,7 @@ public class ReaderbenchService extends RESTService {
 	@ApiResponses(
 			value = { @ApiResponse(
 					code = HttpURLConnection.HTTP_OK,
-					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
+					message = "Feedback has been preceded") })
 	@ApiOperation(
 			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
 			notes = "Example method that returns a phrase containing the received input.")
@@ -271,8 +270,7 @@ public class ReaderbenchService extends RESTService {
 		Gson gson = new Gson();
 		MessageInfo m = gson.fromJson(body, MessageInfo.class);
 		System.out.println("Got message: " + m.msg() + " From Bot" + m.botName());
-		String arr[] = m.msg().split(" ", 3);
-		String text = arr[2];
+		String text = m.msg();
 		System.out.println("Breakpoint--------1------------------"+ body);
 		JSONObject j = new JSONObject();
 		j.put("language", "en");
