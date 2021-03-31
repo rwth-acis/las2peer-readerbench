@@ -14,9 +14,10 @@ public class MessageInfo {
 	String text;
 	String intent;
 	String email;
+	String category;
 	boolean contextOn;
 	public MessageInfo(String msg, String botName,	String channel,	
-			String text, String intent, String email)
+			String text, String intent, String email, String category, boolean contextOn)
 	{
 		this.msg = msg;
 		this.botName = botName;
@@ -24,6 +25,7 @@ public class MessageInfo {
 		this.text = text;
 		this.intent = intent;
 		this.email = email;
+		this.category = category;
 		this.contextOn = contextOn;
 	}
 	public String msg() {

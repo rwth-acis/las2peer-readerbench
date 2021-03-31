@@ -198,30 +198,29 @@ import net.minidev.json.JSONObject;
 	public Response textualcomplexity(String body) {
 <span class="nc" id="L199">		Gson gson = new Gson();</span>
 <span class="nc" id="L200">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
-<span class="nc" id="L201">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot&quot; + m.botName());</span>
-<span class="nc" id="L202">		String arr[] = m.msg().split(&quot; &quot;, 3);</span>
-<span class="nc" id="L203">		String text = arr[2];</span>
-<span class="nc" id="L204">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L205">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
-<span class="nc" id="L206">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
-<span class="nc" id="L207">		j.put(&quot;text&quot;, text);</span>
+<span class="nc" id="L201">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot &quot; + m.botName());</span>
+<span class="nc" id="L202">		String text = m.msg();</span>
+<span class="nc" id="L203">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L204">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
+<span class="nc" id="L205">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
+<span class="nc" id="L206">		j.put(&quot;text&quot;, text);</span>
 		try {
-<span class="nc" id="L209">			StringEntity entity = new StringEntity(j.toString());</span>
-<span class="nc" id="L210">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
-<span class="nc" id="L211">	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/textual-complexity&quot;);</span>
-<span class="nc" id="L212">	        request.setEntity(entity);</span>
-<span class="nc" id="L213">	        HttpResponse response = httpClient.execute(request);</span>
-<span class="nc" id="L214">	        HttpEntity entity2 = response.getEntity();</span>
-<span class="nc" id="L215">			String result = EntityUtils.toString(entity2);</span>
-<span class="nc" id="L216">		    System.out.println(&quot;................result computed from readerbench................&quot;);</span>
-<span class="nc" id="L217">		    JSONObject j1 = new JSONObject();</span>
-<span class="nc" id="L218">		    j1.put(&quot;text&quot;, result);</span>
-<span class="nc" id="L219">		    j1.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L220">		    return Response.ok().entity(j1).build();</span>
-<span class="nc" id="L221">		}catch (IOException e) {</span>
+<span class="nc" id="L208">			StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L209">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L210">	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/textual-complexity&quot;);</span>
+<span class="nc" id="L211">	        request.setEntity(entity);</span>
+<span class="nc" id="L212">	        HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L213">	        HttpEntity entity2 = response.getEntity();</span>
+<span class="nc" id="L214">			String result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L215">		    System.out.println(&quot;................result computed from readerbench................&quot;);</span>
+<span class="nc" id="L216">		    JSONObject j1 = new JSONObject();</span>
+<span class="nc" id="L217">		    j1.put(&quot;text&quot;, result);</span>
+<span class="nc" id="L218">		    j1.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L219">		    return Response.ok().entity(j1).build();</span>
+<span class="nc" id="L220">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-<span class="nc" id="L223">			e.printStackTrace();</span>
-<span class="nc" id="L224">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+<span class="nc" id="L222">			e.printStackTrace();</span>
+<span class="nc" id="L223">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
 		}
 	}
 	/*
@@ -263,37 +262,36 @@ import net.minidev.json.JSONObject;
 	@ApiResponses(
 			value = { @ApiResponse(
 					code = HttpURLConnection.HTTP_OK,
-					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
+					message = &quot;Feedback has been preceded&quot;) })
 	@ApiOperation(
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
 	public Response feedback(String body) {
-<span class="nc" id="L271">		Gson gson = new Gson();</span>
-<span class="nc" id="L272">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
-<span class="nc" id="L273">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot&quot; + m.botName());</span>
-<span class="nc" id="L274">		String arr[] = m.msg().split(&quot; &quot;, 3);</span>
-<span class="nc" id="L275">		String text = arr[2];</span>
-<span class="nc" id="L276">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
-<span class="nc" id="L277">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L278">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
-<span class="nc" id="L279">		j.put(&quot;text&quot;, text);</span>
+<span class="nc" id="L270">		Gson gson = new Gson();</span>
+<span class="nc" id="L271">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
+<span class="nc" id="L272">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot&quot; + m.botName());</span>
+<span class="nc" id="L273">		String text = m.msg();</span>
+<span class="nc" id="L274">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
+<span class="nc" id="L275">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L276">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
+<span class="nc" id="L277">		j.put(&quot;text&quot;, text);</span>
 		try {
-<span class="nc" id="L281">			StringEntity entity = new StringEntity(j.toString());</span>
-<span class="nc" id="L282">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
-<span class="nc" id="L283">	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/feedback&quot;);</span>
-<span class="nc" id="L284">	        request.setEntity(entity);</span>
-<span class="nc" id="L285">	        HttpResponse response = httpClient.execute(request);</span>
-<span class="nc" id="L286">	        HttpEntity entity2 = response.getEntity();</span>
-<span class="nc" id="L287">		    String result = EntityUtils.toString(entity2);</span>
-<span class="nc" id="L288">		    System.out.println(&quot;................result computed from readerbench................&quot;);</span>
-<span class="nc" id="L289">		    JSONObject j1 = new JSONObject();</span>
-<span class="nc" id="L290">		    j1.put(&quot;text&quot;, result);</span>
-<span class="nc" id="L291">			j1.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L292">			return Response.ok().entity(j1).build();</span>
-<span class="nc" id="L293">		}catch (IOException e) {</span>
+<span class="nc" id="L279">			StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L280">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L281">	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/feedback&quot;);</span>
+<span class="nc" id="L282">	        request.setEntity(entity);</span>
+<span class="nc" id="L283">	        HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L284">	        HttpEntity entity2 = response.getEntity();</span>
+<span class="nc" id="L285">		    String result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L286">		    System.out.println(&quot;................result computed from readerbench................&quot;);</span>
+<span class="nc" id="L287">		    JSONObject j1 = new JSONObject();</span>
+<span class="nc" id="L288">		    j1.put(&quot;text&quot;, result);</span>
+<span class="nc" id="L289">			j1.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L290">			return Response.ok().entity(j1).build();</span>
+<span class="nc" id="L291">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-<span class="nc" id="L295">			e.printStackTrace();</span>
-<span class="nc" id="L296">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+<span class="nc" id="L293">			e.printStackTrace();</span>
+<span class="nc" id="L294">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
 		}
 	}
 

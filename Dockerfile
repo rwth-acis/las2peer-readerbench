@@ -8,7 +8,7 @@ ENV DATABASE_USER=user
 ENV DATABASE_PASSWORD=root
 ENV RB_API_URL=http://localhost:6006
 
-RUN apk add --update bash mysql-client apache-ant tzdata curl && rm -f /var/cache/apk/*
+RUN apk add --update bash mysql-client tzdata curl && rm -f /var/cache/apk/*
 ENV TZ=Europe/Berlin
 
 RUN addgroup -g 1000 -S las2peer && \

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
+
 # print all comands to console if DEBUG is set
 if [[ ! -z "${DEBUG}" ]]; then
     set -x
@@ -17,8 +18,7 @@ export CREATE_DB_SQL='RB.sql'
 
 function set_in_service_config {
     sed -i "s?${1}[[:blank:]]*=.*?${1}=${2}?g" ${SERVICE_PROPERTY_FILE}
-}
-
+}   
 set_in_service_config databaseName ${DATABASE_NAME}
 set_in_service_config databaseHost ${DATABASE_HOST}
 set_in_service_config databasePort ${DATABASE_PORT}
