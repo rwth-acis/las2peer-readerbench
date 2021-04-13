@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IndiceDescription.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">readerbench</a> &gt; <a href="index.source.html" class="el_package">i5.las2peer.services.readerbenchService</a> &gt; <span class="el_source">IndiceDescription.java</span></div><h1>IndiceDescription.java</h1><pre class="source lang-java linenums">/**
+ * 
+ */
+package i5.las2peer.services.readerbenchService;
+import java.util.*;
+/**
+ * @author 214
+ *
+ */
+public class IndiceDescription {
+
+	// creating a My HashTable Dictionary
+<span class="nc" id="L13">	private Map&lt;String, String&gt; indices = new HashMap&lt;&gt;();</span>
+	/**
+	 * 
+	 */
+<span class="nc" id="L17">	public IndiceDescription() {</span>
+		// TODO Auto-generated constructor stub
+<span class="nc" id="L19">		this.indices.put(&quot;AvgDocWdEntropy&quot;, &quot;Vielfalt der Konzepte&quot;);</span>
+<span class="nc" id="L20">		this.indices.put(&quot;AvgWordWdLen&quot;, &quot;durchschnittlichen Länge aller Wörter&quot;);</span>
+<span class="nc" id="L21">		this.indices.put(&quot;AvgDocAdjCoh_DOC&quot;, &quot;Kohäsion zwischen Absätzen, basierend auf word2vec&quot;);</span>
+<span class="nc" id="L22">		this.indices.put(&quot;AvgBlockNoSent&quot;, &quot;durchschnittlichen Anzahl von Sätzen pro Absatz&quot;);</span>
+<span class="nc" id="L23">		this.indices.put(&quot;AvgBlockNoWd&quot;, &quot;durchschnittlichen Anzahl von Wörtern pro Absatz&quot;);</span>
+<span class="nc" id="L24">		this.indices.put(&quot;AvgBlockPOSMain_noun&quot;, &quot;durchschnittlichen Anzahl von Substantiven pro Absatz&quot;);</span>
+<span class="nc" id="L25">		this.indices.put(&quot;AvgBlockPOSMain_verb&quot;, &quot;durchschnittlichen Anzahl von Verben pro Absatz&quot;);</span>
+<span class="nc" id="L26">		this.indices.put(&quot;AvgBlockPOSMain_adv&quot;, &quot;durchschnittlichen Anzahl von Adverbien pro Absatz&quot;);</span>
+<span class="nc" id="L27">		this.indices.put(&quot;AvgBlockPOSMain_adj&quot;, &quot;durchschnittlichen Anzahl von Adjektiven pro Absatz&quot;);</span>
+<span class="nc" id="L28">		this.indices.put(&quot;AvgSentNoWd&quot;, &quot;durchschnittlichen Anzahl von Wörtern pro Satz&quot;);</span>
+<span class="nc" id="L29">		this.indices.put(&quot;AvgBlockIntraCoh_BLOCK&quot;, &quot;Intra-Absatz-Zusammenhalt, basierend auf word2vec&quot;);</span>
+<span class="nc" id="L30">		this.indices.put(&quot;AvgSentPOSMain_noun&quot;, &quot;durchschnittlichen Anzahl von Substantiven pro Satz&quot;);</span>
+<span class="nc" id="L31">		this.indices.put(&quot;AvgSentPOSMain_verb&quot;, &quot;durchschnittlichen Anzahl von Verben pro Satz&quot;);</span>
+<span class="nc" id="L32">		this.indices.put(&quot;AvgSentPOSMain_adv&quot;, &quot;durchschnittlichen Anzahl von Adverbien pro Satz&quot;);</span>
+<span class="nc" id="L33">		this.indices.put(&quot;AvgSentPOSMain_adj&quot;, &quot;durchschnittlichen Anzahl von Adjektiven pro Satz&quot;);</span>
+<span class="nc" id="L34">		this.indices.put(&quot;AvgSentRepetitions&quot;, &quot;Wiederholung von Begriffen in Sätzen&quot;);</span>
+<span class="nc" id="L35">		this.indices.put(&quot;AvgSentNoPunct&quot;, &quot;durchschnittlichen Anzahl von Satzzeichen auf Satzebene&quot;);</span>
+<span class="nc" id="L36">		this.indices.put(&quot;AvgBlockNoPunct&quot;, &quot;durchschnittlichen Anzahl von Satzzeichen auf Absatzebene&quot;);</span>
+<span class="nc" id="L37">		this.indices.put(&quot;AvgSentNoCommas&quot;, &quot;durchschnittlichen Anzahl von Kommas auf Satzebene&quot;);</span>
+<span class="nc" id="L38">		this.indices.put(&quot;AvgBlockNoCommas&quot;, &quot;durchschnittlichen Anzahl von Kommas auf Absatzebene&quot;);</span>
+<span class="nc" id="L39">		this.indices.put(&quot;PC1&quot;, &quot;komplexität der Koncepte&quot;);</span>
+<span class="nc" id="L40">		this.indices.put(&quot;PC2&quot;, &quot;Entropie der Konzepte&quot;);</span>
+<span class="nc" id="L41">		this.indices.put(&quot;PC3&quot;, &quot;Zusammenhalt/KohÃ¤sion der Absätzen&quot;);</span>
+<span class="nc" id="L42">		this.indices.put(&quot;AvgBlockNoSent&quot;, &quot;Anzahl der Sätze&quot;);</span>
+<span class="nc" id="L43">		this.indices.put(&quot;AvgBlockIntraCoh_BLOCK&quot;, &quot;Zusammenhalt/KohÃ¤sion zwischen SÃ¤tzen&quot;);</span>
+<span class="nc" id="L44">		this.indices.put(&quot;AvgBlockNoWd&quot;, &quot;Anzahl der Wörter&quot;);</span>
+<span class="nc" id="L45">		this.indices.put(&quot;AvgBlockPOSMain_adv&quot;, &quot;Anzahl der Adverbien&quot;);</span>
+<span class="nc" id="L46">		this.indices.put(&quot;AvgBlockPOSMain_adj&quot;, &quot;Anzahl der Adjektive&quot;);</span>
+<span class="nc" id="L47">		this.indices.put(&quot;AvgBlockPOSMain_noun&quot;, &quot;Anzahl der Substantive&quot;);</span>
+<span class="nc" id="L48">		this.indices.put(&quot;AvgSentNoPunct&quot;, &quot;Anzahl der Satzzeichen&quot;);</span>
+<span class="nc" id="L49">		this.indices.put(&quot;AvgSentPOSMain_noun&quot;, &quot;Anzahl der Substantive&quot;);</span>
+<span class="nc" id="L50">		this.indices.put(&quot;AvgSentPOSMain_adj&quot;, &quot;Anzahl der Adjektive&quot;);</span>
+<span class="nc" id="L51">		this.indices.put(&quot;AvgSentPOSMain_adv&quot;, &quot;Anzahl der Adverbien&quot;);</span>
+<span class="nc" id="L52">		this.indices.put(&quot;AvgSentPOSMain_verb&quot;, &quot;Anzahl der Verben&quot;);</span>
+<span class="nc" id="L53">		this.indices.put(&quot;AvgSentNoCommas&quot;, &quot;Anzahl der Kommas&quot;);</span>
+<span class="nc" id="L54">		this.indices.put(&quot;AvgSentPOSMain_pron&quot;, &quot;Die Anzahl der Pronomen&quot;);</span>
+		
+<span class="nc" id="L56">	}</span>
+	public Map&lt;String, String&gt; getIndiceMap() {
+<span class="nc" id="L58">        return indices;</span>
+   }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

@@ -182,7 +182,6 @@ public class ReaderbenchService extends RESTService {
 			HttpResponse response = httpclient.execute(httpget);
 			HttpEntity entity = response.getEntity();
 			String result = EntityUtils.toString(entity);
-			System.out.println("................"+result);
 			JSONObject j1 = new JSONObject();
 			j1.put("text", result);
 			j1.put("closeContext", true);
@@ -293,13 +292,14 @@ public class ReaderbenchService extends RESTService {
 			String email = bodyJson.getAsString("email");
 			JSONObject context = getContext(email, p);
 			String intent = bodyJson.getAsString("intent");
-			JSONObject entities = (JSONObject) p.parse(bodyJson.getAsString("entities"));
+			System.out.println("Context " + context);
+		    event.put("email", email);
 			event.put("task", "textualComplexity");
 
-
+			System.out.println("................"+intent+"................");
 			switch (intent) {
 			case "quit":
-				chatResponse.put("text", "Okay Aufwiedersehen. 🙃");
+				chatResponse.put("text", "Okay Aufwiedersehen.");
 				chatResponse.put("closeContext", true);
 				return Response.ok(chatResponse).build();
 			case "text":
@@ -315,12 +315,15 @@ public class ReaderbenchService extends RESTService {
 					HttpResponse response = httpClient.execute(request);
 					HttpEntity entity2 = response.getEntity();
 					String result = EntityUtils.toString(entity2);
+					if (context.getAsString("result") != null) {
+						context.remove("result");
+					}
 					context.put("result", result);
+					ContextInfo.put(email, context);
 					System.out.println("................result computed from readerbench................");  
 					chatResponse.put("closeContext", false);
 					String res = selectCategoryMsg();
 					chatResponse.put("text",res);
-					chatResponse.put("closeContext", false);
 					return Response.ok().entity(chatResponse).build();
 				}catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -331,8 +334,9 @@ public class ReaderbenchService extends RESTService {
 				}
 
 
-			case "kategorie":
-				if(entities == null) {
+			case "category":
+				String category =  bodyJson.getAsString("category_option");
+				if(category == null) {
 					throw new ChatException(
 							"Aspekte wurde nicht erkannt. Bitte neue angeben"
 							);
@@ -342,7 +346,6 @@ public class ReaderbenchService extends RESTService {
 					if (context.getAsString("category") != null) {
 						context.remove("category");
 					}
-					String category = entities.getAsString("category");
 					context.put("category", category);
 					ContextInfo.put(email, context);
 				}
@@ -351,7 +354,8 @@ public class ReaderbenchService extends RESTService {
 				chatResponse.put("closeContext", false);
 				return Response.ok().entity(chatResponse).build();
 			case "level":
-				if(entities == null) {
+				String level =  bodyJson.getAsString("level_option");
+				if(level == null) {
 					throw new ChatException(
 							"Shicht wurde nicht erkannt. Bitte wieder angeben"
 							);
@@ -360,14 +364,15 @@ public class ReaderbenchService extends RESTService {
 					if (context.getAsString("level") != null) {
 						context.remove("level");
 					}
-					String level = entities.getAsString("level");
+					context.put("level", level);
+					ContextInfo.put(email, context);
 				}
-				String category = context.getAsString("category");
-				String level = context.getAsString("level");
+				String category1 = context.getAsString("category");
 				JSONObject result = (JSONObject) p.parse(context.getAsString("result"));
-				JSONArray Indices = selectIndices(category, level, result);
-				String res1="\n";
-				res1+="Um ein weitere level für die Kategorie "+ context.getAsString("category")
+				String filtered = finalReturn(category1, level, result);
+				System.out.println("................................indices selected............."); 
+				String res1=" \n";
+				res1+=filtered+"\n Um ein weitere level für die Kategorie "+ context.getAsString("category")
 				+ " auswählen schreib: neue Level\n"
 				+"Um die indizen eine neue Kategorie anzuschauen, schreib: neue Kategorie\n"
 				+"Zum verlassen schreib einfach verlassen";
@@ -409,7 +414,7 @@ public class ReaderbenchService extends RESTService {
 			default:
 				String res4 ="Intent könnte nicht ermitteln werden. Bitte Prozess neue beginnen.";
 				chatResponse.put("text",res4);
-				chatResponse.put("closeContext", true);
+				chatResponse.put("closeContext", false);
 				return Response.ok().entity(chatResponse).build();
 			}
 
@@ -420,7 +425,8 @@ public class ReaderbenchService extends RESTService {
 			return Response.ok().entity(chatResponse).build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			chatResponse.appendField("text", "Sorry, a problem occured ");
+			chatResponse.appendField("text", "Sorry, ein unbekanntes Problem ist angekommen ");
+			chatResponse.put("closeContext", true);
 			return Response.ok(chatResponse).build();
 		}
 	}
@@ -429,7 +435,7 @@ public class ReaderbenchService extends RESTService {
 	private String selectLevelMsg() {
 		// TODO Auto-generated method stub
 		Set<String> selection = new HashSet<String>();
-		selection.add("Dukument: Dokumentbezogene Indizes");
+		selection.add("Dokument: Dokumentbezogene Indizes");
 		selection.add("Absatz:  Indizes bezogen auf den Absatz");
 		selection.add("Satz: Satzbezogene Indizes");
 
@@ -458,24 +464,55 @@ public class ReaderbenchService extends RESTService {
 	private JSONArray selectIndices(String category, String level, JSONObject result) throws ParseException {
 		
 		// TODO Auto-generated method stub
+		System.out.println("................in select indices................");
+		System.out.println("................................category = "+ category); 
+		System.out.println("................................level = "+ level); 
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		JSONObject data = (JSONObject) result.get("data");
 		JSONArray complexityIndices =(JSONArray) p.parse(data.getAsString("complexityIndices"));
-		JSONArray results = null;
+		JSONArray results = new JSONArray();;
 		for (Object item : complexityIndices) {
 			JSONObject obj = (JSONObject) item;
 
 			if (obj.getAsString("category").matches("(?i).*" + category + ".*") ) {
-				JSONArray valencesIndices =(JSONArray) p.parse(data.getAsString("valences"));
+				JSONArray valencesIndices =(JSONArray) p.parse(obj.getAsString("valences"));
 				for(Object item2 : valencesIndices) {
 					JSONObject obj2 = (JSONObject) item2;
 					if(obj2.getAsString("type").matches("(?i).*" + level + ".*")) {
+						System.out.println("................................category obj1 = "+ obj.getAsString("category")); 
+						System.out.println("................................level obj2= "+ obj2.getAsString("type")); 
 						results.add(obj2);
 					}
 				}
 			}
 		}
 		return results;
+	}
+	
+	private String finalReturn(String category, String level, JSONObject result) throws ParseException {
+		JSONArray results= selectIndices( category,  level,  result);
+		IndiceDescription indice = new IndiceDescription();
+        JSONObject jsonObject = new JSONObject(result);
+        HashMap<String,Integer> hashMap = new HashMap<>();
+        String res="";
+        for (Map.Entry<String,String> entry : indice.getIndiceMap().entrySet()) {
+        	int i=0;
+        	double sum=0;
+	        for(Object item : results){
+	            JSONObject innerJsonObject = (JSONObject) item;
+	            if(innerJsonObject.getAsString("index").matches("(?i).*" + entry.getKey() + ".*")) {
+	                sum+=Double.parseDouble(innerJsonObject.getAsString("value")); 
+	                i+=1;
+	            }
+	        }
+	        if(i>=1) {
+	        	res+="\n Durchschnitt der "+ entry.getValue() + ": "+sum/i;
+	        }
+	        
+        	
+        }
+        return res;
+		
 	}
 
 	private JSONObject getContext(String email, JSONParser p)
@@ -506,7 +543,8 @@ public class ReaderbenchService extends RESTService {
 		selection.add("Syntaktische Indizes: Anordnung von Wörtern und Phrasen");
 		selection.add("Wortkomplexitaetsindizes:  Komplexität von Wörtern über ihre Form hinaus");
 
-		String response = "Der Text wurde bearbeitet, welche aspecte der Text würdest du überprüfen?\n"
+		String response = "Der Text wurde bearbeitet, da die Classifiezirung noch nicht gemacht werden, können wir dir nur eine Zusammenfassung des wichtigsten induzen zeigen\n"
+				+ " welche aspecte der Text würdest du überprüfen?\n"
 				+ "Du kannst dir eine aussuchen: \n";
 
 		Iterator<String> it = selection.iterator();
