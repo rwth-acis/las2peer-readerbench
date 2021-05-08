@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MoodleQuiz.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">readerbench</a> &gt; <a href="index.source.html" class="el_package">i5.las2peer.services.readerbenchService.AssessmentContent</a> &gt; <span class="el_source">MoodleQuiz.java</span></div><h1>MoodleQuiz.java</h1><pre class="source lang-java linenums">package i5.las2peer.services.readerbenchService.AssessmentContent;
+
+import java.util.ArrayList;
+
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+
+public class MoodleQuiz extends Assessment {
+	
+	private ArrayList&lt;Double&gt; markForEachQuestion;
+	private ArrayList&lt;String&gt; correctAnswers;
+	private ArrayList&lt;String&gt; answerPossibilities;
+	private ArrayList&lt;String&gt; typeOfEachQuestion;
+	private double maxMark;
+	private ArrayList&lt;String&gt; feedbackForQuestions;
+	private JSONObject actor;
+	private JSONObject verb;
+	private JSONObject object;
+	
+	public MoodleQuiz(String quitIntent, ArrayList&lt;String&gt; questions, ArrayList&lt;Double&gt; questionMarks, ArrayList&lt;String&gt; correctAnswers, ArrayList&lt;String&gt; answerPossibilities, ArrayList&lt;String&gt; typeOfEachQuestion, double maxMark, ArrayList&lt;String&gt; feedbackForQuestions, JSONObject actor, JSONObject verb, JSONObject object) {
+<span class="nc" id="L21">		super(quitIntent, questions);</span>
+<span class="nc" id="L22">		this.markForEachQuestion = questionMarks;</span>
+<span class="nc" id="L23">		this.correctAnswers = correctAnswers;</span>
+<span class="nc" id="L24">		this.answerPossibilities = answerPossibilities;</span>
+<span class="nc" id="L25">		this.typeOfEachQuestion = typeOfEachQuestion;</span>
+<span class="nc" id="L26">		this.maxMark = maxMark;</span>
+<span class="nc" id="L27">		this.feedbackForQuestions = feedbackForQuestions;</span>
+<span class="nc" id="L28">		this.actor = actor;</span>
+<span class="nc" id="L29">		this.verb = verb;</span>
+<span class="nc" id="L30">		this.object = object;</span>
+<span class="nc" id="L31">	}</span>
+	
+	public double getMarkForCurrentQuestion(){
+<span class="nc" id="L34">		return this.markForEachQuestion.get(this.getCurrentQuestionNumber());</span>
+	}
+	
+	public double getMaxMarks() {
+<span class="nc" id="L38">		return this.maxMark;</span>
+	}
+	
+	public double getTotalMarksUntilCurrentQuestion(){
+<span class="nc" id="L42">		double result = 0;</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">    	for(int i = 0; i &lt;= this.getCurrentQuestionNumber() ; i++) {</span>
+<span class="nc" id="L44">    		result += this.markForEachQuestion.get(i);</span>
+    	}
+<span class="nc" id="L46">    	return result;</span>
+	}
+	
+	public String getQuestionType(){
+<span class="nc" id="L50">		return this.typeOfEachQuestion.get(this.getCurrentQuestionNumber());</span>
+	}
+	
+	public String getAnswer() {
+<span class="nc" id="L54">		return this.correctAnswers.get(this.getCurrentQuestionNumber());</span>
+	}
+	
+	public String getPossibilities() {
+<span class="nc" id="L58">		return this.answerPossibilities.get(this.getCurrentQuestionNumber());</span>
+	}
+	
+	public String getFeedback() {
+<span class="nc" id="L62">		return this.feedbackForQuestions.get(this.getCurrentQuestionNumber());</span>
+	}
+	
+    // returns the letters/numbers used to enumerate the possible answers for the MCQ
+    public String getAnswerPossibilitiesForMCQ(){
+<span class="nc" id="L67">    	 String answers = this.answerPossibilities.get(this.getCurrentQuestionNumber());</span>
+<span class="nc" id="L68">    	 String[] splitLineBreak = answers.split(&quot;\\n&quot;);</span>
+<span class="nc" id="L69">    	 String concat = &quot;&quot;;</span>
+    	 // i = 1 bcs &quot;select one or more&quot; is part of the string. 
+<span class="nc bnc" id="L71" title="All 2 branches missed.">    	 for(int i = 1 ; i &lt; splitLineBreak.length ; i++) {</span>
+<span class="nc" id="L72">    		 concat += splitLineBreak[i].split(&quot;\\.&quot;)[0];</span>
+    	 }
+<span class="nc" id="L74">    	 return concat;</span>
+    }
+    
+    // Check if user msg was misread as quitIntent
+    public boolean checkIfAnswerToQuestion (String msg) {
+<span class="nc" id="L79">    	msg = msg.toLowerCase();</span>
+    	// check if perhaps answer is similar to true/false, shortanswer or numerical question
+<span class="nc bnc" id="L81" title="All 10 branches missed.">    	if(&quot;wahr&quot;.contains(msg) ||&quot;falsch&quot;.contains(msg) || &quot;true&quot;.contains(msg) || &quot;false&quot;.contains(msg) || this.correctAnswers.get(this.getCurrentQuestionNumber()).toLowerCase().equals(msg)) {</span>
+<span class="nc" id="L82">    		return true; </span>
+    	}
+    	//check if answer is perhaps answer to MCQ
+<span class="nc" id="L85">		String[] userAnswers = msg.split(&quot;\\s+&quot;);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		for(int j = 0 ; j &lt; userAnswers.length; j++ ){	</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">			if(userAnswers[j].length() &gt; 1) {</span>
+<span class="nc" id="L88">				return false;</span>
+			}
+		}
+<span class="nc" id="L91">    	return true;</span>
+    }
+	
+    
+    public JSONObject createXAPIForMoodle(boolean completed) {
+<span class="nc" id="L96">    	JSONObject result = new JSONObject();</span>
+<span class="nc" id="L97">        result.put(&quot;completion&quot;, completed);</span>
+<span class="nc" id="L98">        JSONObject score = new JSONObject();</span>
+<span class="nc" id="L99">        score.put(&quot;raw&quot;, this.getMarks());</span>
+<span class="nc" id="L100">        score.put(&quot;min&quot;,  0.0);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if(completed) {</span>
+<span class="nc" id="L102">        	score.put(&quot;max&quot;, this.getMaxMarks());</span>
+        } else {
+<span class="nc" id="L104">        	score.put(&quot;max&quot;, (this.getTotalMarksUntilCurrentQuestion() - this.getMarkForCurrentQuestion()));</span>
+        }
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if(!score.getAsString(&quot;max&quot;).equals(&quot;0.0&quot;)) {	</span>
+<span class="nc" id="L107">        	score.put(&quot;scaled&quot;, this.getMarks()/this.getMaxMarks());</span>
+        } else {
+<span class="nc" id="L109">        	score.put(&quot;scaled&quot;, this.getMarks()/(this.getTotalMarksUntilCurrentQuestion() - this.getMarkForCurrentQuestion()));	</span>
+        }
+<span class="nc" id="L111">        result.put(&quot;score&quot;, score);</span>
+<span class="nc" id="L112">        JSONObject xAPI = new JSONObject();</span>
+<span class="nc" id="L113">        xAPI.put(&quot;result&quot;, result);</span>
+ //       xAPI.put(&quot;timestamp&quot;,java.time.LocalDateTime.now() );
+<span class="nc" id="L115">        xAPI.put(&quot;actor&quot;, this.actor);</span>
+<span class="nc" id="L116">        xAPI.put(&quot;object&quot;, this.object);</span>
+<span class="nc" id="L117">        xAPI.put(&quot;verb&quot;, this.verb);</span>
+<span class="nc" id="L118">        return xAPI;</span>
+    } 
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

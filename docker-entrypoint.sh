@@ -31,9 +31,9 @@ while ! mysqladmin ping -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER}
     sleep 1
 done
 echo "${DATABASE_HOST}:${DATABASE_PORT} is available. Continuing..."
-
 # set defaults for optional service parameters
 [[ -z "${SERVICE_PASSPHRASE}" ]] && export SERVICE_PASSPHRASE='sbf'
+
 
 # wait for any bootstrap host to be available
 if [[ ! -z "${BOOTSTRAP}" ]]; then

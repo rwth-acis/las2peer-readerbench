@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Assessment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">readerbench</a> &gt; <a href="index.source.html" class="el_package">i5.las2peer.services.readerbenchService.AssessmentContent</a> &gt; <span class="el_source">Assessment.java</span></div><h1>Assessment.java</h1><pre class="source lang-java linenums">package i5.las2peer.services.readerbenchService.AssessmentContent;
+
+import java.util.ArrayList;
+
+public abstract class Assessment {
+	private String topicName;
+	private String quitIntent;
+	private double marks;
+	private int currentQuestion;
+	private String currentWrongQuestions;
+	private ArrayList&lt;String&gt; questions; 
+	private ArrayList&lt;String&gt; textlevel;
+	private ArrayList&lt;Double&gt; similarityScore;
+	private ArrayList&lt;String&gt; textReference;
+	private String type;
+	private ArrayList&lt;Double&gt; questionWeight;
+	private String modelType;
+	
+<span class="nc" id="L19">	public Assessment(String quitIntent, ArrayList&lt;String&gt; questions) {</span>
+<span class="nc" id="L20">		this.quitIntent = quitIntent;</span>
+<span class="nc" id="L21">		this.questions = questions;</span>
+<span class="nc" id="L22">		this.marks = 0;</span>
+<span class="nc" id="L23">		this.currentQuestion = 0;</span>
+<span class="nc" id="L24">		this.currentWrongQuestions = &quot;&quot;;</span>
+<span class="nc" id="L25">	}</span>
+	public Assessment(String quitIntent, ArrayList&lt;String&gt; questions, String type, ArrayList&lt;String&gt; textrefref,  ArrayList&lt;Double&gt; questionWeight, 
+<span class="nc" id="L27">	String modelType, ArrayList&lt;Double&gt; similarityScore, ArrayList&lt;String&gt; textlevel) {</span>
+<span class="nc" id="L28">		this.quitIntent = quitIntent;</span>
+<span class="nc" id="L29">		this.questions = questions;</span>
+<span class="nc" id="L30">		this.marks = 0;</span>
+<span class="nc" id="L31">		this.currentQuestion = 0;</span>
+<span class="nc" id="L32">		this.currentWrongQuestions = &quot;&quot;;</span>
+<span class="nc" id="L33">		this.similarityScore = similarityScore;</span>
+<span class="nc" id="L34">		this.textlevel = textlevel;</span>
+<span class="nc" id="L35">		this.textReference = textrefref;</span>
+<span class="nc" id="L36">		this.type = type;</span>
+<span class="nc" id="L37">		this.questionWeight =questionWeight;</span>
+<span class="nc" id="L38">		this.modelType = modelType;</span>
+<span class="nc" id="L39">	}</span>
+
+	
+	public String getType(){
+<span class="nc" id="L43">		return this.type;</span>
+	}
+
+	public String getQuitIntent() {
+<span class="nc" id="L47">		return this.quitIntent;</span>
+	}
+	
+	public double getMarks() {
+<span class="nc" id="L51">		return this.marks; </span>
+	}
+	
+	public void incrementMark(double value) {
+<span class="nc" id="L55">    	this.marks += (Math.round(value*100.0)/100.0);</span>
+<span class="nc" id="L56">    } </span>
+	
+	public int getCurrentQuestionNumber() {
+<span class="nc" id="L59">		return this.currentQuestion;</span>
+	}
+	
+	public void incrementCurrentQuestionNumber() {
+<span class="nc" id="L63">		this.currentQuestion++ ;</span>
+<span class="nc" id="L64">	}</span>
+	
+	public int getAssessmentSize() {
+<span class="nc" id="L67">		return this.questions.size();</span>
+	} 
+	
+	public String getWrongQuestions() {
+<span class="nc" id="L71">		return this.currentWrongQuestions;	</span>
+	}
+	
+	public void addWrongQuestion(){
+<span class="nc" id="L75">	    	this.currentWrongQuestions += questions.get(getCurrentQuestionNumber()) + &quot;\n&quot; ;</span>
+<span class="nc" id="L76">	} </span>
+	
+	public String getCurrentQuestion() {
+<span class="nc" id="L79">		return this.questions.get(this.getCurrentQuestionNumber());</span>
+	}
+	public Double getCurrentQuestionWeight() {
+<span class="nc" id="L82">		return this.questionWeight.get(this.getCurrentQuestionNumber());</span>
+	}
+
+	public void setLevel(String level){
+<span class="nc" id="L86">		this.textlevel.set(this.getCurrentQuestionNumber(), level);</span>
+<span class="nc" id="L87">	}</span>
+
+	public void setSimilarity(double value){
+<span class="nc" id="L90">		this.similarityScore.set(this.getCurrentQuestionNumber(), value*100.0*this.questionWeight.get(this.getCurrentQuestionNumber()));</span>
+<span class="nc" id="L91">	}</span>
+	public ArrayList&lt;Double&gt; getSimilarityScoreList(){
+<span class="nc" id="L93">		return this.similarityScore;</span>
+	}
+	public ArrayList&lt;String&gt; getLevelList(){
+<span class="nc" id="L96">		return this.textlevel;</span>
+	}
+	public String gettextReference(){
+<span class="nc" id="L99">		return textReference.get(this.getCurrentQuestionNumber());</span>
+	}
+
+	public String getModelType(){
+<span class="nc" id="L103">		return this.modelType;</span>
+	}
+	
+	
+	
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

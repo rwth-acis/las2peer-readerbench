@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReaderbenchService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">readerbench</a> &gt; <a href="index.source.html" class="el_package">i5.las2peer.services.readerbenchService</a> &gt; <span class="el_source">ReaderbenchService.java</span></div><h1>ReaderbenchService.java</h1><pre class="source lang-java linenums">package i5.las2peer.services.readerbenchService;
 
+
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.*;
 
 import org.apache.http.HttpEntity;
@@ -18,7 +25,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
-import java.util.*;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
+
 import java.util.HashSet;
 
 import javax.ws.rs.GET;
@@ -35,8 +44,17 @@ import com.google.gson.Gson;
 import i5.las2peer.api.Context;
 import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.api.logging.MonitoringEvent;
+import i5.las2peer.api.ManualDeployment;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
+import i5.las2peer.connectors.webConnector.client.ClientResponse;
+import i5.las2peer.connectors.webConnector.client.MiniClient;
+
+import i5.las2peer.api.persistency.Envelope;
+import i5.las2peer.api.persistency.EnvelopeAccessDeniedException;
+import i5.las2peer.api.persistency.EnvelopeNotFoundException;
+import i5.las2peer.api.persistency.EnvelopeOperationFailedException;
+
 import i5.las2peer.services.readerbenchService.model.MessageInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -51,7 +69,17 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Iterator;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import i5.las2peer.services.readerbenchService.AssessmentContent.*;
 
 // TODO Describe your own service
 /**
@@ -79,14 +107,36 @@ import net.minidev.json.parser.ParseException;
 						name = &quot;BSD-3&quot;,
 						url = &quot;https://github.com/Karlydiamond214/las2peer-readerbench&quot;)))
 @ServicePath(&quot;/readerbench&quot;)
-// TODO Your own service class
-<span class="fc" id="L83">public class ReaderbenchService extends RESTService {</span>
+@ManualDeployment
+public class ReaderbenchService extends RESTService {
+	
 
-<span class="fc" id="L85">	private final static List&lt;String&gt; SUPPORTED_FUNCTIONS = Arrays.asList(&quot;textual coomplexity&quot;,</span>
+<span class="fc" id="L114">	private final static List&lt;String&gt; SUPPORTED_FUNCTIONS = Arrays.asList(&quot;textual coomplexity&quot;,</span>
 			&quot;Sentiment&quot;);
 
-<span class="fc" id="L88">	private static HashMap&lt;String, Object&gt; ContextInfo = new HashMap&lt;String, Object&gt;();</span>
+<span class="fc" id="L117">	private static HashMap&lt;String, Object&gt; ContextInfo = new HashMap&lt;String, Object&gt;();</span>
 
+<span class="fc" id="L119">	private String readerbenchEndpoint=&quot;http://rb-controller.ma-zeufack:32446&quot;;</span>
+
+	// Used for keeping context between assessment and non-assessment states
+    // Key is the channelId
+<span class="fc" id="L123">    private static HashMap&lt;String, String&gt; assessmentStarted = new HashMap&lt;String, String&gt;();</span>
+   // Used to keep track if the topics were already given for a specific user. The assessment function first gives a list on available topics and then expects an answer. 
+<span class="fc" id="L125">    private static HashMap&lt;String, Boolean&gt; topicsProposed = new HashMap&lt;String, Boolean&gt;();  </span>
+    // Used to make sure that the same moodle quiz is not being started twice at the same time. You can only start a quiz once on moodle until you submit it. 
+<span class="fc" id="L127">    private static HashMap&lt;String, Boolean&gt; topicProcessed = new HashMap&lt;String, Boolean&gt;();</span>
+    // Saves the current NLUAssessment object for a specific user
+<span class="fc" id="L129">    private static HashMap&lt;String, NLUAssessment&gt; currentNLUAssessment = new HashMap&lt;String, NLUAssessment&gt;();</span>
+    // Saves the current Moodle Assessment for a specific user
+<span class="fc" id="L131">    private static HashMap&lt;String, MoodleQuiz&gt; currentMoodleAssessment = new HashMap&lt;String, MoodleQuiz&gt;();</span>
+    // Keep track of the related channels to a bot. Needed to reset the assessments once a bot gets restarted.
+<span class="fc" id="L133">    private static HashMap&lt;String, ArrayList&lt;String&gt;&gt; botChannel = new HashMap&lt;String, ArrayList&lt;String&gt;&gt;();</span>
+
+	public ReaderbenchService(){
+<span class="fc" id="L136">		super();</span>
+<span class="fc" id="L137">		setFieldValues();</span>
+
+<span class="fc" id="L139">	}</span>
 	/**
 	 * Template of a get function.
 	 * 
@@ -103,9 +153,10 @@ import net.minidev.json.parser.ParseException;
 					code = HttpURLConnection.HTTP_OK,
 					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
 	public Response getTemplate() {
-<span class="fc" id="L106">		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();</span>
-<span class="fc" id="L107">		String name = userAgent.getLoginName();</span>
-<span class="fc" id="L108">		return Response.ok().entity(name).build();</span>
+<span class="fc" id="L156">		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();</span>
+<span class="fc" id="L157">		String name = userAgent.getLoginName();</span>
+<span class="fc" id="L158">		System.out.println(&quot;readerbenchEndpoint: &quot; + this.readerbenchEndpoint);</span>
+<span class="fc" id="L159">		return Response.ok().entity(name).build();</span>
 	}
 
 	/**
@@ -125,9 +176,9 @@ import net.minidev.json.parser.ParseException;
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
 	public Response postTemplate(@PathParam(&quot;input&quot;) String myInput) {
-<span class="fc" id="L128">		String returnString = &quot;&quot;;</span>
-<span class="fc" id="L129">		returnString += &quot;Input &quot; + myInput;</span>
-<span class="fc" id="L130">		return Response.ok().entity(returnString).build();</span>
+<span class="fc" id="L179">		String returnString = &quot;&quot;;</span>
+<span class="fc" id="L180">		returnString += &quot;Input &quot; + myInput;</span>
+<span class="fc" id="L181">		return Response.ok().entity(returnString).build();</span>
 	}
 
 	// TODO your own service methods, e. g. for RMI
@@ -148,11 +199,11 @@ import net.minidev.json.parser.ParseException;
 					code = HttpURLConnection.HTTP_OK,
 					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
 	public Response getSrvStatus() {
-<span class="nc" id="L151">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L152">		j.put(&quot;text&quot;, &quot;service alive&quot;);</span>
-<span class="nc" id="L153">		j.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L154">		String status = &quot;alive---------------&quot;;</span>
-<span class="nc" id="L155">		return Response.ok().entity(j).build();</span>
+<span class="nc" id="L202">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L203">		j.put(&quot;text&quot;, &quot;service alive&quot;);</span>
+<span class="nc" id="L204">		j.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L205">		String status = &quot;alive---------------&quot;;</span>
+<span class="nc" id="L206">		return Response.ok().entity(j).build();</span>
 	}
 
 
@@ -167,36 +218,36 @@ import net.minidev.json.parser.ParseException;
 					code = HttpURLConnection.HTTP_OK,
 					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
 	public Response getRbStatus() {
-<span class="nc" id="L170">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L171">		System.out.println(&quot;Breakpoint--------getRbStatus from Service--------------------------&quot;);</span>
+<span class="nc" id="L221">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L222">		System.out.println(&quot;Breakpoint--------getRbStatus from Service--------------------------&quot;);</span>
 		try {
 			//Creating a HttpClient object
-<span class="nc" id="L174">			CloseableHttpClient httpclient = HttpClients.createDefault();</span>
+<span class="nc" id="L225">			CloseableHttpClient httpclient = HttpClients.createDefault();</span>
 			//Creating a HttpGet object
-<span class="nc" id="L176">			HttpGet httpget = new HttpGet(&quot;http://192.168.56.1:6006/api/v1/isalive&quot;);</span>
+<span class="nc" id="L227">			HttpGet httpget = new HttpGet(&quot;http://rb-controller.ma-zeufack:32446/api/v1/isalive&quot;);</span>
 
 			//Printing the method used
-<span class="nc" id="L179">			System.out.println(&quot;Request Type: &quot;+ httpget.getMethod());</span>
+<span class="nc" id="L230">			System.out.println(&quot;Request Type: &quot;+ httpget.getMethod());</span>
 
 			//Executing the Get request
-<span class="nc" id="L182">			HttpResponse response = httpclient.execute(httpget);</span>
-<span class="nc" id="L183">			HttpEntity entity = response.getEntity();</span>
-<span class="nc" id="L184">			String result = EntityUtils.toString(entity);</span>
-<span class="nc" id="L185">			JSONObject j1 = new JSONObject();</span>
-<span class="nc" id="L186">			j1.put(&quot;text&quot;, result);</span>
-<span class="nc" id="L187">			j1.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L188">			return Response.ok().entity(j1).build();</span>
-<span class="nc" id="L189">		}catch (IOException e) {</span>
+<span class="nc" id="L233">			HttpResponse response = httpclient.execute(httpget);</span>
+<span class="nc" id="L234">			HttpEntity entity = response.getEntity();</span>
+<span class="nc" id="L235">			String result = EntityUtils.toString(entity);</span>
+<span class="nc" id="L236">			JSONObject j1 = new JSONObject();</span>
+<span class="nc" id="L237">			j1.put(&quot;text&quot;, result);</span>
+<span class="nc" id="L238">			j1.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L239">			return Response.ok().entity(j1).build();</span>
+<span class="nc" id="L240">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-<span class="nc" id="L191">			e.printStackTrace();</span>
-<span class="nc" id="L192">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+<span class="nc" id="L242">			e.printStackTrace();</span>
+<span class="nc" id="L243">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
 		}
 	}
 
 
-	/*
+	
 	@POST
-	@Path(&quot;/text-similarity&quot;)
+	@Path(&quot;/textual_similarity&quot;)
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiResponses(
 			value = { @ApiResponse(
@@ -205,28 +256,27 @@ import net.minidev.json.parser.ParseException;
 	@ApiOperation(
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
-	public Response textsimilarity(String categorie, String language, String corpus) {
-		JSONObject j = new JSONObject();
-		j.put(&quot;language&quot;, &quot;en&quot;);
+	public Response textsimilarity(String body) {
+<span class="nc" id="L260">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L261">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
 		//j.put(&quot;texts&quot;, texts);
-		j.put(&quot;corpus&quot;, corpus);
+<span class="nc" id="L263">		j.put(&quot;corpus&quot;, &quot;wikibooks&quot;);</span>
 		try {
-			StringEntity entity = new StringEntity(j.toString());
-			HttpClient httpClient = HttpClientBuilder.create().build();
-	        HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/text-similarity&quot;);
-	        request.setEntity(entity);
-	        HttpResponse response = httpClient.execute(request);
-	        HttpEntity entity2 = response.getEntity();
-		    String result = EntityUtils.toString(entity2);
-		    System.out.println(&quot;................&quot;+result);
-		    return Response.ok().entity(result).build();
-		}catch (IOException e) {
+<span class="nc" id="L265">			StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L266">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L267">	        HttpPost request = new HttpPost(&quot;http://rb-controller.ma-zeufack:32446/api/v1/text-similarity&quot;);</span>
+<span class="nc" id="L268">	        request.setEntity(entity);</span>
+<span class="nc" id="L269">	        HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L270">	        HttpEntity entity2 = response.getEntity();</span>
+<span class="nc" id="L271">		    String result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L272">		    System.out.println(&quot;................&quot;+result);</span>
+<span class="nc" id="L273">		    return Response.ok().entity(result).build();</span>
+<span class="nc" id="L274">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+<span class="nc" id="L276">			e.printStackTrace();</span>
+<span class="nc" id="L277">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
 		}
 	}
-	 */
 	@POST
 	@Path(&quot;/feedback&quot;)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -238,35 +288,35 @@ import net.minidev.json.parser.ParseException;
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
 	public Response feedback(String body) {
-<span class="nc" id="L241">		Gson gson = new Gson();</span>
-<span class="nc" id="L242">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
-<span class="nc" id="L243">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot&quot; + m.botName());</span>
-<span class="nc" id="L244">		String text = m.msg();</span>
-<span class="nc" id="L245">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
-<span class="nc" id="L246">		JSONObject j = new JSONObject();</span>
-<span class="nc" id="L247">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
-<span class="nc" id="L248">		j.put(&quot;text&quot;, text);</span>
+<span class="nc" id="L291">		Gson gson = new Gson();</span>
+<span class="nc" id="L292">		MessageInfo m = gson.fromJson(body, MessageInfo.class);</span>
+<span class="nc" id="L293">		System.out.println(&quot;Got message: &quot; + m.msg() + &quot; From Bot&quot; + m.botName());</span>
+<span class="nc" id="L294">		String text = m.msg();</span>
+<span class="nc" id="L295">		System.out.println(&quot;Breakpoint--------1------------------&quot;+ body);</span>
+<span class="nc" id="L296">		JSONObject j = new JSONObject();</span>
+<span class="nc" id="L297">		j.put(&quot;language&quot;, &quot;en&quot;);</span>
+<span class="nc" id="L298">		j.put(&quot;text&quot;, text);</span>
 		try {
-<span class="nc" id="L250">			StringEntity entity = new StringEntity(j.toString());</span>
-<span class="nc" id="L251">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
-<span class="nc" id="L252">			HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/feedback&quot;);</span>
-<span class="nc" id="L253">			request.setEntity(entity);</span>
-<span class="nc" id="L254">			HttpResponse response = httpClient.execute(request);</span>
-<span class="nc" id="L255">			HttpEntity entity2 = response.getEntity();</span>
-<span class="nc" id="L256">			String result = EntityUtils.toString(entity2);</span>
-<span class="nc" id="L257">			System.out.println(&quot;................result computed from readerbench................&quot;);</span>
+<span class="nc" id="L300">			StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L301">			HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L302">			HttpPost request = new HttpPost(&quot;http://rb-controller.ma-zeufack:32446/api/v1/feedback&quot;);</span>
+<span class="nc" id="L303">			request.setEntity(entity);</span>
+<span class="nc" id="L304">			HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L305">			HttpEntity entity2 = response.getEntity();</span>
+<span class="nc" id="L306">			String result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L307">			System.out.println(&quot;................result computed from readerbench................&quot;);</span>
 
 
 
 
-<span class="nc" id="L262">			JSONObject j1 = new JSONObject();</span>
-<span class="nc" id="L263">			j1.put(&quot;text&quot;, result);</span>
-<span class="nc" id="L264">			j1.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L265">			return Response.ok().entity(j1).build();</span>
-<span class="nc" id="L266">		}catch (IOException e) {</span>
+<span class="nc" id="L312">			JSONObject j1 = new JSONObject();</span>
+<span class="nc" id="L313">			j1.put(&quot;text&quot;, result);</span>
+<span class="nc" id="L314">			j1.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L315">			return Response.ok().entity(j1).build();</span>
+<span class="nc" id="L316">		}catch (IOException e) {</span>
 			// TODO Auto-generated catch block
-<span class="nc" id="L268">			e.printStackTrace();</span>
-<span class="nc" id="L269">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
+<span class="nc" id="L318">			e.printStackTrace();</span>
+<span class="nc" id="L319">			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();</span>
 		}
 	}
 
@@ -281,123 +331,171 @@ import net.minidev.json.parser.ParseException;
 			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
 			notes = &quot;Example method that returns a phrase containing the received input.&quot;)
 	public Response textualComplexity(String body) {
-<span class="nc" id="L284">		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
-<span class="nc" id="L285">		JSONObject chatResponse = new JSONObject();</span>
-<span class="nc" id="L286">		final long start = System.currentTimeMillis();</span>
-<span class="nc" id="L287">		JSONObject event = new JSONObject();</span>
-<span class="nc" id="L288">		System.out.println(&quot;Body &quot; + body);</span>
+<span class="nc" id="L334">		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
+<span class="nc" id="L335">		JSONObject chatResponse = new JSONObject();</span>
+<span class="nc" id="L336">		final long start = System.currentTimeMillis();</span>
+<span class="nc" id="L337">		JSONObject event = new JSONObject();</span>
+<span class="nc" id="L338">		System.out.println(&quot;Body &quot; + body);</span>
 		try {
-<span class="nc" id="L290">			JSONObject bodyJson = (JSONObject) p.parse(body);</span>
+<span class="nc" id="L340">			JSONObject bodyJson = (JSONObject) p.parse(body);</span>
 			String text;
-<span class="nc" id="L292">			String email = bodyJson.getAsString(&quot;email&quot;);</span>
-<span class="nc" id="L293">			JSONObject context = getContext(email, p);</span>
-<span class="nc" id="L294">			String intent = bodyJson.getAsString(&quot;intent&quot;);</span>
-<span class="nc" id="L295">			System.out.println(&quot;Context &quot; + context);</span>
-<span class="nc" id="L296">		    event.put(&quot;email&quot;, email);</span>
-<span class="nc" id="L297">			event.put(&quot;task&quot;, &quot;textualComplexity&quot;);</span>
+<span class="nc" id="L342">			String email = bodyJson.getAsString(&quot;email&quot;);</span>
+<span class="nc" id="L343">			JSONObject context = getContext(email, p);</span>
+<span class="nc" id="L344">			String intent = bodyJson.getAsString(&quot;intent&quot;);</span>
+<span class="nc" id="L345">			System.out.println(&quot;Context &quot; + context);</span>
+<span class="nc" id="L346">		    event.put(&quot;email&quot;, email);</span>
+<span class="nc" id="L347">			event.put(&quot;task&quot;, &quot;textualComplexity&quot;);</span>
 
-<span class="nc" id="L299">			System.out.println(&quot;................&quot;+intent+&quot;................&quot;);</span>
-<span class="nc bnc" id="L300" title="All 7 branches missed.">			switch (intent) {</span>
+<span class="nc" id="L349">			System.out.println(&quot;................&quot;+intent+&quot;................&quot;);</span>
+<span class="nc bnc" id="L350" title="All 10 branches missed.">			switch (intent) {</span>
 			case &quot;quit&quot;:
-<span class="nc" id="L302">				chatResponse.put(&quot;text&quot;, &quot;Okay Aufwiedersehen.&quot;);</span>
-<span class="nc" id="L303">				chatResponse.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L304">				return Response.ok(chatResponse).build();</span>
+<span class="nc" id="L352">				chatResponse.put(&quot;text&quot;, &quot;Willst du die Ergebnisse speichern um spÃ¤ter anzusehen?&quot;);</span>
+<span class="nc" id="L353">				chatResponse.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L354">				return Response.ok(chatResponse).build();</span>
+			case &quot;confirm&quot;:
+				//To do: insert SQL: Insert into SQL
+<span class="nc" id="L357">				chatResponse.put(&quot;text&quot;, &quot;Deine Ergebnisse wurden gespeichert. Aufwiedersehen.&quot;);</span>
+<span class="nc" id="L358">				chatResponse.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L359">				return Response.ok(chatResponse).build();</span>
+			case &quot;no&quot;:
+<span class="nc" id="L361">				chatResponse.put(&quot;text&quot;, &quot;Okay Aufwiedersehen.&quot;);</span>
+<span class="nc" id="L362">				chatResponse.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L363">				return Response.ok(chatResponse).build();</span>
 			case &quot;text&quot;:
-<span class="nc" id="L306">				text = bodyJson.getAsString(&quot;msg&quot;);</span>
-<span class="nc" id="L307">				JSONObject j = new JSONObject();</span>
-<span class="nc" id="L308">				j.put(&quot;language&quot;, &quot;en&quot;);</span>
-<span class="nc" id="L309">				j.put(&quot;text&quot;, text);</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">				if (context.getAsString(&quot;result&quot;) != null) {</span>
+<span class="nc" id="L366">					context.remove(&quot;result&quot;);</span>
+				}
+<span class="nc bnc" id="L368" title="All 2 branches missed.">				if (context.getAsString(&quot;category&quot;) != null) {</span>
+<span class="nc" id="L369">					context.remove(&quot;category&quot;);</span>
+				}
+<span class="nc bnc" id="L371" title="All 2 branches missed.">				if (context.getAsString(&quot;level&quot;) != null) {</span>
+<span class="nc" id="L372">					context.remove(&quot;level&quot;);</span>
+				}
+<span class="nc" id="L374">				text = bodyJson.getAsString(&quot;msg&quot;);</span>
+<span class="nc" id="L375">				JSONObject j = new JSONObject();</span>
+<span class="nc" id="L376">				j.put(&quot;language&quot;, &quot;de&quot;);</span>
+<span class="nc" id="L377">				j.put(&quot;text&quot;, text);</span>
 				try {
-<span class="nc" id="L311">					StringEntity entity = new StringEntity(j.toString());</span>
-<span class="nc" id="L312">					HttpClient httpClient = HttpClientBuilder.create().build();</span>
-<span class="nc" id="L313">					HttpPost request = new HttpPost(&quot;http://192.168.56.1:6006/api/v1/textual-complexity&quot;);</span>
-<span class="nc" id="L314">					request.setEntity(entity);</span>
-<span class="nc" id="L315">					HttpResponse response = httpClient.execute(request);</span>
-<span class="nc" id="L316">					HttpEntity entity2 = response.getEntity();</span>
-<span class="nc" id="L317">					String result = EntityUtils.toString(entity2);</span>
-<span class="nc bnc" id="L318" title="All 2 branches missed.">					if (context.getAsString(&quot;result&quot;) != null) {</span>
-<span class="nc" id="L319">						context.remove(&quot;result&quot;);</span>
-					}
-<span class="nc" id="L321">					context.put(&quot;result&quot;, result);</span>
-<span class="nc" id="L322">					ContextInfo.put(email, context);</span>
-<span class="nc" id="L323">					System.out.println(&quot;................result computed from readerbench................&quot;);  </span>
-<span class="nc" id="L324">					chatResponse.put(&quot;closeContext&quot;, false);</span>
-<span class="nc" id="L325">					String res = selectCategoryMsg();</span>
-<span class="nc" id="L326">					chatResponse.put(&quot;text&quot;,res);</span>
-<span class="nc" id="L327">					return Response.ok().entity(chatResponse).build();</span>
-<span class="nc" id="L328">				}catch (IOException e) {</span>
+<span class="nc" id="L379">					StringEntity entity = new StringEntity(j.toString());</span>
+<span class="nc" id="L380">					HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L381">					HttpPost request = new HttpPost(&quot;http://rb-controller.ma-zeufack:32446/api/v1/textual-complexity&quot;);</span>
+<span class="nc" id="L382">					request.setEntity(entity);</span>
+<span class="nc" id="L383">						HttpResponse response = httpClient.execute(request);</span>
+<span class="nc" id="L384">						HttpEntity entity2 = response.getEntity();</span>
+<span class="nc" id="L385">						String result = EntityUtils.toString(entity2);</span>
+					
+<span class="nc" id="L387">					context.put(&quot;result&quot;, result);</span>
+<span class="nc" id="L388">					ContextInfo.put(email, context);</span>
+<span class="nc" id="L389">					System.out.println(&quot;................result computed from readerbench................&quot;);  </span>
+<span class="nc" id="L390">					chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L391">					JSONObject result2 = (JSONObject) p.parse(context.getAsString(&quot;result&quot;));</span>
+<span class="nc" id="L392">					String res= &quot;Der Text wurde bearbeitet, dein Text level ist folgende:\n&quot;+</span>
+<span class="nc" id="L393">					selectLevel(result2) + &quot;\nWir kÃ¶nnen  dir noch eine Zusammenfassung des wichtigsten indizen zeigen\n&quot;</span>
+<span class="nc" id="L394">					+&quot;dafÃ¼r musst du eine der folgende Kategorien auswÃ¤hlen&quot;+ selectCategoryMsg();</span>
+<span class="nc" id="L395">					System.out.println(res);</span>
+<span class="nc" id="L396">					chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L397">					chatResponse.put(&quot;text&quot;,res);</span>
+					try {
+<span class="nc" id="L399">						MiniClient client = new MiniClient();</span>
+<span class="nc" id="L400">						client.setConnectorEndpoint(&quot;http://137.226.232.185:32445&quot;);</span>
+						//client.setLogin(testAgent.getIdentifier(), testPass);
+						
+						// testInput is the pathParam
+<span class="nc" id="L404">						ClientResponse trigger_result = client.sendRequest(&quot;POST&quot;, &quot;SBFManager&quot; + &quot;post/{readerBot}/trigger/intent&quot;, &quot;&quot;);</span>
+<span class="nc" id="L405">						Assert.assertEquals(200, trigger_result.getHttpCode());</span>
+						// &quot;testInput&quot; name is part of response
+<span class="nc" id="L407">						Assert.assertTrue(trigger_result.getResponse().trim().contains(&quot;testInput&quot;));</span>
+<span class="nc" id="L408">						System.out.println(&quot;Result of 'testPost': &quot; + trigger_result.getResponse().trim());</span>
+<span class="nc" id="L409">					} catch (Exception e) {</span>
+<span class="nc" id="L410">						e.printStackTrace();</span>
+<span class="nc" id="L411">					}</span>
+<span class="nc" id="L412">					return Response.ok().entity(chatResponse).build();</span>
+<span class="nc" id="L413">				}catch (IOException e) {</span>
 					// TODO Auto-generated catch block
-<span class="nc" id="L330">					e.printStackTrace();</span>
-<span class="nc" id="L331">					throw new ChatException(</span>
-<span class="nc" id="L332">							e.getMessage()</span>
+<span class="nc" id="L415">					e.printStackTrace();</span>
+<span class="nc" id="L416">					throw new ChatException(</span>
+<span class="nc" id="L417">							e.getMessage()</span>
 							);
 				}
-
-
+			case &quot;status&quot;:
+<span class="nc bnc" id="L421" title="All 2 branches missed.">				if (context.getAsString(&quot;result&quot;) != null) {</span>
+<span class="nc" id="L422">					JSONObject result22 = (JSONObject) p.parse(context.getAsString(&quot;result&quot;));</span>
+<span class="nc" id="L423">					String res11= &quot;Der Text wurde bearbeitet, dein Text level ist folgende:\n&quot;+</span>
+<span class="nc" id="L424">					selectLevel(result22) + &quot;\nWir kÃ¶nnen  dir noch eine Zusammenfassung des wichtigsten indizen zeigen\n&quot;</span>
+<span class="nc" id="L425">					+&quot;dafÃ¼r musst du eine der folgende Kategorien auswÃ¤hlen&quot;+ selectCategoryMsg();</span>
+<span class="nc" id="L426">					System.out.println(res11);</span>
+<span class="nc" id="L427">					chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L428">					chatResponse.put(&quot;text&quot;,res11);</span>
+<span class="nc" id="L429">					return Response.ok().entity(chatResponse).build();</span>
+				}
+<span class="nc" id="L431">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L432">				chatResponse.put(&quot;text&quot;,&quot;Der Text wird noch analysiert...\n &quot;);</span>
+<span class="nc" id="L433">				return Response.ok().entity(chatResponse).build();</span>
+				
 			case &quot;category&quot;:
-<span class="nc" id="L338">				String category =  bodyJson.getAsString(&quot;category_option&quot;);</span>
-<span class="nc bnc" id="L339" title="All 2 branches missed.">				if(category == null) {</span>
-<span class="nc" id="L340">					throw new ChatException(</span>
+<span class="nc" id="L436">				String category =  bodyJson.getAsString(&quot;category_option&quot;);</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">				if(category == null) {</span>
+<span class="nc" id="L438">					throw new ChatException(</span>
 							&quot;Aspekte wurde nicht erkannt. Bitte neue angeben&quot;
 							);
 
 				}
 				else {
-<span class="nc bnc" id="L346" title="All 2 branches missed.">					if (context.getAsString(&quot;category&quot;) != null) {</span>
-<span class="nc" id="L347">						context.remove(&quot;category&quot;);</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">					if (context.getAsString(&quot;category&quot;) != null) {</span>
+<span class="nc" id="L445">						context.remove(&quot;category&quot;);</span>
 					}
-<span class="nc" id="L349">					context.put(&quot;category&quot;, category);</span>
-<span class="nc" id="L350">					ContextInfo.put(email, context);</span>
+<span class="nc" id="L447">					context.put(&quot;category&quot;, category);</span>
+<span class="nc" id="L448">					ContextInfo.put(email, context);</span>
 				}
-<span class="nc" id="L352">				String res = selectLevelMsg();</span>
-<span class="nc" id="L353">				chatResponse.put(&quot;text&quot;,res);</span>
-<span class="nc" id="L354">				chatResponse.put(&quot;closeContext&quot;, false);</span>
-<span class="nc" id="L355">				return Response.ok().entity(chatResponse).build();</span>
+<span class="nc" id="L450">				String res = selectLevelMsg();</span>
+<span class="nc" id="L451">				chatResponse.put(&quot;text&quot;,res);</span>
+<span class="nc" id="L452">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L453">				return Response.ok().entity(chatResponse).build();</span>
 			case &quot;level&quot;:
-<span class="nc" id="L357">				String level =  bodyJson.getAsString(&quot;level_option&quot;);</span>
-<span class="nc bnc" id="L358" title="All 2 branches missed.">				if(level == null) {</span>
-<span class="nc" id="L359">					throw new ChatException(</span>
+<span class="nc" id="L455">				String level =  bodyJson.getAsString(&quot;level_option&quot;);</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">				if(level == null) {</span>
+<span class="nc" id="L457">					throw new ChatException(</span>
 							&quot;Shicht wurde nicht erkannt. Bitte wieder angeben&quot;
 							);
 				}
 				else {
-<span class="nc bnc" id="L364" title="All 2 branches missed.">					if (context.getAsString(&quot;level&quot;) != null) {</span>
-<span class="nc" id="L365">						context.remove(&quot;level&quot;);</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">					if (context.getAsString(&quot;level&quot;) != null) {</span>
+<span class="nc" id="L463">						context.remove(&quot;level&quot;);</span>
 					}
-<span class="nc" id="L367">					context.put(&quot;level&quot;, level);</span>
-<span class="nc" id="L368">					ContextInfo.put(email, context);</span>
+<span class="nc" id="L465">					context.put(&quot;level&quot;, level);</span>
+<span class="nc" id="L466">					ContextInfo.put(email, context);</span>
 				}
-<span class="nc" id="L370">				String category1 = context.getAsString(&quot;category&quot;);</span>
-<span class="nc" id="L371">				JSONObject result = (JSONObject) p.parse(context.getAsString(&quot;result&quot;));</span>
-<span class="nc" id="L372">				String filtered = finalReturn(category1, level, result);</span>
-<span class="nc" id="L373">				System.out.println(&quot;................................indices selected.............&quot;); </span>
-<span class="nc" id="L374">				String res1=&quot; \n&quot;;</span>
-<span class="nc" id="L375">				res1+=filtered+&quot;\n Um ein weitere level fÃ¼r die Kategorie &quot;+ context.getAsString(&quot;category&quot;)</span>
+<span class="nc" id="L468">				String category1 = context.getAsString(&quot;category&quot;);</span>
+<span class="nc" id="L469">				JSONObject result = (JSONObject) p.parse(context.getAsString(&quot;result&quot;));</span>
+<span class="nc" id="L470">				String filtered = finalReturn(category1, level, result);</span>
+<span class="nc" id="L471">				System.out.println(&quot;................................indices selected.............&quot;); </span>
+<span class="nc" id="L472">				String res1=&quot; \n&quot;;</span>
+<span class="nc" id="L473">				res1+=filtered+&quot;\n Um ein weitere level fÃ¼r die Kategorie &quot;+ context.getAsString(&quot;category&quot;)</span>
 				+ &quot; auswÃ¤hlen schreib: neue Level\n&quot;
 				+&quot;Um die indizen eine neue Kategorie anzuschauen, schreib: neue Kategorie\n&quot;
 				+&quot;Zum verlassen schreib einfach verlassen&quot;;
-<span class="nc" id="L379">				chatResponse.put(&quot;text&quot;,res1);</span>
-<span class="nc" id="L380">				chatResponse.put(&quot;closeContext&quot;, false);</span>
-<span class="nc" id="L381">				return Response.ok().entity(chatResponse).build();</span>
+<span class="nc" id="L477">				chatResponse.put(&quot;text&quot;,res1);</span>
+<span class="nc" id="L478">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L479">				return Response.ok().entity(chatResponse).build();</span>
 			case &quot;new_Category&quot;:
-<span class="nc bnc" id="L383" title="All 2 branches missed.">				if (context.getAsString(&quot;category&quot;) != null) {</span>
-<span class="nc" id="L384">					context.remove(&quot;category&quot;);</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">				if (context.getAsString(&quot;category&quot;) != null) {</span>
+<span class="nc" id="L482">					context.remove(&quot;category&quot;);</span>
 				}
-<span class="nc bnc" id="L386" title="All 2 branches missed.">				if (context.getAsString(&quot;level&quot;) != null) {</span>
-<span class="nc" id="L387">					context.remove(&quot;level&quot;);</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">				if (context.getAsString(&quot;level&quot;) != null) {</span>
+<span class="nc" id="L485">					context.remove(&quot;level&quot;);</span>
 				}
-<span class="nc" id="L389">				String res2 = selectCategoryMsg();</span>
-<span class="nc" id="L390">				chatResponse.put(&quot;text&quot;,res2);</span>
-<span class="nc" id="L391">				chatResponse.put(&quot;closeContext&quot;, false);</span>
-<span class="nc" id="L392">				return Response.ok().entity(chatResponse).build();</span>
+<span class="nc" id="L487">				String res2 = selectCategoryMsg();</span>
+<span class="nc" id="L488">				chatResponse.put(&quot;text&quot;,res2);</span>
+<span class="nc" id="L489">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L490">				return Response.ok().entity(chatResponse).build();</span>
 			case &quot;new_Level&quot;:
-<span class="nc bnc" id="L394" title="All 2 branches missed.">				if (context.getAsString(&quot;level&quot;) != null) {</span>
-<span class="nc" id="L395">					context.remove(&quot;level&quot;);</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">				if (context.getAsString(&quot;level&quot;) != null) {</span>
+<span class="nc" id="L493">					context.remove(&quot;level&quot;);</span>
 				}
-<span class="nc" id="L397">				String res3 = selectLevelMsg();</span>
-<span class="nc" id="L398">				chatResponse.put(&quot;text&quot;,res3);</span>
-<span class="nc" id="L399">				chatResponse.put(&quot;closeContext&quot;, false);</span>
-<span class="nc" id="L400">				return Response.ok().entity(chatResponse).build();</span>
+<span class="nc" id="L495">				String res3 = selectLevelMsg();</span>
+<span class="nc" id="L496">				chatResponse.put(&quot;text&quot;,res3);</span>
+<span class="nc" id="L497">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L498">				return Response.ok().entity(chatResponse).build();</span>
 
 
 
@@ -412,48 +510,705 @@ import net.minidev.json.parser.ParseException;
 			     case &quot;Wortkomplexitaet&quot;:
 			          category=&quot;WORD&quot;;*/
 			default:
-<span class="nc" id="L415">				String res4 =&quot;Intent kÃ¶nnte nicht ermitteln werden. Bitte Prozess neue beginnen.&quot;;</span>
-<span class="nc" id="L416">				chatResponse.put(&quot;text&quot;,res4);</span>
-<span class="nc" id="L417">				chatResponse.put(&quot;closeContext&quot;, false);</span>
-<span class="nc" id="L418">				return Response.ok().entity(chatResponse).build();</span>
+<span class="nc" id="L513">				String res4 =&quot;Intent kÃ¶nnte nicht ermitteln werden. Bitte erneue versuchen neue beginnen.&quot;;</span>
+<span class="nc" id="L514">				chatResponse.put(&quot;text&quot;,res4);</span>
+<span class="nc" id="L515">				chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L516">				return Response.ok().entity(chatResponse).build();</span>
 			}
 
 		}
-<span class="nc" id="L422">		catch (ChatException e) {</span>
-<span class="nc" id="L423">			chatResponse.appendField(&quot;text&quot;, e.getMessage());</span>
-<span class="nc" id="L424">			chatResponse.put(&quot;closeContext&quot;, false);</span>
-<span class="nc" id="L425">			return Response.ok().entity(chatResponse).build();</span>
-<span class="nc" id="L426">		} catch (Exception e) {</span>
-<span class="nc" id="L427">			e.printStackTrace();</span>
-<span class="nc" id="L428">			chatResponse.appendField(&quot;text&quot;, &quot;Sorry, ein unbekanntes Problem ist angekommen &quot;);</span>
-<span class="nc" id="L429">			chatResponse.put(&quot;closeContext&quot;, true);</span>
-<span class="nc" id="L430">			return Response.ok(chatResponse).build();</span>
+<span class="nc" id="L520">		catch (ChatException e) {</span>
+<span class="nc" id="L521">			chatResponse.appendField(&quot;text&quot;, e.getMessage());</span>
+<span class="nc" id="L522">			chatResponse.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L523">			return Response.ok().entity(chatResponse).build();</span>
+<span class="nc" id="L524">		} catch (Exception e) {</span>
+<span class="nc" id="L525">			e.printStackTrace();</span>
+<span class="nc" id="L526">			chatResponse.appendField(&quot;text&quot;, &quot;Sorry, ein unbekanntes Problem ist angekommen &quot;);</span>
+<span class="nc" id="L527">			chatResponse.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L528">			return Response.ok(chatResponse).build();</span>
 		}
 	}
+	
+	@POST
+	@Path(&quot;/nluAssessmentDE&quot;)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(
+			value = &quot;REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME&quot;,
+			notes = &quot;REPLACE THIS WITH YOUR NOTES TO THE FUNCTION&quot;)
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = &quot;REPLACE THIS WITH YOUR OK MESSAGE&quot;) })
+	public Response nluAssessmentDe(String body) {
+<span class="nc" id="L543">		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
+		try {
+<span class="nc" id="L545">			JSONObject bodyJson = (JSONObject) p.parse(body);		</span>
+<span class="nc" id="L546">			System.out.println(bodyJson);</span>
+<span class="nc" id="L547">			JSONObject response = new JSONObject();</span>
+<span class="nc" id="L548">			String channel = bodyJson.getAsString(&quot;channel&quot;);</span>
+			
+			try {
+<span class="nc" id="L551">				ArrayList&lt;String&gt; channels =  botChannel.get(bodyJson.getAsString(&quot;botName&quot;));</span>
+<span class="nc" id="L552">				channels.add(channel);</span>
+<span class="nc" id="L553">				botChannel.put(bodyJson.getAsString(&quot;botName&quot;), channels);</span>
+<span class="nc" id="L554">			} catch (Exception e) {</span>
+<span class="nc" id="L555">				ArrayList&lt;String&gt; channels = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L556">				channels.add(channel);</span>
+<span class="nc" id="L557">				botChannel.put(bodyJson.getAsString(&quot;botName&quot;), channels);</span>
+<span class="nc" id="L558">			}</span>
+<span class="nc bnc" id="L559" title="All 2 branches missed.">			if(this.assessmentStarted.get(channel) == null){</span>
+				// function needs assessmentContent parameter
+<span class="nc bnc" id="L561" title="All 2 branches missed.">				if(!(bodyJson.get(&quot;assessmentContent&quot;) instanceof JSONArray)) {</span>
+<span class="nc" id="L562">					JSONArray assessmentContent = new JSONArray();</span>
+<span class="nc" id="L563">					assessmentContent.add(bodyJson.get(&quot;assessmentContent&quot;));</span>
+<span class="nc" id="L564">					bodyJson.put(&quot;assessmentContent&quot;, assessmentContent);</span>
+				}
+<span class="nc" id="L566">				JSONArray jsonAssessment = (JSONArray) bodyJson.get(&quot;assessmentContent&quot;);</span>
+<span class="nc" id="L567">				ArrayList&lt;String&gt; assessment = new ArrayList&lt;String&gt;();</span>
+<span class="nc bnc" id="L568" title="All 2 branches missed.">				if(jsonAssessment != null) {</span>
+<span class="nc" id="L569">					int len = jsonAssessment.size();</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">					for(int i=0; i&lt;len ; i++){</span>
+<span class="nc" id="L571">						assessment.add(jsonAssessment.get(i).toString());</span>
+					}
+					JSONObject contentJson;
+<span class="nc bnc" id="L574" title="All 2 branches missed.">					if(this.topicsProposed.get(channel) == null) {</span>
+<span class="nc" id="L575">						String topicNames=&quot;&quot;;</span>
+<span class="nc" id="L576">						int topicNumber = 1;</span>
+<span class="nc bnc" id="L577" title="All 2 branches missed.">						for(String content : assessment) {</span>
+<span class="nc" id="L578">							 contentJson = (JSONObject) p.parse(content);</span>
+<span class="nc" id="L579">							 topicNames += &quot; â€¢ &quot; + topicNumber + &quot;. &quot; + contentJson.getAsString(&quot;topic&quot;) + &quot;\n&quot;;</span>
+<span class="nc" id="L580">							 topicNumber++;</span>
+<span class="nc" id="L581">						}</span>
+<span class="nc bnc" id="L582" title="All 2 branches missed.">						if(!topicNames.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L583">							response.put(&quot;text&quot;, &quot;WÃ¤hle ein Thema indem du mit der entsprechenden Nummer oder dem entsprechenden Name antwortest:\n&quot; + topicNames);</span>
+<span class="nc" id="L584">							response.put(&quot;closeContext&quot;, false);</span>
+<span class="nc" id="L585">							this.topicsProposed.put(channel, true);</span>
+<span class="nc" id="L586">							return Response.ok().entity(response).build();</span>
+						}
+<span class="nc" id="L588">						JSONObject error = new JSONObject();</span>
+<span class="nc" id="L589">						error.put(&quot;text&quot;, &quot;Derzeit sind keine Themen verfÃ¼gbar, versuche zu einem spÃ¤teren Zeitpunkt wieder!&quot;);</span>
+<span class="nc" id="L590">						error.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L591">						return Response.ok().entity(error).build();</span>
+					} else {
+						
+<span class="nc" id="L594">						String chosenTopicNumber = bodyJson.getAsString(&quot;msg&quot;).split(&quot;\\.&quot;)[0];</span>
+<span class="nc" id="L595">						String similarNames = &quot;&quot;;</span>
+<span class="nc" id="L596">				        ArrayList&lt;String&gt; similarTopicNames = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L597">				        String smiliarNames = &quot;&quot;;</span>
+<span class="nc" id="L598">						int topicCount = 1;</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">						for(String content : assessment) {</span>
+<span class="nc" id="L600">							 contentJson = (JSONObject) p.parse(content);</span>
+<span class="nc bnc" id="L601" title="All 4 branches missed.">							if(contentJson.getAsString(&quot;topic&quot;).toLowerCase().equals(bodyJson.getAsString(&quot;msg&quot;).toLowerCase()) || chosenTopicNumber.equals(String.valueOf(topicCount))){</span>
+<span class="nc" id="L602">								setUpNluAssessment(contentJson, channel, bodyJson.getAsString(&quot;quitIntent&quot;), bodyJson.getAsString(&quot;helpIntent&quot;),  bodyJson.getAsString(&quot;Type&quot;), bodyJson.getAsString(&quot;modelType&quot;));</span>
+<span class="nc" id="L603">								this.topicsProposed.remove(channel);</span>
+<span class="nc" id="L604">								this.assessmentStarted.put(channel, &quot;true&quot;);</span>
+<span class="nc" id="L605">								response.put(&quot;text&quot;, &quot;Wir starten jetzt das Nlu Assessment Ã¼ber &quot;+ contentJson.getAsString(&quot;topic&quot;) + &quot; :)!\n&quot; + this.currentNLUAssessment.get(channel).getCurrentQuestion());							</span>
+<span class="nc" id="L606">								response.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+								
+<span class="nc" id="L608">								return Response.ok().entity(response).build(); </span>
+<span class="nc bnc" id="L609" title="All 2 branches missed.">							} else if(contentJson.getAsString(&quot;topic&quot;).toLowerCase().contains(bodyJson.getAsString(&quot;msg&quot;).toLowerCase())) {</span>
+<span class="nc" id="L610">								similarTopicNames.add(contentJson.getAsString(&quot;topic&quot;));</span>
+<span class="nc" id="L611">								similarNames += &quot; â€¢ &quot; + topicCount + &quot;. &quot; + contentJson.getAsString(&quot;topic&quot;) + &quot;\n&quot;;</span>
+							}
+<span class="nc" id="L613">							topicCount++;</span>
+<span class="nc" id="L614">						}</span>
+<span class="nc bnc" id="L615" title="All 2 branches missed.">						if(similarTopicNames.size() == 1) {</span>
+<span class="nc" id="L616">							bodyJson.put(&quot;msg&quot;, similarTopicNames.get(0));</span>
+<span class="nc" id="L617">							return nluAssessmentDe(bodyJson.toString());</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">						} else if(similarTopicNames.size() &gt; 1) {</span>
+<span class="nc" id="L619">							response.put(&quot;text&quot;, &quot;Mehrere Nlu Assessments entsprechen deiner Antwort, welche von diesen mÃ¶chtest du denn anfangen?\n&quot; + similarNames);							</span>
+<span class="nc" id="L620">							response.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L621">							return Response.ok().entity(response).build();</span>
+						}
+<span class="nc" id="L623">						JSONObject error = new JSONObject();</span>
+<span class="nc" id="L624">						error.put(&quot;text&quot;, &quot;Topic with name &quot; + bodyJson.getAsString(&quot;topic&quot;)+ &quot; not found&quot;);</span>
+<span class="nc" id="L625">						error.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L626">						return Response.ok().entity(error).build();</span>
+					}
+				}
+				
+
+<span class="nc" id="L631">			} else {</span>
+<span class="nc" id="L632">				System.out.println(bodyJson.getAsString(&quot;intent&quot;));</span>
+<span class="nc" id="L633">				return Response.ok().entity(continueAssessment(channel, bodyJson.getAsString(&quot;intent&quot;), bodyJson, &quot;NLUAssessmentDe&quot;)).build();</span>
+			}		
+			
+<span class="nc" id="L636">		} catch (ParseException e) {</span>
+<span class="nc" id="L637">			e.printStackTrace();</span>
+<span class="nc" id="L638">		}	</span>
+<span class="nc" id="L639">		JSONObject error = new JSONObject();</span>
+<span class="nc" id="L640">		error.put(&quot;text&quot;, &quot;Something went wrong&quot;);</span>
+<span class="nc" id="L641">		error.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L642">		return Response.ok().entity(error).build();</span>
+
+	}
+
+	private void setUpNluAssessment(JSONObject content , String channel, String quitIntent, String helpIntent, String type, String modelType) {
+<span class="nc" id="L647">        int noNum = 0;</span>
+<span class="nc" id="L648">        JSONArray Sequence =(JSONArray) content.get(&quot;Sequence&quot;);</span>
+<span class="nc" id="L649">        JSONArray Questions =(JSONArray) content.get(&quot;Questions&quot;);</span>
+<span class="nc" id="L650">        JSONArray Intents =(JSONArray) content.get(&quot;Intents&quot;);</span>
+<span class="nc" id="L651">		JSONArray Hints =(JSONArray) content.get(&quot;Hints&quot;);</span>
+		//Adding the element for the text Assessment
+<span class="nc" id="L653">		JSONArray Lectureref =(JSONArray) content.get(&quot;Textrefs&quot;);</span>
+<span class="nc" id="L654">		JSONArray QuestionWeight =(JSONArray) content.get(&quot;QuestionWeights&quot;);</span>
+
+
+
+
+<span class="nc" id="L659">        int length = Questions.size(); </span>
+<span class="nc" id="L660">        int max = 0;</span>
+<span class="nc" id="L661">        String[][] assessmentContent = new String[length][6];</span>
+<span class="nc bnc" id="L662" title="All 2 branches missed.">        for(int i = 0; i &lt; length ; i++){</span>
+<span class="nc bnc" id="L663" title="All 2 branches missed.">            if(Sequence.get(i).equals(&quot;&quot;)){</span>
+<span class="nc" id="L664">                noNum++;   </span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">            } else if(Integer.parseInt(Sequence.get(i).toString()) &gt; max){</span>
+<span class="nc" id="L666">                max = Integer.parseInt(Sequence.get(i).toString());    </span>
+<span class="nc bnc" id="L667" title="All 2 branches missed.">            } else if(Integer.parseInt(Sequence.get(i).toString()) == max) {</span>
+<span class="nc" id="L668">            	Sequence.add(i, String.valueOf(max+1));</span>
+<span class="nc" id="L669">            	max++;</span>
+            }           
+<span class="nc" id="L671">            assessmentContent[i][0] = Sequence.get(i).toString();</span>
+<span class="nc" id="L672">            assessmentContent[i][1] = Questions.get(i).toString();</span>
+<span class="nc" id="L673">            assessmentContent[i][2] = Intents.get(i).toString();</span>
+<span class="nc" id="L674">			assessmentContent[i][3] = Hints.get(i).toString();  </span>
+<span class="nc" id="L675">			assessmentContent[i][4] = Lectureref.get(i).toString(); </span>
+<span class="nc" id="L676">			assessmentContent[i][5] = QuestionWeight.get(i).toString();      </span>
+        }
+        
+        // to fill out the blank sequence slots
+        // last blank space will be at last place
+        
+        
+        
+        // change to nlu quiz object
+<span class="nc bnc" id="L685" title="All 2 branches missed.">        for(int i = length-1; i &gt;= 0 ; i--){</span>
+<span class="nc bnc" id="L686" title="All 2 branches missed.">            if(assessmentContent[i][0].equals(&quot;&quot;)){</span>
+<span class="nc" id="L687">            	assessmentContent[i][0] = Integer.toString(max + noNum);</span>
+<span class="nc" id="L688">            	noNum--;</span>
+            }
+        }      
+<span class="nc" id="L691">        Arrays.sort(assessmentContent, (a, b) -&gt; Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));</span>
+<span class="nc" id="L692">        ArrayList&lt;String&gt; questions = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L693">        ArrayList&lt;String&gt; intents = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L694">		ArrayList&lt;String&gt; hints = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L695">		ArrayList&lt;String&gt; lectureref = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L696">		ArrayList&lt;Double&gt; questionWeight = new  ArrayList&lt;Double&gt;();</span>
+<span class="nc" id="L697">		ArrayList&lt;Double&gt; similarityScore = new  ArrayList&lt;Double&gt;();</span>
+<span class="nc" id="L698">		ArrayList&lt;String&gt; textlevel = new ArrayList&lt;String&gt;();</span>
+
+<span class="nc bnc" id="L700" title="All 2 branches missed.">        for(int i = 0; i &lt; length ; i++){</span>
+<span class="nc" id="L701">        	questions.add(assessmentContent[i][1]);</span>
+<span class="nc" id="L702">        	intents.add(assessmentContent[i][2]);</span>
+<span class="nc" id="L703">			hints.add(assessmentContent[i][3]);</span>
+<span class="nc" id="L704">			lectureref.add(assessmentContent[i][4]);</span>
+<span class="nc" id="L705">			questionWeight.add(Double.parseDouble(assessmentContent[i][5]));</span>
+<span class="nc" id="L706">			similarityScore.add(0.0);</span>
+<span class="nc" id="L707">			textlevel.add(&quot;&quot;);</span>
+<span class="nc" id="L708">			System.out.println(assessmentContent[i][0] + &quot; &quot; + assessmentContent[i][1] + &quot; &quot; + assessmentContent[i][2] + &quot; &quot; + assessmentContent[i][3]+ &quot; &quot; </span>
+			+ assessmentContent[i][4]+ &quot; &quot; + assessmentContent[i][5]);
+        } 
+<span class="nc" id="L711">        NLUAssessment assessment = new NLUAssessment(quitIntent, questions, intents, hints, helpIntent, type, lectureref, questionWeight, modelType, similarityScore, textlevel);</span>
+<span class="nc" id="L712">        this.currentNLUAssessment.put(channel, assessment);</span>
+<span class="nc" id="L713">        this.assessmentStarted.put(channel, &quot;true&quot;);	</span>
+  		
+<span class="nc" id="L715">	}</span>
+
+	private JSONObject continueAssessment(String channel, String intent, JSONObject triggeredBody, String assessmentType){
+<span class="nc" id="L718">		JSONObject response = new JSONObject();</span>
+<span class="nc" id="L719">		JSONObject error = new JSONObject();</span>
+<span class="nc" id="L720">    	String answer = &quot;&quot;;    	</span>
+<span class="nc" id="L721">    	response.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc bnc" id="L722" title="All 2 branches missed.">        if(assessmentType.equals(&quot;NLUAssessment&quot;)) {</span>
+<span class="nc" id="L723">        	NLUAssessment assessment = this.currentNLUAssessment.get(channel);</span>
+<span class="nc bnc" id="L724" title="All 2 branches missed.">	        if(intent.equals(assessment.getQuitIntent())){</span>
+	        	// Additionall check to see if the quit intent was recognized by accident (Writing &quot;e a c&quot; was recognized as quit once...)
+<span class="nc" id="L726">	        	answer += &quot;Assessment is over \n&quot; + &quot;You got &quot; + assessment.getMarks() + &quot;/&quot; + assessment.getCurrentQuestionNumber() + &quot; Questions right! \n&quot;; </span>
+<span class="nc bnc" id="L727" title="All 2 branches missed.">	            if(assessment.getMarks() == assessment.getCurrentQuestionNumber()) {</span>
+<span class="nc" id="L728">	            	answer += &quot;You got no questions wrong!&quot;;</span>
+<span class="nc" id="L729">	            } else answer +=  &quot;You got following Questions wrong: \n&quot; + assessment.getWrongQuestions();</span>
+<span class="nc" id="L730">	        	this.assessmentStarted.put(channel, null);</span>
+<span class="nc" id="L731">	            response.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">	        } else if(intent.equals(assessment.getHelpIntent())){</span>
+<span class="nc" id="L733">	        	answer+= assessment.getQuestionHint() + &quot;\n&quot;;</span>
+<span class="nc" id="L734">	        	response.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+	        } else { 
+
+<span class="nc bnc" id="L737" title="All 2 branches missed.">		        if(intent.equals(assessment.getCorrectAnswerIntent())){</span>
+<span class="nc" id="L738">		            answer += &quot;Correct Answer! \n&quot;;</span>
+<span class="nc" id="L739">		            assessment.incrementMark(1);</span>
+		        } else {
+<span class="nc" id="L741">		        	answer += &quot;Wrong answer :/ \n&quot;;</span>
+<span class="nc" id="L742">		        	assessment.addWrongQuestion();</span>
+		        }
+<span class="nc" id="L744">		        assessment.incrementCurrentQuestionNumber();</span>
+<span class="nc bnc" id="L745" title="All 2 branches missed.">		        if(assessment.getCurrentQuestionNumber() == assessment.getAssessmentSize()){</span>
+<span class="nc bnc" id="L746" title="All 2 branches missed.">		        	if(assessment.getMarks() == assessment.getAssessmentSize()) {</span>
+<span class="nc" id="L747">		        		answer += &quot;Assessment is over \n&quot; + &quot;You got &quot; + assessment.getMarks() + &quot;/&quot; + assessment.getAssessmentSize() + &quot;Questions right! \n You got no Questions wrong! \n &quot; + assessment.getWrongQuestions();</span>
+<span class="nc" id="L748">		        	} else answer += &quot;Assessment is over \n&quot; + &quot;You got &quot; + assessment.getMarks() + &quot;/&quot; + assessment.getAssessmentSize() + &quot;Questions right! \n You got following Questions wrong: \n &quot; + assessment.getWrongQuestions();</span>
+<span class="nc" id="L749">		            this.assessmentStarted.put(channel, null);</span>
+<span class="nc" id="L750">		            response.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+		        } else {
+<span class="nc" id="L752">		            answer += assessment.getCurrentQuestion();        </span>
+		        }
+	        }
+	        
+<span class="nc bnc" id="L756" title="All 2 branches missed.">        } else if(assessmentType.equals(&quot;NLUAssessmentDe&quot;)) {</span>
+<span class="nc" id="L757">			NLUAssessment assessment = this.currentNLUAssessment.get(channel);</span>
+<span class="nc bnc" id="L758" title="All 2 branches missed.">				if(intent.equals(assessment.getQuitIntent())){</span>
+<span class="nc" id="L759">					Double OverallScore = 0.0;</span>
+<span class="nc bnc" id="L760" title="All 2 branches missed.">					for(int i=0; i &lt;  assessment.getAssessmentSize(); i++){</span>
+<span class="nc" id="L761">						OverallScore += assessment.getSimilarityScoreList().get(i);</span>
+<span class="nc" id="L762">						System.out.println(&quot;Overallscore is............&quot;+ OverallScore);</span>
+					}
+					
+<span class="nc" id="L765">					answer += &quot;Das Assessment ist fertig \n&quot; + &quot;Du hast insgesamt  &quot; + OverallScore + &quot; % erreicht\n&quot;;</span>
+<span class="nc" id="L766">					answer+= &quot;Du hast folgende text KomplexitÃ¤ten:\n&quot;;</span>
+<span class="nc" id="L767">					int currentQuestion = 0;</span>
+<span class="nc bnc" id="L768" title="All 2 branches missed.">					for(int i=0; i &lt;  assessment.getAssessmentSize(); i++){</span>
+<span class="nc" id="L769">						answer += &quot;Frage &quot; + (currentQuestion + 1) + &quot;: &quot; + assessment.getLevelList().get(i) + &quot;\n&quot;; </span>
+<span class="nc" id="L770">						currentQuestion += 1;</span>
+<span class="nc" id="L771">						System.out.println(&quot;level is............&quot;+ assessment.getLevelList().get(i-1));</span>
+					}
+<span class="nc" id="L773">					this.assessmentStarted.put(channel, null);</span>
+<span class="nc" id="L774">					response.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+<span class="nc bnc" id="L775" title="All 2 branches missed.">				} else if(intent.equals(assessment.getHelpIntent())){</span>
+<span class="nc" id="L776">					answer+= assessment.getQuestionHint() + &quot;\n&quot;;</span>
+<span class="nc" id="L777">					response.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+				} else {
+<span class="nc" id="L779">					String msg = triggeredBody.getAsString(&quot;msg&quot;);</span>
+					
+<span class="nc" id="L781">					String textRef = assessment.gettextReference();</span>
+<span class="nc" id="L782">					String modelTyp = assessment.getModelType();</span>
+					//MiniClient client = new MiniClient();
+					//client.setConnectorEndpoint(&quot;&quot;);
+					//System.out.println(&quot;Now connecting&quot;);
+					//HashMap&lt;String, String&gt; headers = new HashMap&lt;String, String&gt;();
+<span class="nc" id="L787">					JSONArray texts = new JSONArray(); </span>
+<span class="nc" id="L788">					texts.add(textRef);</span>
+<span class="nc" id="L789">					texts.add(msg);</span>
+<span class="nc" id="L790">					JSONObject similarity_Body = new JSONObject();</span>
+<span class="nc" id="L791">					similarity_Body.put(&quot;texts&quot;, texts);</span>
+<span class="nc" id="L792">					similarity_Body.put(&quot;language&quot;, &quot;de&quot;);</span>
+<span class="nc" id="L793">					similarity_Body.put(&quot;corpus&quot;, &quot;wikibooks&quot;);</span>
+<span class="nc" id="L794">					JSONObject complexity_Body = new JSONObject();</span>
+<span class="nc" id="L795">					complexity_Body.put(&quot;language&quot;, &quot;de&quot;);</span>
+<span class="nc" id="L796">					complexity_Body.put(&quot;text&quot;, msg);</span>
+<span class="nc" id="L797">					JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
+					try{
+<span class="nc" id="L799">						String email = triggeredBody.getAsString(&quot;email&quot;);</span>
+<span class="nc" id="L800">						JSONObject context = getContext(email, p);	</span>
+<span class="nc" id="L801">						StringEntity entity = new StringEntity(similarity_Body.toString());</span>
+<span class="nc" id="L802">						HttpClient httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L803">						HttpPost request = new HttpPost(&quot;http://rb-controller.ma-zeufack:32446/api/v1/text-similarity&quot;);</span>
+<span class="nc" id="L804">						request.setEntity(entity);</span>
+<span class="nc" id="L805">						HttpResponse res = httpClient.execute(request);</span>
+<span class="nc" id="L806">						HttpEntity entity2 = res.getEntity();</span>
+<span class="nc" id="L807">						String similarity_result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L808">						context.put(&quot;similarity_result&quot;, similarity_result);</span>
+<span class="nc" id="L809">						ContextInfo.put(email, context);</span>
+<span class="nc" id="L810">						System.out.println(&quot;................result SIMILARITY computed from readerbench................&quot;);</span>
+<span class="nc" id="L811">						System.out.println(context.getAsString(&quot;similarity_result&quot;));</span>
+<span class="nc" id="L812">						JSONObject result = (JSONObject) p.parse(context.getAsString(&quot;similarity_result&quot;)); </span>
+<span class="nc" id="L813">						JSONObject data = (JSONObject) result.get(&quot;data&quot;);</span>
+<span class="nc" id="L814">						JSONArray pairs = (JSONArray) data.get(&quot;pairs&quot;);</span>
+						
+<span class="nc" id="L816">						JSONObject pair = (JSONObject) pairs.get(0);</span>
+<span class="nc" id="L817">						JSONArray scores = (JSONArray) pair.get(&quot;scores&quot;);</span>
+<span class="nc" id="L818">						String score =  ((JSONObject) scores.get(0)).getAsString(&quot;score&quot;);</span>
+<span class="nc" id="L819">						System.out.println(&quot;Score 0 is ...... &quot;+ ((JSONObject) scores.get(0)).getAsString(&quot;score&quot;));</span>
+<span class="nc" id="L820">						System.out.println(&quot;Score is ...... &quot;+ score);</span>
+<span class="nc" id="L821">						assessment.setSimilarity(Double.parseDouble( ((JSONObject) scores.get(0)).getAsString(&quot;score&quot;)));</span>
+						
+<span class="nc" id="L823">						entity = new StringEntity(complexity_Body.toString());</span>
+<span class="nc" id="L824">						httpClient = HttpClientBuilder.create().build();</span>
+<span class="nc" id="L825">						request = new HttpPost(&quot;http://rb-controller.ma-zeufack:32446/api/v1/textual-complexity&quot;);</span>
+<span class="nc" id="L826">						request.setEntity(entity);</span>
+<span class="nc" id="L827">						res = httpClient.execute(request);</span>
+<span class="nc" id="L828">						entity2 = res.getEntity();</span>
+<span class="nc" id="L829">						String complexity_result = EntityUtils.toString(entity2);</span>
+<span class="nc" id="L830">						context.put(&quot;complexity_result&quot;, complexity_result);</span>
+<span class="nc" id="L831">						ContextInfo.put(email, context);</span>
+<span class="nc" id="L832">						System.out.println(&quot;................result Complexity computed from readerbench................&quot;);</span>
+<span class="nc" id="L833">						System.out.println(context.getAsString(&quot;complexity_result&quot;));</span>
+<span class="nc" id="L834">						result = (JSONObject) p.parse(context.getAsString(&quot;complexity_result&quot;)); </span>
+<span class="nc" id="L835">						p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
+<span class="nc" id="L836">						data = (JSONObject) result.get(&quot;data&quot;);</span>
+<span class="nc" id="L837">						String level = data.getAsString(&quot;level&quot;);</span>
+<span class="nc" id="L838">						assessment.setLevel(level);</span>
+
+<span class="nc" id="L840">					}  catch (Exception e) {</span>
+<span class="nc" id="L841">						e.printStackTrace();</span>
+<span class="nc" id="L842">						error.put(&quot;text&quot;, &quot;Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor&quot;);</span>
+<span class="nc" id="L843">						error.put(&quot;closeContext&quot;, true);</span>
+<span class="nc" id="L844">						return error;</span>
+<span class="nc" id="L845">					}</span>
+					
+
+					//ClientResponse SimilarityResult = client.sendRequest(&quot;POST&quot;, &quot;readerbench/&quot;  + &quot;post/textual_similarity&quot;, MediaType.APPLICATION_JSON, headers);
+					//Assert.assertEquals(200, SimilarityResult.getHttpCode());
+					//ClientResponse ComplexityResult = client.sendRequest(&quot;POST&quot;, &quot;readerbench/&quot;  + &quot;post/textual_complexity&quot;, MediaType.APPLICATION_JSON, headers);
+					//Assert.assertEquals(200, ComplexityResult.getHttpCode());
+					//TODO: Compute the Assessments
+					
+<span class="nc" id="L854">					assessment.incrementCurrentQuestionNumber();</span>
+<span class="nc bnc" id="L855" title="All 2 branches missed.">					if(assessment.getCurrentQuestionNumber() == assessment.getAssessmentSize()){</span>
+<span class="nc" id="L856">						Double OverallScore = 0.0;</span>
+<span class="nc bnc" id="L857" title="All 2 branches missed.">						for(int i=0; i &lt;  assessment.getAssessmentSize(); i++){</span>
+<span class="nc" id="L858">							OverallScore += assessment.getSimilarityScoreList().get(i);</span>
+<span class="nc" id="L859">							System.out.println(&quot;Overallscore is............&quot;+ assessment.getSimilarityScoreList().get(i));</span>
+						}
+						
+<span class="nc" id="L862">						answer += &quot;Das Assessment ist fertig \n&quot; + &quot;Du hast insgesamt  &quot; + OverallScore	 + &quot; % erreicht\n&quot;;</span>
+<span class="nc" id="L863">						answer+= &quot;Du hast folgende text KomplexitÃ¤ten:\n&quot;;</span>
+<span class="nc" id="L864">						int currentQuestion = 0;</span>
+<span class="nc bnc" id="L865" title="All 2 branches missed.">						for(int i=0; i &lt;  assessment.getAssessmentSize(); i++){</span>
+<span class="nc" id="L866">							answer += &quot;Frage &quot; + (currentQuestion + 1) + &quot;: &quot; + assessment.getLevelList().get(i) + &quot;\n&quot;; </span>
+<span class="nc" id="L867">							currentQuestion += 1;</span>
+<span class="nc" id="L868">							System.out.println(&quot;level is............&quot;+ assessment.getLevelList().get(i));</span>
+						}
+						
+						
+<span class="nc" id="L872">						this.assessmentStarted.put(channel, null);</span>
+<span class="nc" id="L873">						response.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L874">					} else {</span>
+<span class="nc" id="L875">						answer += assessment.getCurrentQuestion();        </span>
+					}
+				}
+	        
+<span class="nc bnc" id="L879" title="All 2 branches missed.">        } else if(assessmentType.equals(&quot;moodleAssessment&quot;)) {</span>
+<span class="nc" id="L880">        	MoodleQuiz quiz = this.currentMoodleAssessment.get(channel);</span>
+<span class="nc" id="L881">        	String msg = triggeredBody.getAsString(&quot;msg&quot;);</span>
+<span class="nc bnc" id="L882" title="All 4 branches missed.">	        if(intent.equals(quiz.getQuitIntent()) &amp;&amp; !quiz.checkIfAnswerToQuestion(msg)) {</span>
+<span class="nc" id="L883">	        		answer += &quot;Assessment is over \n&quot; + &quot;Your final mark is *&quot; + quiz.getMarks() + &quot;/&quot; + (quiz.getTotalMarksUntilCurrentQuestion() - quiz.getMarkForCurrentQuestion()) + &quot;* \n&quot;;  	</span>
+<span class="nc bnc" id="L884" title="All 2 branches missed.">		            if(quiz.getMarks() == ((quiz.getTotalMarksUntilCurrentQuestion() - quiz.getMarkForCurrentQuestion()))) {</span>
+<span class="nc" id="L885">		            	answer += &quot;You got no questions wrong!&quot;;</span>
+<span class="nc" id="L886">		            } else answer += &quot;You got following Questions wrong: \n &quot; + quiz.getWrongQuestions();</span>
+		        	
+<span class="nc" id="L888">		            this.assessmentStarted.put(channel, null);</span>
+		        	
+<span class="nc" id="L890">		            Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, quiz.createXAPIForMoodle(false).toString() + &quot;*&quot; + triggeredBody.getAsString(&quot;email&quot;));</span>
+<span class="nc" id="L891">		            response.put(&quot;closeContext&quot;, &quot;true&quot;);	</span>
+	        	
+	        	
+	        } else { 
+	        	
+	        	// differ between true false / multiple answers, one answer 
+	        	// for multiple choice split with &quot;,&quot; to have all the answers
+<span class="nc bnc" id="L898" title="All 4 branches missed.">	        	if(quiz.getQuestionType().equals(&quot;numerical&quot;) || quiz.getQuestionType().equals(&quot;shortanswer&quot;) ) {</span>
+<span class="nc bnc" id="L899" title="All 2 branches missed.">	        		 if(quiz.getAnswer().toLowerCase().equals(msg.toLowerCase())) {</span>
+<span class="nc" id="L900">	        			answer += &quot;Correct Answer! \n&quot;;</span>
+<span class="nc" id="L901">	        			quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+	        		 } else {
+<span class="nc" id="L903">	        			 answer += &quot;Wrong answer :/ \n&quot;;</span>
+<span class="nc" id="L904">	 		        	quiz.addWrongQuestion();</span>
+	        		 }
+<span class="nc bnc" id="L906" title="All 2 branches missed.">	        	} else if(quiz.getQuestionType().equals(&quot;truefalse&quot;)) {</span>
+<span class="nc bnc" id="L907" title="All 4 branches missed.">	        		if(!(&quot;true&quot;.contains(msg.toLowerCase()) || &quot;false&quot;.contains(msg.toLowerCase())) ) {</span>
+<span class="nc" id="L908">	        			answer += &quot;Please answer with \&quot;True\&quot; or \&quot;False\&quot;\n&quot;;</span>
+<span class="nc" id="L909">        				JSONObject userMistake = new JSONObject();</span>
+<span class="nc" id="L910">        				userMistake.put(&quot;text&quot;, answer);</span>
+<span class="nc" id="L911">        				userMistake.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L912">        				return userMistake;</span>
+        				}
+<span class="nc bnc" id="L914" title="All 2 branches missed.">	        		 if(quiz.getAnswer().toLowerCase().contains(msg.toLowerCase())) {</span>
+<span class="nc" id="L915">	        			answer += &quot;Correct Answer! \n&quot;;</span>
+<span class="nc" id="L916">	 		            quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+	        		 } else {
+<span class="nc" id="L918">	        			answer += &quot;Wrong answer :/ \n&quot;;</span>
+<span class="nc" id="L919">	 		        	quiz.addWrongQuestion();</span>
+	        		 }
+<span class="nc bnc" id="L921" title="All 2 branches missed.">	        	} else if(quiz.getQuestionType().equals(&quot;multichoice&quot;)) {</span>
+	        		
+<span class="nc bnc" id="L923" title="All 2 branches missed.">	        		if(quiz.getAnswer().split(&quot;;&quot;).length &lt;= 2) {</span>
+<span class="nc" id="L924">	        			System.out.println(&quot;A&quot;);</span>
+<span class="nc bnc" id="L925" title="All 2 branches missed.">	        			if(msg.length() &gt; 1) {</span>
+<span class="nc" id="L926">	        				answer += &quot;Please only enter the letter/number corresponding to the given answers!\n&quot;;</span>
+<span class="nc" id="L927">	        				JSONObject userMistake = new JSONObject();</span>
+<span class="nc" id="L928">	        				userMistake.put(&quot;text&quot;, answer);</span>
+<span class="nc" id="L929">	        				userMistake.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L930">	        				return userMistake;</span>
+	        			} else {
+<span class="nc bnc" id="L932" title="All 2 branches missed.">	        				if(!quiz.getAnswerPossibilitiesForMCQ().toLowerCase().contains(msg.toLowerCase())) {</span>
+<span class="nc" id="L933">	        					answer += &quot;Please only enter the letter/number corresponding to the given answers!\n&quot;;</span>
+<span class="nc" id="L934">		        				JSONObject userMistake = new JSONObject();</span>
+<span class="nc" id="L935">		        				userMistake.put(&quot;text&quot;, answer);</span>
+<span class="nc" id="L936">		        				userMistake.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L937">		        				return userMistake;</span>
+	        				}
+<span class="nc bnc" id="L939" title="All 2 branches missed.">		        			if(quiz.getAnswer().toLowerCase().contains(msg.toLowerCase())) {</span>
+<span class="nc" id="L940">			        			answer += &quot;Correct Answer! \n&quot;;</span>
+<span class="nc" id="L941">			        			quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+			        		 } else {
+<span class="nc" id="L943">			        			answer += &quot;Wrong answer :/ \n&quot;;</span>
+<span class="nc" id="L944">			 		        	quiz.addWrongQuestion();</span>
+			        		 }
+	        			}
+	        		} else {
+<span class="nc" id="L948">	        			String[] multipleAnswers = quiz.getAnswer().split(&quot;;&quot;);</span>
+<span class="nc" id="L949">	        			String[] userAnswers = msg.split(&quot;\\s+&quot;);</span>
+<span class="nc" id="L950">	        			double splitMark = quiz.getMarkForCurrentQuestion()/(multipleAnswers.length-1);</span>
+<span class="nc" id="L951">	        			int numberOfCorrectAnswers = 0;</span>
+<span class="nc bnc" id="L952" title="All 2 branches missed.">        				for(int j = 0 ; j &lt; userAnswers.length; j++ ){	</span>
+<span class="nc bnc" id="L953" title="All 4 branches missed.">        					if(userAnswers[j].length() &gt; 1 || !quiz.getAnswerPossibilitiesForMCQ().toLowerCase().contains(userAnswers[j].toLowerCase())) {</span>
+<span class="nc" id="L954">	        					answer += &quot;Please only enter the letters/numbers corresponding to the given answers!\n&quot;;</span>
+<span class="nc" id="L955">		        				JSONObject userMistake = new JSONObject();</span>
+<span class="nc" id="L956">		        				userMistake.put(&quot;text&quot;, answer);</span>
+<span class="nc" id="L957">		        				userMistake.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L958">		        				return userMistake;</span>
+        					}
+        				}
+<span class="nc bnc" id="L961" title="All 2 branches missed.">	        			for(int i = 0 ; i &lt; multipleAnswers.length -1 ; i++) {</span>
+<span class="nc bnc" id="L962" title="All 2 branches missed.">	        				for(int j = 0 ; j &lt; userAnswers.length; j++ ){</span>
+<span class="nc bnc" id="L963" title="All 2 branches missed.">	        					if(userAnswers[j].length() &gt; 1 ) {</span>
+<span class="nc" id="L964">	        						continue;</span>
+<span class="nc bnc" id="L965" title="All 2 branches missed.">	        					} else if(multipleAnswers[i].toLowerCase().contains(userAnswers[j].toLowerCase())) {</span>
+<span class="nc" id="L966">	        						numberOfCorrectAnswers++;</span>
+<span class="nc" id="L967">	        						break;</span>
+	        					}
+	        				}
+	        			}
+<span class="nc bnc" id="L971" title="All 2 branches missed.">	        			if((multipleAnswers.length-1) == userAnswers.length ) {</span>
+<span class="nc bnc" id="L972" title="All 2 branches missed.">	        				if(userAnswers.length == numberOfCorrectAnswers) {</span>
+<span class="nc" id="L973">	        					answer += &quot;Correct Answer(s)! \n&quot;;</span>
+<span class="nc" id="L974">	        					quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+<span class="nc bnc" id="L975" title="All 2 branches missed.">	        				} else if(userAnswers.length &gt; numberOfCorrectAnswers) {</span>
+	        					// what if 0 points  ?  
+<span class="nc bnc" id="L977" title="All 2 branches missed.">	        					if(numberOfCorrectAnswers == 0) {</span>
+<span class="nc" id="L978">	        						answer += &quot;Your answers were all wrong\n&quot;;</span>
+<span class="nc" id="L979">	        					} else answer += &quot;Your answer was partially correct, you got &quot; + numberOfCorrectAnswers + &quot; correct answer(s) and &quot; + (userAnswers.length-numberOfCorrectAnswers) + &quot; wrong one(s)\n&quot;;</span>
+<span class="nc" id="L980">	        					quiz.incrementMark(splitMark*numberOfCorrectAnswers);</span>
+<span class="nc" id="L981">	        					quiz.addWrongQuestion();</span>
+	        				} else {
+<span class="nc" id="L983">	        					answer += &quot;You somehow managed to get more points than intended\n&quot;;</span>
+<span class="nc" id="L984">	        					quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+	        				}
+<span class="nc bnc" id="L986" title="All 2 branches missed.">	        			} else if((multipleAnswers.length-1) &gt; userAnswers.length) {</span>
+<span class="nc" id="L987">	        				 quiz.addWrongQuestion();</span>
+<span class="nc bnc" id="L988" title="All 2 branches missed.">	        				 if(userAnswers.length &gt; numberOfCorrectAnswers) {  </span>
+<span class="nc bnc" id="L989" title="All 2 branches missed.">	        					if(numberOfCorrectAnswers == 0) {</span>
+<span class="nc" id="L990">	        						answer += &quot;Your answers were all wrong\n&quot;;</span>
+<span class="nc" id="L991">	        					} else answer += &quot;Your answer was partially correct, you got &quot; + numberOfCorrectAnswers + &quot; correct answer(s) and &quot; + (userAnswers.length-numberOfCorrectAnswers) + &quot; wrong one(s)\n&quot;;</span>
+<span class="nc" id="L992">	        					quiz.incrementMark(splitMark*numberOfCorrectAnswers);</span>
+<span class="nc bnc" id="L993" title="All 2 branches missed.">	        				} else if(userAnswers.length == numberOfCorrectAnswers) {</span>
+<span class="nc" id="L994">	        					answer += &quot;Your answer was partially correct, you got &quot; + numberOfCorrectAnswers + &quot; correct answer(s)\n&quot;;</span>
+<span class="nc" id="L995">	        					quiz.incrementMark(numberOfCorrectAnswers*splitMark);</span>
+	        				} else {
+<span class="nc" id="L997">	        					answer += &quot;You somehow managed to get more points than intended\n&quot;;</span>
+<span class="nc" id="L998">	        					quiz.incrementMark(numberOfCorrectAnswers*splitMark);</span>
+	        				}
+<span class="nc bnc" id="L1000" title="All 2 branches missed.">	        			} else if((multipleAnswers.length-1) &lt; userAnswers.length) {</span>
+<span class="nc" id="L1001">	        				quiz.addWrongQuestion();</span>
+	        				// careful here, - points if someone has too many answers
+<span class="nc" id="L1003">	        				 answer += &quot;Your answer was partially correct, you got &quot; + numberOfCorrectAnswers + &quot; correct answer(s) and &quot; + (userAnswers.length-numberOfCorrectAnswers) + &quot; wrong one(s)\n&quot;;</span>
+<span class="nc" id="L1004">	        				 int points = numberOfCorrectAnswers - userAnswers.length; </span>
+<span class="nc bnc" id="L1005" title="All 2 branches missed.">	        				 if(points &gt;= 0) {</span>
+<span class="nc" id="L1006">	        					 quiz.incrementMark(numberOfCorrectAnswers*splitMark);</span>
+	        				 }
+	        			}	
+	        		}
+	        	}
+<span class="nc bnc" id="L1011" title="All 2 branches missed.">	        	if(!quiz.getFeedback().equals(&quot;&quot;)) {</span>
+<span class="nc" id="L1012">	        		answer += quiz.getFeedback() + &quot;\n&quot;;</span>
+	        	}
+<span class="nc" id="L1014">	        	quiz.incrementCurrentQuestionNumber();</span>
+<span class="nc bnc" id="L1015" title="All 2 branches missed.">		        if(quiz.getCurrentQuestionNumber() == quiz.getAssessmentSize()){</span>
+<span class="nc bnc" id="L1016" title="All 2 branches missed.">		        	if(quiz.getMarks() == quiz.getMaxMarks()) {</span>
+<span class="nc" id="L1017">		        		answer += &quot;Assessment is over \n&quot; + &quot;Your final mark is *&quot; + quiz.getMarks() + &quot;/&quot; + quiz.getMaxMarks() + &quot;* \n You got no Questions wrong! \n &quot;;</span>
+<span class="nc" id="L1018">		        	} else answer += &quot;Assessment is over \n&quot; + &quot;Your final mark is *&quot; + quiz.getMarks() + &quot;/&quot; + quiz.getMaxMarks() + &quot;*  \n You got following Questions wrong: \n &quot; + quiz.getWrongQuestions();</span>
+<span class="nc" id="L1019">		            this.assessmentStarted.put(channel, null);</span>
+<span class="nc" id="L1020">		            Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, quiz.createXAPIForMoodle(true).toString() + &quot;*&quot; + triggeredBody.getAsString(&quot;email&quot;));</span>
+		            
+<span class="nc" id="L1022">		            response.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+		        } else {
+<span class="nc" id="L1024">		            answer += quiz.getCurrentQuestion() + quiz.getPossibilities() ;        </span>
+		        }
+	        }
+<span class="nc bnc" id="L1027" title="All 2 branches missed.">        } else if(assessmentType == &quot;moodleAssessmentDe&quot;){</span>
+<span class="nc" id="L1028">        	MoodleQuiz quiz = this.currentMoodleAssessment.get(channel);</span>
+<span class="nc" id="L1029">        	String msg = triggeredBody.getAsString(&quot;msg&quot;);</span>
+<span class="nc bnc" id="L1030" title="All 4 branches missed.">	        if(intent.equals(quiz.getQuitIntent()) &amp;&amp; !quiz.checkIfAnswerToQuestion(msg)) {</span>
+	        	
+	        		// add check if lrs is actually available...
+<span class="nc" id="L1033">		        	answer += &quot;Assessment ist fertig \n&quot; + &quot;Dein Endresultat ist *&quot; + quiz.getMarks() + &quot;/&quot; + (quiz.getTotalMarksUntilCurrentQuestion() - quiz.getMarkForCurrentQuestion()) + &quot;* \n&quot;;  	</span>
+<span class="nc bnc" id="L1034" title="All 2 branches missed.">		            if(quiz.getMarks() == (quiz.getTotalMarksUntilCurrentQuestion() - quiz.getMarkForCurrentQuestion())) {</span>
+<span class="nc" id="L1035">		            	answer += &quot;Du hast keine falsche Antworten!&quot;;</span>
+<span class="nc" id="L1036">		            } else answer += &quot;Du hast folgende Fragen falsch beantwortet: \n &quot; + quiz.getWrongQuestions();</span>
+<span class="nc" id="L1037">		        	this.assessmentStarted.put(channel, null);</span>
+		        	
+<span class="nc" id="L1039">		        	Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3,quiz.createXAPIForMoodle(false).toString() + &quot;*&quot; + triggeredBody.getAsString(&quot;email&quot;));</span>
+		            
+<span class="nc" id="L1041">		            response.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+	        	
+	        	
+	        } else { 
+	        	
+	        	// differ between true false / multiple answers, one answer 
+	        	// for multiple choice split with &quot;,&quot; to have all the answers
+<span class="nc bnc" id="L1048" title="All 4 branches missed.">	        	if(quiz.getQuestionType().equals(&quot;numerical&quot;) || quiz.getQuestionType().equals(&quot;shortanswer&quot;) ) {</span>
+<span class="nc bnc" id="L1049" title="All 2 branches missed.">	        		 if(quiz.getAnswer().toLowerCase().equals(msg.toLowerCase())) {</span>
+<span class="nc" id="L1050">	        			answer += &quot;Richtige Antwort! \n&quot;;</span>
+<span class="nc" id="L1051">	        			quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+	        		 } else {
+<span class="nc" id="L1053">	        			 answer += &quot;Falsche Antwort :/ \n&quot;;</span>
+<span class="nc" id="L1054">	 		        	quiz.addWrongQuestion();</span>
+	        		 }
+<span class="nc bnc" id="L1056" title="All 2 branches missed.">	        	} else if(quiz.getQuestionType().equals(&quot;truefalse&quot;)) {</span>
+<span class="nc bnc" id="L1057" title="All 4 branches missed.">	        		if(!(&quot;wahr&quot;.contains(msg.toLowerCase()) || &quot;falsch&quot;.contains(msg.toLowerCase())) ) {</span>
+<span class="nc" id="L1058">	        			answer += &quot;Bitte antworte nur mit \&quot;Wahr\&quot; oder \&quot;Falsch\&quot;\n&quot;;</span>
+<span class="nc" id="L1059">        				JSONObject userMistake = new JSONObject();</span>
+<span class="nc" id="L1060">        				userMistake.put(&quot;text&quot;, answer);</span>
+<span class="nc" id="L1061">        				userMistake.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L1062">        				return userMistake;</span>
+	        		}
+<span class="nc bnc" id="L1064" title="All 2 branches missed.">	        		 if(quiz.getAnswer().toLowerCase().contains(msg.toLowerCase())) {</span>
+<span class="nc" id="L1065">	        			answer += &quot;Richtige Antwort! \n&quot;;</span>
+<span class="nc" id="L1066">	 		            quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+	        		 } else {
+<span class="nc" id="L1068">	        			answer += &quot;Falsche Antwort :/ \n&quot;;</span>
+<span class="nc" id="L1069">	 		        	quiz.addWrongQuestion();</span>
+	        		 }
+<span class="nc bnc" id="L1071" title="All 2 branches missed.">	        	} else if(quiz.getQuestionType().equals(&quot;multichoice&quot;)) {</span>
+	        		
+<span class="nc bnc" id="L1073" title="All 2 branches missed.">	        		if(quiz.getAnswer().split(&quot;;&quot;).length &lt;= 2) {</span>
+<span class="nc bnc" id="L1074" title="All 2 branches missed.">	        			if(msg.length() &gt; 1) {</span>
+<span class="nc" id="L1075">	        				answer += &quot;Bitte antworte nur mit den vorgegebenen Buchstaben/Zahlen!\n&quot;;</span>
+<span class="nc" id="L1076">	        				JSONObject userMistake = new JSONObject();</span>
+<span class="nc" id="L1077">	        				userMistake.put(&quot;text&quot;, answer);</span>
+<span class="nc" id="L1078">	        				userMistake.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L1079">	        				return userMistake;</span>
+	        			} else {
+<span class="nc" id="L1081">	        				System.out.println(quiz.getAnswerPossibilitiesForMCQ());</span>
+<span class="nc bnc" id="L1082" title="All 2 branches missed.">	        				if(!quiz.getAnswerPossibilitiesForMCQ().toLowerCase().contains(msg.toLowerCase())) {</span>
+<span class="nc" id="L1083">	        					answer += &quot;Bitte antworte nur mit den vorgegebenen Buchstaben/Zahlen!\n&quot;;</span>
+<span class="nc" id="L1084">		        				JSONObject userMistake = new JSONObject();</span>
+<span class="nc" id="L1085">		        				userMistake.put(&quot;text&quot;, answer);</span>
+<span class="nc" id="L1086">		        				userMistake.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L1087">		        				return userMistake;</span>
+	        				}
+<span class="nc bnc" id="L1089" title="All 2 branches missed.">		        			if(quiz.getAnswer().toLowerCase().contains(msg.toLowerCase())) {</span>
+<span class="nc" id="L1090">			        			answer += &quot;Richtige Antwort! \n&quot;;</span>
+<span class="nc" id="L1091">			        			quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+			        		 } else {
+<span class="nc" id="L1093">			        			answer += &quot;Falsche Antwort :/ \n&quot;;</span>
+<span class="nc" id="L1094">			 		        	quiz.addWrongQuestion();</span>
+			        		 }
+	        			}
+	        		} else {
+<span class="nc" id="L1098">	        			String[] multipleAnswers = quiz.getAnswer().split(&quot;;&quot;);</span>
+<span class="nc" id="L1099">	        			String[] userAnswers = msg.split(&quot;\\s+&quot;);</span>
+<span class="nc" id="L1100">	        			double splitMark = quiz.getMarkForCurrentQuestion()/(multipleAnswers.length-1);</span>
+<span class="nc" id="L1101">	        			int numberOfCorrectAnswers = 0;</span>
+<span class="nc bnc" id="L1102" title="All 2 branches missed.">        				for(int j = 0 ; j &lt; userAnswers.length; j++ ){	</span>
+<span class="nc bnc" id="L1103" title="All 4 branches missed.">        					if(userAnswers[j].length() &gt; 1 || !quiz.getAnswerPossibilitiesForMCQ().toLowerCase().contains(userAnswers[j].toLowerCase())) {</span>
+<span class="nc" id="L1104">	        					answer += &quot;Bitte antworte nur mit den vorgegebenen Buchstaben/Zahlen!\n&quot;;</span>
+<span class="nc" id="L1105">		        				JSONObject userMistake = new JSONObject();</span>
+<span class="nc" id="L1106">		        				userMistake.put(&quot;text&quot;, answer);</span>
+<span class="nc" id="L1107">		        				userMistake.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L1108">		        				return userMistake;</span>
+        					}
+        				}
+<span class="nc bnc" id="L1111" title="All 2 branches missed.">	        			for(int i = 0 ; i &lt; multipleAnswers.length -1 ; i++) {</span>
+<span class="nc bnc" id="L1112" title="All 2 branches missed.">	        				for(int j = 0 ; j &lt; userAnswers.length; j++ ){</span>
+<span class="nc bnc" id="L1113" title="All 2 branches missed.">	        					if(userAnswers[j].length() &gt; 1 ) {</span>
+<span class="nc" id="L1114">	        						continue;</span>
+<span class="nc bnc" id="L1115" title="All 2 branches missed.">	        					} else if(multipleAnswers[i].toLowerCase().contains(userAnswers[j].toLowerCase())) {</span>
+<span class="nc" id="L1116">	        						numberOfCorrectAnswers++;</span>
+<span class="nc" id="L1117">	        						break;</span>
+	        					}
+	        				}
+	        			}
+<span class="nc bnc" id="L1121" title="All 2 branches missed.">	        			if((multipleAnswers.length-1) == userAnswers.length ) {</span>
+<span class="nc bnc" id="L1122" title="All 2 branches missed.">	        				if(userAnswers.length == numberOfCorrectAnswers) {</span>
+<span class="nc" id="L1123">	        					answer += &quot;Richtige Antwort(en)! \n&quot;;</span>
+<span class="nc" id="L1124">	        					quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+<span class="nc bnc" id="L1125" title="All 2 branches missed.">	        				} else if(userAnswers.length &gt; numberOfCorrectAnswers) {</span>
+	        					// what if 0 points  ?  
+<span class="nc bnc" id="L1127" title="All 2 branches missed.">	        					if(numberOfCorrectAnswers == 0) {</span>
+<span class="nc" id="L1128">	        						answer += &quot;Deine Antworten waren alle falsch\n&quot;;</span>
+<span class="nc" id="L1129">	        					} else answer += &quot;Deine Antwort war teilweise richtig, du hast &quot; + numberOfCorrectAnswers + &quot; richtige Antwort(en) und &quot; + (userAnswers.length-numberOfCorrectAnswers) + &quot; falsche\n&quot;;</span>
+<span class="nc" id="L1130">	        					quiz.incrementMark(splitMark*numberOfCorrectAnswers);</span>
+<span class="nc" id="L1131">	        					quiz.addWrongQuestion();</span>
+	        				} else {
+<span class="nc" id="L1133">	        					answer += &quot;Du hast mehr Punkte bekommen als vorgegeben?!\n&quot;;</span>
+<span class="nc" id="L1134">	        					quiz.incrementMark(quiz.getMarkForCurrentQuestion());</span>
+	        				}
+<span class="nc bnc" id="L1136" title="All 2 branches missed.">	        			} else if((multipleAnswers.length-1) &gt; userAnswers.length) {</span>
+<span class="nc" id="L1137">	        				 quiz.addWrongQuestion();</span>
+<span class="nc bnc" id="L1138" title="All 2 branches missed.">	        				 if(userAnswers.length &gt; numberOfCorrectAnswers) {  </span>
+<span class="nc bnc" id="L1139" title="All 2 branches missed.">	        					if(numberOfCorrectAnswers == 0) {</span>
+<span class="nc" id="L1140">	        						answer += &quot;Deine Antworten waren alle falsch\n&quot;;</span>
+<span class="nc" id="L1141">	        					} else answer += &quot;Deine Antwort war teilweise richtig, du hast &quot; + numberOfCorrectAnswers + &quot; richtige Antwort(en) und &quot; + (userAnswers.length-numberOfCorrectAnswers) + &quot; falsche\n&quot;;</span>
+<span class="nc" id="L1142">	        					quiz.incrementMark(splitMark*numberOfCorrectAnswers);</span>
+<span class="nc bnc" id="L1143" title="All 2 branches missed.">	        				} else if(userAnswers.length == numberOfCorrectAnswers) {</span>
+<span class="nc" id="L1144">	        					answer += &quot;Deine Antwort war teilweise richtig, du hast &quot; + numberOfCorrectAnswers + &quot; richtige Antwort(en)\n&quot;;</span>
+<span class="nc" id="L1145">	        					quiz.incrementMark(numberOfCorrectAnswers*splitMark);</span>
+	        				} else {
+<span class="nc" id="L1147">	        					answer += &quot;Du hast mehr Punkte bekommen als vorgegeben?!\n&quot;;</span>
+<span class="nc" id="L1148">	        					quiz.incrementMark(numberOfCorrectAnswers*splitMark);</span>
+	        				}
+<span class="nc bnc" id="L1150" title="All 2 branches missed.">	        			} else if((multipleAnswers.length-1) &lt; userAnswers.length) {</span>
+<span class="nc" id="L1151">	        				quiz.addWrongQuestion();</span>
+	        				// careful here, - points if someone has too many answers
+<span class="nc" id="L1153">	        				 answer += &quot;Deine Antwort war teilweise richtig, du hast &quot; + numberOfCorrectAnswers + &quot; richtige Antwort(en) und &quot; + (userAnswers.length-numberOfCorrectAnswers) + &quot; falsche\n&quot;;</span>
+<span class="nc" id="L1154">	        				 int points = numberOfCorrectAnswers - userAnswers.length; </span>
+<span class="nc bnc" id="L1155" title="All 2 branches missed.">	        				 if(points &gt;= 0) {</span>
+<span class="nc" id="L1156">	        					 quiz.incrementMark(numberOfCorrectAnswers*splitMark);</span>
+	        				 }
+	        			}	
+	        		}
+	        	}
+<span class="nc bnc" id="L1161" title="All 2 branches missed.">	        	if(!(quiz.getFeedback().equals(&quot;&quot;))) {</span>
+<span class="nc" id="L1162">	        		answer += quiz.getFeedback() + &quot;\n&quot;;</span>
+	        	}
+<span class="nc" id="L1164">	        	quiz.incrementCurrentQuestionNumber();</span>
+<span class="nc bnc" id="L1165" title="All 2 branches missed.">		        if(quiz.getCurrentQuestionNumber() == quiz.getAssessmentSize()){</span>
+<span class="nc bnc" id="L1166" title="All 2 branches missed.">		        	if(quiz.getMarks() == quiz.getAssessmentSize()) {</span>
+<span class="nc" id="L1167">		        		answer += &quot;Assessment ist fertig \n&quot; + &quot;Dein Endresultat ist *&quot; + quiz.getMarks() + &quot;/&quot; + quiz.getMaxMarks() + &quot;* \n Du hast keine falsche Fragen \n &quot; + quiz.getWrongQuestions();</span>
+<span class="nc" id="L1168">		        	} else answer += &quot;Assessment ist fertig \n&quot; + &quot;Dein Endresultat ist *&quot; + quiz.getMarks() + &quot;/&quot; + quiz.getMaxMarks() + &quot;*  \n Du hast folgende Fragen falsch beantwortet: \n &quot; + quiz.getWrongQuestions();</span>
+<span class="nc" id="L1169">		            this.assessmentStarted.put(channel, null);</span>
+<span class="nc" id="L1170">		            Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, quiz.createXAPIForMoodle(true).toString() + &quot;*&quot; + triggeredBody.getAsString(&quot;email&quot;));</span>
+<span class="nc" id="L1171">		            response.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
+		        } else {
+<span class="nc" id="L1173">		            answer += quiz.getCurrentQuestion() + quiz.getPossibilities() ;        </span>
+		        }
+	        }
+        	
+<span class="nc" id="L1177">        } else {</span>
+<span class="nc" id="L1178">        	System.out.println(&quot;Assessment type: &quot;+ assessmentType + &quot; not known&quot;);</span>
+        }
+<span class="nc" id="L1180">        response.put(&quot;text&quot;, answer);</span>
+<span class="nc" id="L1181">        return response;</span>
+    }
 
 
 	private String selectLevelMsg() {
 		// TODO Auto-generated method stub
-<span class="nc" id="L437">		Set&lt;String&gt; selection = new HashSet&lt;String&gt;();</span>
-<span class="nc" id="L438">		selection.add(&quot;Dokument: Dokumentbezogene Indizes&quot;);</span>
-<span class="nc" id="L439">		selection.add(&quot;Absatz:  Indizes bezogen auf den Absatz&quot;);</span>
-<span class="nc" id="L440">		selection.add(&quot;Satz: Satzbezogene Indizes&quot;);</span>
+<span class="nc" id="L1187">		Set&lt;String&gt; selection = new HashSet&lt;String&gt;();</span>
+<span class="nc" id="L1188">		selection.add(&quot;Dokument: Dokumentbezogene Indizes&quot;);</span>
+<span class="nc" id="L1189">		selection.add(&quot;Absatz:  Indizes bezogen auf den Absatz&quot;);</span>
+<span class="nc" id="L1190">		selection.add(&quot;Satz: Satzbezogene Indizes&quot;);</span>
 
 
-<span class="nc" id="L443">		String response = &quot;Welche textlevel wÃ¼rdest du erst Ã¼berprÃ¼fen?\n&quot;</span>
+<span class="nc" id="L1193">		String response = &quot;Welche textlevel wÃ¼rdest du erst Ã¼berprÃ¼fen?\n&quot;</span>
 				+ &quot;Du kannst dir eine aussuchen: \n&quot;;
 
-<span class="nc" id="L446">		Iterator&lt;String&gt; it = selection.iterator();</span>
-<span class="nc" id="L447">		int i = 1;</span>
-<span class="nc bnc" id="L448" title="All 2 branches missed.">		while(it.hasNext()){</span>
-<span class="nc" id="L449">			response += i + &quot;. &quot; + it.next() + &quot;\n&quot;;</span>
-<span class="nc" id="L450">			i++;</span>
+<span class="nc" id="L1196">		Iterator&lt;String&gt; it = selection.iterator();</span>
+<span class="nc" id="L1197">		int i = 1;</span>
+<span class="nc bnc" id="L1198" title="All 2 branches missed.">		while(it.hasNext()){</span>
+<span class="nc" id="L1199">			response += i + &quot;. &quot; + it.next() + &quot;\n&quot;;</span>
+<span class="nc" id="L1200">			i++;</span>
 		}
 
-<span class="nc" id="L453">		response += &quot;Bitte level eingeben&quot;;</span>
-<span class="nc" id="L454">		return response;</span>
+<span class="nc" id="L1203">		response += &quot;Bitte level eingeben&quot;;</span>
+<span class="nc" id="L1204">		return response;</span>
 	}
 	
+	private String selectLevel(JSONObject result)throws ParseException {
+<span class="nc" id="L1208">		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
+<span class="nc" id="L1209">		JSONObject data = (JSONObject) result.get(&quot;data&quot;);</span>
+<span class="nc" id="L1210">		return data.getAsString(&quot;level&quot;);</span>
+	}
 	/**
 	 * Filter Indices on Category and level
 	 * @param category categoryname for the Indices function will match it to
@@ -464,66 +1219,66 @@ import net.minidev.json.parser.ParseException;
 	private JSONArray selectIndices(String category, String level, JSONObject result) throws ParseException {
 		
 		// TODO Auto-generated method stub
-<span class="nc" id="L467">		System.out.println(&quot;................in select indices................&quot;);</span>
-<span class="nc" id="L468">		System.out.println(&quot;................................category = &quot;+ category); </span>
-<span class="nc" id="L469">		System.out.println(&quot;................................level = &quot;+ level); </span>
-<span class="nc" id="L470">		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
-<span class="nc" id="L471">		JSONObject data = (JSONObject) result.get(&quot;data&quot;);</span>
-<span class="nc" id="L472">		JSONArray complexityIndices =(JSONArray) p.parse(data.getAsString(&quot;complexityIndices&quot;));</span>
-<span class="nc" id="L473">		JSONArray results = new JSONArray();;</span>
-<span class="nc bnc" id="L474" title="All 2 branches missed.">		for (Object item : complexityIndices) {</span>
-<span class="nc" id="L475">			JSONObject obj = (JSONObject) item;</span>
+<span class="nc" id="L1222">		System.out.println(&quot;................in select indices................&quot;);</span>
+<span class="nc" id="L1223">		System.out.println(&quot;................................category = &quot;+ category); </span>
+<span class="nc" id="L1224">		System.out.println(&quot;................................level = &quot;+ level); </span>
+<span class="nc" id="L1225">		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);</span>
+<span class="nc" id="L1226">		JSONObject data = (JSONObject) result.get(&quot;data&quot;);</span>
+<span class="nc" id="L1227">		JSONArray complexityIndices =(JSONArray) p.parse(data.getAsString(&quot;complexityIndices&quot;));</span>
+<span class="nc" id="L1228">		JSONArray results = new JSONArray();;</span>
+<span class="nc bnc" id="L1229" title="All 2 branches missed.">		for (Object item : complexityIndices) {</span>
+<span class="nc" id="L1230">			JSONObject obj = (JSONObject) item;</span>
 
-<span class="nc bnc" id="L477" title="All 2 branches missed.">			if (obj.getAsString(&quot;category&quot;).matches(&quot;(?i).*&quot; + category + &quot;.*&quot;) ) {</span>
-<span class="nc" id="L478">				JSONArray valencesIndices =(JSONArray) p.parse(obj.getAsString(&quot;valences&quot;));</span>
-<span class="nc bnc" id="L479" title="All 2 branches missed.">				for(Object item2 : valencesIndices) {</span>
-<span class="nc" id="L480">					JSONObject obj2 = (JSONObject) item2;</span>
-<span class="nc bnc" id="L481" title="All 2 branches missed.">					if(obj2.getAsString(&quot;type&quot;).matches(&quot;(?i).*&quot; + level + &quot;.*&quot;)) {</span>
-<span class="nc" id="L482">						System.out.println(&quot;................................category obj1 = &quot;+ obj.getAsString(&quot;category&quot;)); </span>
-<span class="nc" id="L483">						System.out.println(&quot;................................level obj2= &quot;+ obj2.getAsString(&quot;type&quot;)); </span>
-<span class="nc" id="L484">						results.add(obj2);</span>
+<span class="nc bnc" id="L1232" title="All 2 branches missed.">			if (obj.getAsString(&quot;category&quot;).matches(&quot;(?i).*&quot; + category + &quot;.*&quot;) ) {</span>
+<span class="nc" id="L1233">				JSONArray valencesIndices =(JSONArray) p.parse(obj.getAsString(&quot;valences&quot;));</span>
+<span class="nc bnc" id="L1234" title="All 2 branches missed.">				for(Object item2 : valencesIndices) {</span>
+<span class="nc" id="L1235">					JSONObject obj2 = (JSONObject) item2;</span>
+<span class="nc bnc" id="L1236" title="All 2 branches missed.">					if(obj2.getAsString(&quot;type&quot;).matches(&quot;(?i).*&quot; + level + &quot;.*&quot;)) {</span>
+<span class="nc" id="L1237">						System.out.println(&quot;................................category obj1 = &quot;+ obj.getAsString(&quot;category&quot;)); </span>
+<span class="nc" id="L1238">						System.out.println(&quot;................................level obj2= &quot;+ obj2.getAsString(&quot;type&quot;)); </span>
+<span class="nc" id="L1239">						results.add(obj2);</span>
 					}
-<span class="nc" id="L486">				}</span>
+<span class="nc" id="L1241">				}</span>
 			}
-<span class="nc" id="L488">		}</span>
-<span class="nc" id="L489">		return results;</span>
+<span class="nc" id="L1243">		}</span>
+<span class="nc" id="L1244">		return results;</span>
 	}
 	
 	private String finalReturn(String category, String level, JSONObject result) throws ParseException {
-<span class="nc" id="L493">		JSONArray results= selectIndices( category,  level,  result);</span>
-<span class="nc" id="L494">		IndiceDescription indice = new IndiceDescription();</span>
-<span class="nc" id="L495">        JSONObject jsonObject = new JSONObject(result);</span>
-<span class="nc" id="L496">        HashMap&lt;String,Integer&gt; hashMap = new HashMap&lt;&gt;();</span>
-<span class="nc" id="L497">        String res=&quot;&quot;;</span>
-<span class="nc bnc" id="L498" title="All 2 branches missed.">        for (Map.Entry&lt;String,String&gt; entry : indice.getIndiceMap().entrySet()) {</span>
-<span class="nc" id="L499">        	int i=0;</span>
-<span class="nc" id="L500">        	double sum=0;</span>
-<span class="nc bnc" id="L501" title="All 2 branches missed.">	        for(Object item : results){</span>
-<span class="nc" id="L502">	            JSONObject innerJsonObject = (JSONObject) item;</span>
-<span class="nc bnc" id="L503" title="All 2 branches missed.">	            if(innerJsonObject.getAsString(&quot;index&quot;).matches(&quot;(?i).*&quot; + entry.getKey() + &quot;.*&quot;)) {</span>
-<span class="nc" id="L504">	                sum+=Double.parseDouble(innerJsonObject.getAsString(&quot;value&quot;)); </span>
-<span class="nc" id="L505">	                i+=1;</span>
+<span class="nc" id="L1248">		JSONArray results= selectIndices( category,  level,  result);</span>
+<span class="nc" id="L1249">		IndiceDescription indice = new IndiceDescription();</span>
+<span class="nc" id="L1250">        JSONObject jsonObject = new JSONObject(result);</span>
+<span class="nc" id="L1251">        HashMap&lt;String,Integer&gt; hashMap = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L1252">        String res=&quot;&quot;;</span>
+<span class="nc bnc" id="L1253" title="All 2 branches missed.">        for (Map.Entry&lt;String,String&gt; entry : indice.getIndiceMap().entrySet()) {</span>
+<span class="nc" id="L1254">        	int i=0;</span>
+<span class="nc" id="L1255">        	double sum=0;</span>
+<span class="nc bnc" id="L1256" title="All 2 branches missed.">	        for(Object item : results){</span>
+<span class="nc" id="L1257">	            JSONObject innerJsonObject = (JSONObject) item;</span>
+<span class="nc bnc" id="L1258" title="All 2 branches missed.">	            if(innerJsonObject.getAsString(&quot;index&quot;).matches(&quot;(?i).*&quot; + entry.getKey() + &quot;.*&quot;)) {</span>
+<span class="nc" id="L1259">	                sum+=Double.parseDouble(innerJsonObject.getAsString(&quot;value&quot;)); </span>
+<span class="nc" id="L1260">	                i+=1;</span>
 	            }
-<span class="nc" id="L507">	        }</span>
-<span class="nc bnc" id="L508" title="All 2 branches missed.">	        if(i&gt;=1) {</span>
-<span class="nc" id="L509">	        	res+=&quot;\n Durchschnitt der &quot;+ entry.getValue() + &quot;: &quot;+sum/i;</span>
+<span class="nc" id="L1262">	        }</span>
+<span class="nc bnc" id="L1263" title="All 2 branches missed.">	        if(i&gt;=1) {</span>
+<span class="nc" id="L1264">	        	res+=&quot;\n Durchschnitt der &quot;+ entry.getValue() + &quot;: &quot;+sum/i;</span>
 	        }
 	        
         	
-<span class="nc" id="L513">        }</span>
-<span class="nc" id="L514">        return res;</span>
+<span class="nc" id="L1268">        }</span>
+<span class="nc" id="L1269">        return res;</span>
 		
 	}
 
 	private JSONObject getContext(String email, JSONParser p)
 			throws ParseException{
 		// TODO Auto-generated method stub
-<span class="nc" id="L521">		Object obj = ContextInfo.get(email);</span>
-<span class="nc bnc" id="L522" title="All 2 branches missed.">		if (obj instanceof JSONObject) {</span>
-<span class="nc" id="L523">			JSONObject context = (JSONObject) (obj);</span>
-<span class="nc" id="L524">			return context;</span>
+<span class="nc" id="L1276">		Object obj = ContextInfo.get(email);</span>
+<span class="nc bnc" id="L1277" title="All 2 branches missed.">		if (obj instanceof JSONObject) {</span>
+<span class="nc" id="L1278">			JSONObject context = (JSONObject) (obj);</span>
+<span class="nc" id="L1279">			return context;</span>
 		}
-<span class="nc" id="L526">		return new JSONObject();</span>
+<span class="nc" id="L1281">		return new JSONObject();</span>
 	}
 
 	/**
@@ -534,28 +1289,28 @@ import net.minidev.json.parser.ParseException;
 	 */
 	private String selectCategoryMsg()
 	{
-<span class="nc" id="L537">		Set&lt;String&gt; selection = new HashSet&lt;String&gt;();</span>
-<span class="nc" id="L538">		selection.add(&quot;Semantische Kohaesionsindizes: lokaler und globaler Zusammenhalt &quot;);</span>
-<span class="nc" id="L539">		selection.add(&quot;Diskursstruktur-Indizes:  Textorganisation&quot;);</span>
-<span class="nc" id="L540">		selection.add(&quot;Morphologische Indizes: Formen von WÃ¶rtern, insbesondere flektierte Formen&quot;);</span>
-<span class="nc" id="L541">		selection.add(&quot;Isochrony (Sprechrhythmus)&quot;);</span>
-<span class="nc" id="L542">		selection.add(&quot;Oberflaechenindizes: Form des Textes&quot;);</span>
-<span class="nc" id="L543">		selection.add(&quot;Syntaktische Indizes: Anordnung von WÃ¶rtern und Phrasen&quot;);</span>
-<span class="nc" id="L544">		selection.add(&quot;Wortkomplexitaetsindizes:  KomplexitÃ¤t von WÃ¶rtern Ã¼ber ihre Form hinaus&quot;);</span>
+<span class="nc" id="L1292">		Set&lt;String&gt; selection = new HashSet&lt;String&gt;();</span>
+<span class="nc" id="L1293">		selection.add(&quot;Semantische Kohaesionsindizes: lokaler und globaler Zusammenhalt &quot;);</span>
+<span class="nc" id="L1294">		selection.add(&quot;Diskursstruktur-Indizes:  Textorganisation&quot;);</span>
+<span class="nc" id="L1295">		selection.add(&quot;Morphologische Indizes: Formen von WÃ¶rtern, insbesondere flektierte Formen&quot;);</span>
+<span class="nc" id="L1296">		selection.add(&quot;Isochrony (Sprechrhythmus)&quot;);</span>
+<span class="nc" id="L1297">		selection.add(&quot;Oberflaechenindizes: Form des Textes&quot;);</span>
+<span class="nc" id="L1298">		selection.add(&quot;Syntaktische Indizes: Anordnung von WÃ¶rtern und Phrasen&quot;);</span>
+<span class="nc" id="L1299">		selection.add(&quot;Wortkomplexitaetsindizes:  KomplexitÃ¤t von WÃ¶rtern Ã¼ber ihre Form hinaus&quot;);</span>
 
-<span class="nc" id="L546">		String response = &quot;Der Text wurde bearbeitet, da die Classifiezirung noch nicht gemacht werden, kÃ¶nnen wir dir nur eine Zusammenfassung des wichtigsten induzen zeigen\n&quot;</span>
+<span class="nc" id="L1301">		String response = &quot;&quot;</span>
 				+ &quot; welche aspecte der Text wÃ¼rdest du Ã¼berprÃ¼fen?\n&quot;
 				+ &quot;Du kannst dir eine aussuchen: \n&quot;;
 
-<span class="nc" id="L550">		Iterator&lt;String&gt; it = selection.iterator();</span>
-<span class="nc" id="L551">		int i = 1;</span>
-<span class="nc bnc" id="L552" title="All 2 branches missed.">		while(it.hasNext()){</span>
-<span class="nc" id="L553">			response += i + &quot;. &quot; + it.next() + &quot;\n&quot;;</span>
-<span class="nc" id="L554">			i++;</span>
+<span class="nc" id="L1305">		Iterator&lt;String&gt; it = selection.iterator();</span>
+<span class="nc" id="L1306">		int i = 1;</span>
+<span class="nc bnc" id="L1307" title="All 2 branches missed.">		while(it.hasNext()){</span>
+<span class="nc" id="L1308">			response += i + &quot;. &quot; + it.next() + &quot;\n&quot;;</span>
+<span class="nc" id="L1309">			i++;</span>
 		}
 
-<span class="nc" id="L557">		response += &quot;Bitte Kategorie eingeben&quot;;</span>
-<span class="nc" id="L558">		return response;</span>
+<span class="nc" id="L1312">		response += &quot;Bitte Kategorie eingeben&quot;;</span>
+<span class="nc" id="L1313">		return response;</span>
 	}
 
 	
@@ -571,11 +1326,11 @@ import net.minidev.json.parser.ParseException;
 		private static final long serialVersionUID = 1L;
 
 		protected ChatException(String message) {
-<span class="nc" id="L574">			super(message);</span>
+<span class="nc" id="L1329">			super(message);</span>
 			Context
-<span class="nc" id="L576">			.get()</span>
-<span class="nc" id="L577">			.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_ERROR_3, message);</span>
-<span class="nc" id="L578">		}</span>
+<span class="nc" id="L1331">			.get()</span>
+<span class="nc" id="L1332">			.monitorEvent(MonitoringEvent.SERVICE_CUSTOM_ERROR_3, message);</span>
+<span class="nc" id="L1333">		}</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

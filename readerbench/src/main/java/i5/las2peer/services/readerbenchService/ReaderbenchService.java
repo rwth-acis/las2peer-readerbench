@@ -1,10 +1,17 @@
 package i5.las2peer.services.readerbenchService;
 
+
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.*;
 
 import org.apache.http.HttpEntity;
@@ -18,7 +25,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
-import java.util.*;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
+
 import java.util.HashSet;
 
 import javax.ws.rs.GET;
@@ -35,8 +44,17 @@ import com.google.gson.Gson;
 import i5.las2peer.api.Context;
 import i5.las2peer.api.security.UserAgent;
 import i5.las2peer.api.logging.MonitoringEvent;
+import i5.las2peer.api.ManualDeployment;
 import i5.las2peer.restMapper.RESTService;
 import i5.las2peer.restMapper.annotations.ServicePath;
+import i5.las2peer.connectors.webConnector.client.ClientResponse;
+import i5.las2peer.connectors.webConnector.client.MiniClient;
+
+import i5.las2peer.api.persistency.Envelope;
+import i5.las2peer.api.persistency.EnvelopeAccessDeniedException;
+import i5.las2peer.api.persistency.EnvelopeNotFoundException;
+import i5.las2peer.api.persistency.EnvelopeOperationFailedException;
+
 import i5.las2peer.services.readerbenchService.model.MessageInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -51,7 +69,17 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Iterator;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import i5.las2peer.services.readerbenchService.AssessmentContent.*;
 
 // TODO Describe your own service
 /**
@@ -79,14 +107,36 @@ import net.minidev.json.parser.ParseException;
 						name = "BSD-3",
 						url = "https://github.com/Karlydiamond214/las2peer-readerbench")))
 @ServicePath("/readerbench")
-// TODO Your own service class
+@ManualDeployment
 public class ReaderbenchService extends RESTService {
+	
 
 	private final static List<String> SUPPORTED_FUNCTIONS = Arrays.asList("textual coomplexity",
 			"Sentiment");
 
 	private static HashMap<String, Object> ContextInfo = new HashMap<String, Object>();
 
+	private String readerbenchEndpoint="http://rb-controller.ma-zeufack:32446";
+
+	// Used for keeping context between assessment and non-assessment states
+    // Key is the channelId
+    private static HashMap<String, String> assessmentStarted = new HashMap<String, String>();
+   // Used to keep track if the topics were already given for a specific user. The assessment function first gives a list on available topics and then expects an answer. 
+    private static HashMap<String, Boolean> topicsProposed = new HashMap<String, Boolean>();  
+    // Used to make sure that the same moodle quiz is not being started twice at the same time. You can only start a quiz once on moodle until you submit it. 
+    private static HashMap<String, Boolean> topicProcessed = new HashMap<String, Boolean>();
+    // Saves the current NLUAssessment object for a specific user
+    private static HashMap<String, NLUAssessment> currentNLUAssessment = new HashMap<String, NLUAssessment>();
+    // Saves the current Moodle Assessment for a specific user
+    private static HashMap<String, MoodleQuiz> currentMoodleAssessment = new HashMap<String, MoodleQuiz>();
+    // Keep track of the related channels to a bot. Needed to reset the assessments once a bot gets restarted.
+    private static HashMap<String, ArrayList<String>> botChannel = new HashMap<String, ArrayList<String>>();
+
+	public ReaderbenchService(){
+		super();
+		setFieldValues();
+
+	}
 	/**
 	 * Template of a get function.
 	 * 
@@ -105,6 +155,7 @@ public class ReaderbenchService extends RESTService {
 	public Response getTemplate() {
 		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
 		String name = userAgent.getLoginName();
+		System.out.println("readerbenchEndpoint: " + this.readerbenchEndpoint);
 		return Response.ok().entity(name).build();
 	}
 
@@ -173,7 +224,7 @@ public class ReaderbenchService extends RESTService {
 			//Creating a HttpClient object
 			CloseableHttpClient httpclient = HttpClients.createDefault();
 			//Creating a HttpGet object
-			HttpGet httpget = new HttpGet("http://192.168.56.1:6006/api/v1/isalive");
+			HttpGet httpget = new HttpGet("http://rb-controller.ma-zeufack:32446/api/v1/isalive");
 
 			//Printing the method used
 			System.out.println("Request Type: "+ httpget.getMethod());
@@ -194,9 +245,9 @@ public class ReaderbenchService extends RESTService {
 	}
 
 
-	/*
+	
 	@POST
-	@Path("/text-similarity")
+	@Path("/textual_similarity")
 	@Produces(MediaType.TEXT_PLAIN)
 	@ApiResponses(
 			value = { @ApiResponse(
@@ -205,15 +256,15 @@ public class ReaderbenchService extends RESTService {
 	@ApiOperation(
 			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
 			notes = "Example method that returns a phrase containing the received input.")
-	public Response textsimilarity(String categorie, String language, String corpus) {
+	public Response textsimilarity(String body) {
 		JSONObject j = new JSONObject();
 		j.put("language", "en");
 		//j.put("texts", texts);
-		j.put("corpus", corpus);
+		j.put("corpus", "wikibooks");
 		try {
 			StringEntity entity = new StringEntity(j.toString());
 			HttpClient httpClient = HttpClientBuilder.create().build();
-	        HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/text-similarity");
+	        HttpPost request = new HttpPost("http://rb-controller.ma-zeufack:32446/api/v1/text-similarity");
 	        request.setEntity(entity);
 	        HttpResponse response = httpClient.execute(request);
 	        HttpEntity entity2 = response.getEntity();
@@ -226,7 +277,6 @@ public class ReaderbenchService extends RESTService {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	 */
 	@POST
 	@Path("/feedback")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -249,7 +299,7 @@ public class ReaderbenchService extends RESTService {
 		try {
 			StringEntity entity = new StringEntity(j.toString());
 			HttpClient httpClient = HttpClientBuilder.create().build();
-			HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/feedback");
+			HttpPost request = new HttpPost("http://rb-controller.ma-zeufack:32446/api/v1/feedback");
 			request.setEntity(entity);
 			HttpResponse response = httpClient.execute(request);
 			HttpEntity entity2 = response.getEntity();
@@ -299,31 +349,66 @@ public class ReaderbenchService extends RESTService {
 			System.out.println("................"+intent+"................");
 			switch (intent) {
 			case "quit":
+				chatResponse.put("text", "Willst du die Ergebnisse speichern um später anzusehen?");
+				chatResponse.put("closeContext", true);
+				return Response.ok(chatResponse).build();
+			case "confirm":
+				//To do: insert SQL: Insert into SQL
+				chatResponse.put("text", "Deine Ergebnisse wurden gespeichert. Aufwiedersehen.");
+				chatResponse.put("closeContext", true);
+				return Response.ok(chatResponse).build();
+			case "no":
 				chatResponse.put("text", "Okay Aufwiedersehen.");
 				chatResponse.put("closeContext", true);
 				return Response.ok(chatResponse).build();
 			case "text":
+				if (context.getAsString("result") != null) {
+					context.remove("result");
+				}
+				if (context.getAsString("category") != null) {
+					context.remove("category");
+				}
+				if (context.getAsString("level") != null) {
+					context.remove("level");
+				}
 				text = bodyJson.getAsString("msg");
 				JSONObject j = new JSONObject();
-				j.put("language", "en");
+				j.put("language", "de");
 				j.put("text", text);
 				try {
 					StringEntity entity = new StringEntity(j.toString());
 					HttpClient httpClient = HttpClientBuilder.create().build();
-					HttpPost request = new HttpPost("http://192.168.56.1:6006/api/v1/textual-complexity");
+					HttpPost request = new HttpPost("http://rb-controller.ma-zeufack:32446/api/v1/textual-complexity");
 					request.setEntity(entity);
-					HttpResponse response = httpClient.execute(request);
-					HttpEntity entity2 = response.getEntity();
-					String result = EntityUtils.toString(entity2);
-					if (context.getAsString("result") != null) {
-						context.remove("result");
-					}
+						HttpResponse response = httpClient.execute(request);
+						HttpEntity entity2 = response.getEntity();
+						String result = EntityUtils.toString(entity2);
+					
 					context.put("result", result);
 					ContextInfo.put(email, context);
 					System.out.println("................result computed from readerbench................");  
 					chatResponse.put("closeContext", false);
-					String res = selectCategoryMsg();
+					JSONObject result2 = (JSONObject) p.parse(context.getAsString("result"));
+					String res= "Der Text wurde bearbeitet, dein Text level ist folgende:\n"+
+					selectLevel(result2) + "\nWir können  dir noch eine Zusammenfassung des wichtigsten indizen zeigen\n"
+					+"dafür musst du eine der folgende Kategorien auswählen"+ selectCategoryMsg();
+					System.out.println(res);
+					chatResponse.put("closeContext", false);
 					chatResponse.put("text",res);
+					try {
+						MiniClient client = new MiniClient();
+						client.setConnectorEndpoint("http://137.226.232.185:32445");
+						//client.setLogin(testAgent.getIdentifier(), testPass);
+						
+						// testInput is the pathParam
+						ClientResponse trigger_result = client.sendRequest("POST", "SBFManager" + "post/{readerBot}/trigger/intent", "");
+						Assert.assertEquals(200, trigger_result.getHttpCode());
+						// "testInput" name is part of response
+						Assert.assertTrue(trigger_result.getResponse().trim().contains("testInput"));
+						System.out.println("Result of 'testPost': " + trigger_result.getResponse().trim());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 					return Response.ok().entity(chatResponse).build();
 				}catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -332,8 +417,21 @@ public class ReaderbenchService extends RESTService {
 							e.getMessage()
 							);
 				}
-
-
+			case "status":
+				if (context.getAsString("result") != null) {
+					JSONObject result22 = (JSONObject) p.parse(context.getAsString("result"));
+					String res11= "Der Text wurde bearbeitet, dein Text level ist folgende:\n"+
+					selectLevel(result22) + "\nWir können  dir noch eine Zusammenfassung des wichtigsten indizen zeigen\n"
+					+"dafür musst du eine der folgende Kategorien auswählen"+ selectCategoryMsg();
+					System.out.println(res11);
+					chatResponse.put("closeContext", false);
+					chatResponse.put("text",res11);
+					return Response.ok().entity(chatResponse).build();
+				}
+				chatResponse.put("closeContext", false);
+				chatResponse.put("text","Der Text wird noch analysiert...\n ");
+				return Response.ok().entity(chatResponse).build();
+				
 			case "category":
 				String category =  bodyJson.getAsString("category_option");
 				if(category == null) {
@@ -412,7 +510,7 @@ public class ReaderbenchService extends RESTService {
 			     case "Wortkomplexitaet":
 			          category="WORD";*/
 			default:
-				String res4 ="Intent könnte nicht ermitteln werden. Bitte Prozess neue beginnen.";
+				String res4 ="Intent könnte nicht ermitteln werden. Bitte erneue versuchen neue beginnen.";
 				chatResponse.put("text",res4);
 				chatResponse.put("closeContext", false);
 				return Response.ok().entity(chatResponse).build();
@@ -430,6 +528,658 @@ public class ReaderbenchService extends RESTService {
 			return Response.ok(chatResponse).build();
 		}
 	}
+	
+	@POST
+	@Path("/nluAssessmentDE")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(
+			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
+			notes = "REPLACE THIS WITH YOUR NOTES TO THE FUNCTION")
+	@ApiResponses(
+			value = { @ApiResponse(
+					code = HttpURLConnection.HTTP_OK,
+					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
+	public Response nluAssessmentDe(String body) {
+		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		try {
+			JSONObject bodyJson = (JSONObject) p.parse(body);		
+			System.out.println(bodyJson);
+			JSONObject response = new JSONObject();
+			String channel = bodyJson.getAsString("channel");
+			
+			try {
+				ArrayList<String> channels =  botChannel.get(bodyJson.getAsString("botName"));
+				channels.add(channel);
+				botChannel.put(bodyJson.getAsString("botName"), channels);
+			} catch (Exception e) {
+				ArrayList<String> channels = new ArrayList<String>();
+				channels.add(channel);
+				botChannel.put(bodyJson.getAsString("botName"), channels);
+			}
+			if(this.assessmentStarted.get(channel) == null){
+				// function needs assessmentContent parameter
+				if(!(bodyJson.get("assessmentContent") instanceof JSONArray)) {
+					JSONArray assessmentContent = new JSONArray();
+					assessmentContent.add(bodyJson.get("assessmentContent"));
+					bodyJson.put("assessmentContent", assessmentContent);
+				}
+				JSONArray jsonAssessment = (JSONArray) bodyJson.get("assessmentContent");
+				ArrayList<String> assessment = new ArrayList<String>();
+				if(jsonAssessment != null) {
+					int len = jsonAssessment.size();
+					for(int i=0; i<len ; i++){
+						assessment.add(jsonAssessment.get(i).toString());
+					}
+					JSONObject contentJson;
+					if(this.topicsProposed.get(channel) == null) {
+						String topicNames="";
+						int topicNumber = 1;
+						for(String content : assessment) {
+							 contentJson = (JSONObject) p.parse(content);
+							 topicNames += " • " + topicNumber + ". " + contentJson.getAsString("topic") + "\n";
+							 topicNumber++;
+						}
+						if(!topicNames.equals("")) {
+							response.put("text", "Wähle ein Thema indem du mit der entsprechenden Nummer oder dem entsprechenden Name antwortest:\n" + topicNames);
+							response.put("closeContext", false);
+							this.topicsProposed.put(channel, true);
+							return Response.ok().entity(response).build();
+						}
+						JSONObject error = new JSONObject();
+						error.put("text", "Derzeit sind keine Themen verfügbar, versuche zu einem späteren Zeitpunkt wieder!");
+						error.put("closeContext", "true");
+						return Response.ok().entity(error).build();
+					} else {
+						
+						String chosenTopicNumber = bodyJson.getAsString("msg").split("\\.")[0];
+						String similarNames = "";
+				        ArrayList<String> similarTopicNames = new ArrayList<String>();
+				        String smiliarNames = "";
+						int topicCount = 1;
+						for(String content : assessment) {
+							 contentJson = (JSONObject) p.parse(content);
+							if(contentJson.getAsString("topic").toLowerCase().equals(bodyJson.getAsString("msg").toLowerCase()) || chosenTopicNumber.equals(String.valueOf(topicCount))){
+								setUpNluAssessment(contentJson, channel, bodyJson.getAsString("quitIntent"), bodyJson.getAsString("helpIntent"),  bodyJson.getAsString("Type"), bodyJson.getAsString("modelType"));
+								this.topicsProposed.remove(channel);
+								this.assessmentStarted.put(channel, "true");
+								response.put("text", "Wir starten jetzt das Nlu Assessment über "+ contentJson.getAsString("topic") + " :)!\n" + this.currentNLUAssessment.get(channel).getCurrentQuestion());							
+								response.put("closeContext", "false");
+								
+								return Response.ok().entity(response).build(); 
+							} else if(contentJson.getAsString("topic").toLowerCase().contains(bodyJson.getAsString("msg").toLowerCase())) {
+								similarTopicNames.add(contentJson.getAsString("topic"));
+								similarNames += " • " + topicCount + ". " + contentJson.getAsString("topic") + "\n";
+							}
+							topicCount++;
+						}
+						if(similarTopicNames.size() == 1) {
+							bodyJson.put("msg", similarTopicNames.get(0));
+							return nluAssessmentDe(bodyJson.toString());
+						} else if(similarTopicNames.size() > 1) {
+							response.put("text", "Mehrere Nlu Assessments entsprechen deiner Antwort, welche von diesen möchtest du denn anfangen?\n" + similarNames);							
+							response.put("closeContext", "false");
+							return Response.ok().entity(response).build();
+						}
+						JSONObject error = new JSONObject();
+						error.put("text", "Topic with name " + bodyJson.getAsString("topic")+ " not found");
+						error.put("closeContext", "true");
+						return Response.ok().entity(error).build();
+					}
+				}
+				
+
+			} else {
+				System.out.println(bodyJson.getAsString("intent"));
+				return Response.ok().entity(continueAssessment(channel, bodyJson.getAsString("intent"), bodyJson, "NLUAssessmentDe")).build();
+			}		
+			
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}	
+		JSONObject error = new JSONObject();
+		error.put("text", "Something went wrong");
+		error.put("closeContext", "true");
+		return Response.ok().entity(error).build();
+
+	}
+
+	private void setUpNluAssessment(JSONObject content , String channel, String quitIntent, String helpIntent, String type, String modelType) {
+        int noNum = 0;
+        JSONArray Sequence =(JSONArray) content.get("Sequence");
+        JSONArray Questions =(JSONArray) content.get("Questions");
+        JSONArray Intents =(JSONArray) content.get("Intents");
+		JSONArray Hints =(JSONArray) content.get("Hints");
+		//Adding the element for the text Assessment
+		JSONArray Lectureref =(JSONArray) content.get("Textrefs");
+		JSONArray QuestionWeight =(JSONArray) content.get("QuestionWeights");
+
+
+
+
+        int length = Questions.size(); 
+        int max = 0;
+        String[][] assessmentContent = new String[length][6];
+        for(int i = 0; i < length ; i++){
+            if(Sequence.get(i).equals("")){
+                noNum++;   
+            } else if(Integer.parseInt(Sequence.get(i).toString()) > max){
+                max = Integer.parseInt(Sequence.get(i).toString());    
+            } else if(Integer.parseInt(Sequence.get(i).toString()) == max) {
+            	Sequence.add(i, String.valueOf(max+1));
+            	max++;
+            }           
+            assessmentContent[i][0] = Sequence.get(i).toString();
+            assessmentContent[i][1] = Questions.get(i).toString();
+            assessmentContent[i][2] = Intents.get(i).toString();
+			assessmentContent[i][3] = Hints.get(i).toString();  
+			assessmentContent[i][4] = Lectureref.get(i).toString(); 
+			assessmentContent[i][5] = QuestionWeight.get(i).toString();      
+        }
+        
+        // to fill out the blank sequence slots
+        // last blank space will be at last place
+        
+        
+        
+        // change to nlu quiz object
+        for(int i = length-1; i >= 0 ; i--){
+            if(assessmentContent[i][0].equals("")){
+            	assessmentContent[i][0] = Integer.toString(max + noNum);
+            	noNum--;
+            }
+        }      
+        Arrays.sort(assessmentContent, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
+        ArrayList<String> questions = new ArrayList<String>();
+        ArrayList<String> intents = new ArrayList<String>();
+		ArrayList<String> hints = new ArrayList<String>();
+		ArrayList<String> lectureref = new ArrayList<String>();
+		ArrayList<Double> questionWeight = new  ArrayList<Double>();
+		ArrayList<Double> similarityScore = new  ArrayList<Double>();
+		ArrayList<String> textlevel = new ArrayList<String>();
+
+        for(int i = 0; i < length ; i++){
+        	questions.add(assessmentContent[i][1]);
+        	intents.add(assessmentContent[i][2]);
+			hints.add(assessmentContent[i][3]);
+			lectureref.add(assessmentContent[i][4]);
+			questionWeight.add(Double.parseDouble(assessmentContent[i][5]));
+			similarityScore.add(0.0);
+			textlevel.add("");
+			System.out.println(assessmentContent[i][0] + " " + assessmentContent[i][1] + " " + assessmentContent[i][2] + " " + assessmentContent[i][3]+ " " 
+			+ assessmentContent[i][4]+ " " + assessmentContent[i][5]);
+        } 
+        NLUAssessment assessment = new NLUAssessment(quitIntent, questions, intents, hints, helpIntent, type, lectureref, questionWeight, modelType, similarityScore, textlevel);
+        this.currentNLUAssessment.put(channel, assessment);
+        this.assessmentStarted.put(channel, "true");	
+  		
+	}
+
+	private JSONObject continueAssessment(String channel, String intent, JSONObject triggeredBody, String assessmentType){
+		JSONObject response = new JSONObject();
+		JSONObject error = new JSONObject();
+    	String answer = "";    	
+    	response.put("closeContext", "false");
+        if(assessmentType.equals("NLUAssessment")) {
+        	NLUAssessment assessment = this.currentNLUAssessment.get(channel);
+	        if(intent.equals(assessment.getQuitIntent())){
+	        	// Additionall check to see if the quit intent was recognized by accident (Writing "e a c" was recognized as quit once...)
+	        	answer += "Assessment is over \n" + "You got " + assessment.getMarks() + "/" + assessment.getCurrentQuestionNumber() + " Questions right! \n"; 
+	            if(assessment.getMarks() == assessment.getCurrentQuestionNumber()) {
+	            	answer += "You got no questions wrong!";
+	            } else answer +=  "You got following Questions wrong: \n" + assessment.getWrongQuestions();
+	        	this.assessmentStarted.put(channel, null);
+	            response.put("closeContext", "true");
+	        } else if(intent.equals(assessment.getHelpIntent())){
+	        	answer+= assessment.getQuestionHint() + "\n";
+	        	response.put("closeContext", "false");
+	        } else { 
+
+		        if(intent.equals(assessment.getCorrectAnswerIntent())){
+		            answer += "Correct Answer! \n";
+		            assessment.incrementMark(1);
+		        } else {
+		        	answer += "Wrong answer :/ \n";
+		        	assessment.addWrongQuestion();
+		        }
+		        assessment.incrementCurrentQuestionNumber();
+		        if(assessment.getCurrentQuestionNumber() == assessment.getAssessmentSize()){
+		        	if(assessment.getMarks() == assessment.getAssessmentSize()) {
+		        		answer += "Assessment is over \n" + "You got " + assessment.getMarks() + "/" + assessment.getAssessmentSize() + "Questions right! \n You got no Questions wrong! \n " + assessment.getWrongQuestions();
+		        	} else answer += "Assessment is over \n" + "You got " + assessment.getMarks() + "/" + assessment.getAssessmentSize() + "Questions right! \n You got following Questions wrong: \n " + assessment.getWrongQuestions();
+		            this.assessmentStarted.put(channel, null);
+		            response.put("closeContext", "true");
+		        } else {
+		            answer += assessment.getCurrentQuestion();        
+		        }
+	        }
+	        
+        } else if(assessmentType.equals("NLUAssessmentDe")) {
+			NLUAssessment assessment = this.currentNLUAssessment.get(channel);
+				if(intent.equals(assessment.getQuitIntent())){
+					Double OverallScore = 0.0;
+					for(int i=0; i <  assessment.getAssessmentSize(); i++){
+						OverallScore += assessment.getSimilarityScoreList().get(i);
+						System.out.println("Overallscore is............"+ OverallScore);
+					}
+					
+					answer += "Das Assessment ist fertig \n" + "Du hast insgesamt  " + OverallScore + " % erreicht\n";
+					answer+= "Du hast folgende text Komplexitäten:\n";
+					int currentQuestion = 0;
+					for(int i=0; i <  assessment.getAssessmentSize(); i++){
+						answer += "Frage " + (currentQuestion + 1) + ": " + assessment.getLevelList().get(i) + "\n"; 
+						currentQuestion += 1;
+						System.out.println("level is............"+ assessment.getLevelList().get(i-1));
+					}
+					this.assessmentStarted.put(channel, null);
+					response.put("closeContext", "true");
+				} else if(intent.equals(assessment.getHelpIntent())){
+					answer+= assessment.getQuestionHint() + "\n";
+					response.put("closeContext", "false");
+				} else {
+					String msg = triggeredBody.getAsString("msg");
+					
+					String textRef = assessment.gettextReference();
+					String modelTyp = assessment.getModelType();
+					//MiniClient client = new MiniClient();
+					//client.setConnectorEndpoint("");
+					//System.out.println("Now connecting");
+					//HashMap<String, String> headers = new HashMap<String, String>();
+					JSONArray texts = new JSONArray(); 
+					texts.add(textRef);
+					texts.add(msg);
+					JSONObject similarity_Body = new JSONObject();
+					similarity_Body.put("texts", texts);
+					similarity_Body.put("language", "de");
+					similarity_Body.put("corpus", "wikibooks");
+					JSONObject complexity_Body = new JSONObject();
+					complexity_Body.put("language", "de");
+					complexity_Body.put("text", msg);
+					JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+					try{
+						String email = triggeredBody.getAsString("email");
+						JSONObject context = getContext(email, p);	
+						StringEntity entity = new StringEntity(similarity_Body.toString());
+						HttpClient httpClient = HttpClientBuilder.create().build();
+						HttpPost request = new HttpPost("http://rb-controller.ma-zeufack:32446/api/v1/text-similarity");
+						request.setEntity(entity);
+						HttpResponse res = httpClient.execute(request);
+						HttpEntity entity2 = res.getEntity();
+						String similarity_result = EntityUtils.toString(entity2);
+						context.put("similarity_result", similarity_result);
+						ContextInfo.put(email, context);
+						System.out.println("................result SIMILARITY computed from readerbench................");
+						System.out.println(context.getAsString("similarity_result"));
+						JSONObject result = (JSONObject) p.parse(context.getAsString("similarity_result")); 
+						JSONObject data = (JSONObject) result.get("data");
+						JSONArray pairs = (JSONArray) data.get("pairs");
+						
+						JSONObject pair = (JSONObject) pairs.get(0);
+						JSONArray scores = (JSONArray) pair.get("scores");
+						String score =  ((JSONObject) scores.get(0)).getAsString("score");
+						System.out.println("Score 0 is ...... "+ ((JSONObject) scores.get(0)).getAsString("score"));
+						System.out.println("Score is ...... "+ score);
+						assessment.setSimilarity(Double.parseDouble( ((JSONObject) scores.get(0)).getAsString("score")));
+						
+						entity = new StringEntity(complexity_Body.toString());
+						httpClient = HttpClientBuilder.create().build();
+						request = new HttpPost("http://rb-controller.ma-zeufack:32446/api/v1/textual-complexity");
+						request.setEntity(entity);
+						res = httpClient.execute(request);
+						entity2 = res.getEntity();
+						String complexity_result = EntityUtils.toString(entity2);
+						context.put("complexity_result", complexity_result);
+						ContextInfo.put(email, context);
+						System.out.println("................result Complexity computed from readerbench................");
+						System.out.println(context.getAsString("complexity_result"));
+						result = (JSONObject) p.parse(context.getAsString("complexity_result")); 
+						p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+						data = (JSONObject) result.get("data");
+						String level = data.getAsString("level");
+						assessment.setLevel(level);
+
+					}  catch (Exception e) {
+						e.printStackTrace();
+						error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
+						error.put("closeContext", true);
+						return error;
+					}
+					
+
+					//ClientResponse SimilarityResult = client.sendRequest("POST", "readerbench/"  + "post/textual_similarity", MediaType.APPLICATION_JSON, headers);
+					//Assert.assertEquals(200, SimilarityResult.getHttpCode());
+					//ClientResponse ComplexityResult = client.sendRequest("POST", "readerbench/"  + "post/textual_complexity", MediaType.APPLICATION_JSON, headers);
+					//Assert.assertEquals(200, ComplexityResult.getHttpCode());
+					//TODO: Compute the Assessments
+					
+					assessment.incrementCurrentQuestionNumber();
+					if(assessment.getCurrentQuestionNumber() == assessment.getAssessmentSize()){
+						Double OverallScore = 0.0;
+						for(int i=0; i <  assessment.getAssessmentSize(); i++){
+							OverallScore += assessment.getSimilarityScoreList().get(i);
+							System.out.println("Overallscore is............"+ assessment.getSimilarityScoreList().get(i));
+						}
+						
+						answer += "Das Assessment ist fertig \n" + "Du hast insgesamt  " + OverallScore	 + " % erreicht\n";
+						answer+= "Du hast folgende text Komplexitäten:\n";
+						int currentQuestion = 0;
+						for(int i=0; i <  assessment.getAssessmentSize(); i++){
+							answer += "Frage " + (currentQuestion + 1) + ": " + assessment.getLevelList().get(i) + "\n"; 
+							currentQuestion += 1;
+							System.out.println("level is............"+ assessment.getLevelList().get(i));
+						}
+						
+						
+						this.assessmentStarted.put(channel, null);
+						response.put("closeContext", "true");
+					} else {
+						answer += assessment.getCurrentQuestion();        
+					}
+				}
+	        
+        } else if(assessmentType.equals("moodleAssessment")) {
+        	MoodleQuiz quiz = this.currentMoodleAssessment.get(channel);
+        	String msg = triggeredBody.getAsString("msg");
+	        if(intent.equals(quiz.getQuitIntent()) && !quiz.checkIfAnswerToQuestion(msg)) {
+	        		answer += "Assessment is over \n" + "Your final mark is *" + quiz.getMarks() + "/" + (quiz.getTotalMarksUntilCurrentQuestion() - quiz.getMarkForCurrentQuestion()) + "* \n";  	
+		            if(quiz.getMarks() == ((quiz.getTotalMarksUntilCurrentQuestion() - quiz.getMarkForCurrentQuestion()))) {
+		            	answer += "You got no questions wrong!";
+		            } else answer += "You got following Questions wrong: \n " + quiz.getWrongQuestions();
+		        	
+		            this.assessmentStarted.put(channel, null);
+		        	
+		            Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, quiz.createXAPIForMoodle(false).toString() + "*" + triggeredBody.getAsString("email"));
+		            response.put("closeContext", "true");	
+	        	
+	        	
+	        } else { 
+	        	
+	        	// differ between true false / multiple answers, one answer 
+	        	// for multiple choice split with "," to have all the answers
+	        	if(quiz.getQuestionType().equals("numerical") || quiz.getQuestionType().equals("shortanswer") ) {
+	        		 if(quiz.getAnswer().toLowerCase().equals(msg.toLowerCase())) {
+	        			answer += "Correct Answer! \n";
+	        			quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+	        		 } else {
+	        			 answer += "Wrong answer :/ \n";
+	 		        	quiz.addWrongQuestion();
+	        		 }
+	        	} else if(quiz.getQuestionType().equals("truefalse")) {
+	        		if(!("true".contains(msg.toLowerCase()) || "false".contains(msg.toLowerCase())) ) {
+	        			answer += "Please answer with \"True\" or \"False\"\n";
+        				JSONObject userMistake = new JSONObject();
+        				userMistake.put("text", answer);
+        				userMistake.put("closeContext", "false");
+        				return userMistake;
+        				}
+	        		 if(quiz.getAnswer().toLowerCase().contains(msg.toLowerCase())) {
+	        			answer += "Correct Answer! \n";
+	 		            quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+	        		 } else {
+	        			answer += "Wrong answer :/ \n";
+	 		        	quiz.addWrongQuestion();
+	        		 }
+	        	} else if(quiz.getQuestionType().equals("multichoice")) {
+	        		
+	        		if(quiz.getAnswer().split(";").length <= 2) {
+	        			System.out.println("A");
+	        			if(msg.length() > 1) {
+	        				answer += "Please only enter the letter/number corresponding to the given answers!\n";
+	        				JSONObject userMistake = new JSONObject();
+	        				userMistake.put("text", answer);
+	        				userMistake.put("closeContext", "false");
+	        				return userMistake;
+	        			} else {
+	        				if(!quiz.getAnswerPossibilitiesForMCQ().toLowerCase().contains(msg.toLowerCase())) {
+	        					answer += "Please only enter the letter/number corresponding to the given answers!\n";
+		        				JSONObject userMistake = new JSONObject();
+		        				userMistake.put("text", answer);
+		        				userMistake.put("closeContext", "false");
+		        				return userMistake;
+	        				}
+		        			if(quiz.getAnswer().toLowerCase().contains(msg.toLowerCase())) {
+			        			answer += "Correct Answer! \n";
+			        			quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+			        		 } else {
+			        			answer += "Wrong answer :/ \n";
+			 		        	quiz.addWrongQuestion();
+			        		 }
+	        			}
+	        		} else {
+	        			String[] multipleAnswers = quiz.getAnswer().split(";");
+	        			String[] userAnswers = msg.split("\\s+");
+	        			double splitMark = quiz.getMarkForCurrentQuestion()/(multipleAnswers.length-1);
+	        			int numberOfCorrectAnswers = 0;
+        				for(int j = 0 ; j < userAnswers.length; j++ ){	
+        					if(userAnswers[j].length() > 1 || !quiz.getAnswerPossibilitiesForMCQ().toLowerCase().contains(userAnswers[j].toLowerCase())) {
+	        					answer += "Please only enter the letters/numbers corresponding to the given answers!\n";
+		        				JSONObject userMistake = new JSONObject();
+		        				userMistake.put("text", answer);
+		        				userMistake.put("closeContext", "false");
+		        				return userMistake;
+        					}
+        				}
+	        			for(int i = 0 ; i < multipleAnswers.length -1 ; i++) {
+	        				for(int j = 0 ; j < userAnswers.length; j++ ){
+	        					if(userAnswers[j].length() > 1 ) {
+	        						continue;
+	        					} else if(multipleAnswers[i].toLowerCase().contains(userAnswers[j].toLowerCase())) {
+	        						numberOfCorrectAnswers++;
+	        						break;
+	        					}
+	        				}
+	        			}
+	        			if((multipleAnswers.length-1) == userAnswers.length ) {
+	        				if(userAnswers.length == numberOfCorrectAnswers) {
+	        					answer += "Correct Answer(s)! \n";
+	        					quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+	        				} else if(userAnswers.length > numberOfCorrectAnswers) {
+	        					// what if 0 points  ?  
+	        					if(numberOfCorrectAnswers == 0) {
+	        						answer += "Your answers were all wrong\n";
+	        					} else answer += "Your answer was partially correct, you got " + numberOfCorrectAnswers + " correct answer(s) and " + (userAnswers.length-numberOfCorrectAnswers) + " wrong one(s)\n";
+	        					quiz.incrementMark(splitMark*numberOfCorrectAnswers);
+	        					quiz.addWrongQuestion();
+	        				} else {
+	        					answer += "You somehow managed to get more points than intended\n";
+	        					quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+	        				}
+	        			} else if((multipleAnswers.length-1) > userAnswers.length) {
+	        				 quiz.addWrongQuestion();
+	        				 if(userAnswers.length > numberOfCorrectAnswers) {  
+	        					if(numberOfCorrectAnswers == 0) {
+	        						answer += "Your answers were all wrong\n";
+	        					} else answer += "Your answer was partially correct, you got " + numberOfCorrectAnswers + " correct answer(s) and " + (userAnswers.length-numberOfCorrectAnswers) + " wrong one(s)\n";
+	        					quiz.incrementMark(splitMark*numberOfCorrectAnswers);
+	        				} else if(userAnswers.length == numberOfCorrectAnswers) {
+	        					answer += "Your answer was partially correct, you got " + numberOfCorrectAnswers + " correct answer(s)\n";
+	        					quiz.incrementMark(numberOfCorrectAnswers*splitMark);
+	        				} else {
+	        					answer += "You somehow managed to get more points than intended\n";
+	        					quiz.incrementMark(numberOfCorrectAnswers*splitMark);
+	        				}
+	        			} else if((multipleAnswers.length-1) < userAnswers.length) {
+	        				quiz.addWrongQuestion();
+	        				// careful here, - points if someone has too many answers
+	        				 answer += "Your answer was partially correct, you got " + numberOfCorrectAnswers + " correct answer(s) and " + (userAnswers.length-numberOfCorrectAnswers) + " wrong one(s)\n";
+	        				 int points = numberOfCorrectAnswers - userAnswers.length; 
+	        				 if(points >= 0) {
+	        					 quiz.incrementMark(numberOfCorrectAnswers*splitMark);
+	        				 }
+	        			}	
+	        		}
+	        	}
+	        	if(!quiz.getFeedback().equals("")) {
+	        		answer += quiz.getFeedback() + "\n";
+	        	}
+	        	quiz.incrementCurrentQuestionNumber();
+		        if(quiz.getCurrentQuestionNumber() == quiz.getAssessmentSize()){
+		        	if(quiz.getMarks() == quiz.getMaxMarks()) {
+		        		answer += "Assessment is over \n" + "Your final mark is *" + quiz.getMarks() + "/" + quiz.getMaxMarks() + "* \n You got no Questions wrong! \n ";
+		        	} else answer += "Assessment is over \n" + "Your final mark is *" + quiz.getMarks() + "/" + quiz.getMaxMarks() + "*  \n You got following Questions wrong: \n " + quiz.getWrongQuestions();
+		            this.assessmentStarted.put(channel, null);
+		            Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, quiz.createXAPIForMoodle(true).toString() + "*" + triggeredBody.getAsString("email"));
+		            
+		            response.put("closeContext", "true");
+		        } else {
+		            answer += quiz.getCurrentQuestion() + quiz.getPossibilities() ;        
+		        }
+	        }
+        } else if(assessmentType == "moodleAssessmentDe"){
+        	MoodleQuiz quiz = this.currentMoodleAssessment.get(channel);
+        	String msg = triggeredBody.getAsString("msg");
+	        if(intent.equals(quiz.getQuitIntent()) && !quiz.checkIfAnswerToQuestion(msg)) {
+	        	
+	        		// add check if lrs is actually available...
+		        	answer += "Assessment ist fertig \n" + "Dein Endresultat ist *" + quiz.getMarks() + "/" + (quiz.getTotalMarksUntilCurrentQuestion() - quiz.getMarkForCurrentQuestion()) + "* \n";  	
+		            if(quiz.getMarks() == (quiz.getTotalMarksUntilCurrentQuestion() - quiz.getMarkForCurrentQuestion())) {
+		            	answer += "Du hast keine falsche Antworten!";
+		            } else answer += "Du hast folgende Fragen falsch beantwortet: \n " + quiz.getWrongQuestions();
+		        	this.assessmentStarted.put(channel, null);
+		        	
+		        	Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3,quiz.createXAPIForMoodle(false).toString() + "*" + triggeredBody.getAsString("email"));
+		            
+		            response.put("closeContext", "true");
+	        	
+	        	
+	        } else { 
+	        	
+	        	// differ between true false / multiple answers, one answer 
+	        	// for multiple choice split with "," to have all the answers
+	        	if(quiz.getQuestionType().equals("numerical") || quiz.getQuestionType().equals("shortanswer") ) {
+	        		 if(quiz.getAnswer().toLowerCase().equals(msg.toLowerCase())) {
+	        			answer += "Richtige Antwort! \n";
+	        			quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+	        		 } else {
+	        			 answer += "Falsche Antwort :/ \n";
+	 		        	quiz.addWrongQuestion();
+	        		 }
+	        	} else if(quiz.getQuestionType().equals("truefalse")) {
+	        		if(!("wahr".contains(msg.toLowerCase()) || "falsch".contains(msg.toLowerCase())) ) {
+	        			answer += "Bitte antworte nur mit \"Wahr\" oder \"Falsch\"\n";
+        				JSONObject userMistake = new JSONObject();
+        				userMistake.put("text", answer);
+        				userMistake.put("closeContext", "false");
+        				return userMistake;
+	        		}
+	        		 if(quiz.getAnswer().toLowerCase().contains(msg.toLowerCase())) {
+	        			answer += "Richtige Antwort! \n";
+	 		            quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+	        		 } else {
+	        			answer += "Falsche Antwort :/ \n";
+	 		        	quiz.addWrongQuestion();
+	        		 }
+	        	} else if(quiz.getQuestionType().equals("multichoice")) {
+	        		
+	        		if(quiz.getAnswer().split(";").length <= 2) {
+	        			if(msg.length() > 1) {
+	        				answer += "Bitte antworte nur mit den vorgegebenen Buchstaben/Zahlen!\n";
+	        				JSONObject userMistake = new JSONObject();
+	        				userMistake.put("text", answer);
+	        				userMistake.put("closeContext", "false");
+	        				return userMistake;
+	        			} else {
+	        				System.out.println(quiz.getAnswerPossibilitiesForMCQ());
+	        				if(!quiz.getAnswerPossibilitiesForMCQ().toLowerCase().contains(msg.toLowerCase())) {
+	        					answer += "Bitte antworte nur mit den vorgegebenen Buchstaben/Zahlen!\n";
+		        				JSONObject userMistake = new JSONObject();
+		        				userMistake.put("text", answer);
+		        				userMistake.put("closeContext", "false");
+		        				return userMistake;
+	        				}
+		        			if(quiz.getAnswer().toLowerCase().contains(msg.toLowerCase())) {
+			        			answer += "Richtige Antwort! \n";
+			        			quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+			        		 } else {
+			        			answer += "Falsche Antwort :/ \n";
+			 		        	quiz.addWrongQuestion();
+			        		 }
+	        			}
+	        		} else {
+	        			String[] multipleAnswers = quiz.getAnswer().split(";");
+	        			String[] userAnswers = msg.split("\\s+");
+	        			double splitMark = quiz.getMarkForCurrentQuestion()/(multipleAnswers.length-1);
+	        			int numberOfCorrectAnswers = 0;
+        				for(int j = 0 ; j < userAnswers.length; j++ ){	
+        					if(userAnswers[j].length() > 1 || !quiz.getAnswerPossibilitiesForMCQ().toLowerCase().contains(userAnswers[j].toLowerCase())) {
+	        					answer += "Bitte antworte nur mit den vorgegebenen Buchstaben/Zahlen!\n";
+		        				JSONObject userMistake = new JSONObject();
+		        				userMistake.put("text", answer);
+		        				userMistake.put("closeContext", "false");
+		        				return userMistake;
+        					}
+        				}
+	        			for(int i = 0 ; i < multipleAnswers.length -1 ; i++) {
+	        				for(int j = 0 ; j < userAnswers.length; j++ ){
+	        					if(userAnswers[j].length() > 1 ) {
+	        						continue;
+	        					} else if(multipleAnswers[i].toLowerCase().contains(userAnswers[j].toLowerCase())) {
+	        						numberOfCorrectAnswers++;
+	        						break;
+	        					}
+	        				}
+	        			}
+	        			if((multipleAnswers.length-1) == userAnswers.length ) {
+	        				if(userAnswers.length == numberOfCorrectAnswers) {
+	        					answer += "Richtige Antwort(en)! \n";
+	        					quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+	        				} else if(userAnswers.length > numberOfCorrectAnswers) {
+	        					// what if 0 points  ?  
+	        					if(numberOfCorrectAnswers == 0) {
+	        						answer += "Deine Antworten waren alle falsch\n";
+	        					} else answer += "Deine Antwort war teilweise richtig, du hast " + numberOfCorrectAnswers + " richtige Antwort(en) und " + (userAnswers.length-numberOfCorrectAnswers) + " falsche\n";
+	        					quiz.incrementMark(splitMark*numberOfCorrectAnswers);
+	        					quiz.addWrongQuestion();
+	        				} else {
+	        					answer += "Du hast mehr Punkte bekommen als vorgegeben?!\n";
+	        					quiz.incrementMark(quiz.getMarkForCurrentQuestion());
+	        				}
+	        			} else if((multipleAnswers.length-1) > userAnswers.length) {
+	        				 quiz.addWrongQuestion();
+	        				 if(userAnswers.length > numberOfCorrectAnswers) {  
+	        					if(numberOfCorrectAnswers == 0) {
+	        						answer += "Deine Antworten waren alle falsch\n";
+	        					} else answer += "Deine Antwort war teilweise richtig, du hast " + numberOfCorrectAnswers + " richtige Antwort(en) und " + (userAnswers.length-numberOfCorrectAnswers) + " falsche\n";
+	        					quiz.incrementMark(splitMark*numberOfCorrectAnswers);
+	        				} else if(userAnswers.length == numberOfCorrectAnswers) {
+	        					answer += "Deine Antwort war teilweise richtig, du hast " + numberOfCorrectAnswers + " richtige Antwort(en)\n";
+	        					quiz.incrementMark(numberOfCorrectAnswers*splitMark);
+	        				} else {
+	        					answer += "Du hast mehr Punkte bekommen als vorgegeben?!\n";
+	        					quiz.incrementMark(numberOfCorrectAnswers*splitMark);
+	        				}
+	        			} else if((multipleAnswers.length-1) < userAnswers.length) {
+	        				quiz.addWrongQuestion();
+	        				// careful here, - points if someone has too many answers
+	        				 answer += "Deine Antwort war teilweise richtig, du hast " + numberOfCorrectAnswers + " richtige Antwort(en) und " + (userAnswers.length-numberOfCorrectAnswers) + " falsche\n";
+	        				 int points = numberOfCorrectAnswers - userAnswers.length; 
+	        				 if(points >= 0) {
+	        					 quiz.incrementMark(numberOfCorrectAnswers*splitMark);
+	        				 }
+	        			}	
+	        		}
+	        	}
+	        	if(!(quiz.getFeedback().equals(""))) {
+	        		answer += quiz.getFeedback() + "\n";
+	        	}
+	        	quiz.incrementCurrentQuestionNumber();
+		        if(quiz.getCurrentQuestionNumber() == quiz.getAssessmentSize()){
+		        	if(quiz.getMarks() == quiz.getAssessmentSize()) {
+		        		answer += "Assessment ist fertig \n" + "Dein Endresultat ist *" + quiz.getMarks() + "/" + quiz.getMaxMarks() + "* \n Du hast keine falsche Fragen \n " + quiz.getWrongQuestions();
+		        	} else answer += "Assessment ist fertig \n" + "Dein Endresultat ist *" + quiz.getMarks() + "/" + quiz.getMaxMarks() + "*  \n Du hast folgende Fragen falsch beantwortet: \n " + quiz.getWrongQuestions();
+		            this.assessmentStarted.put(channel, null);
+		            Context.get().monitorEvent(MonitoringEvent.SERVICE_CUSTOM_MESSAGE_3, quiz.createXAPIForMoodle(true).toString() + "*" + triggeredBody.getAsString("email"));
+		            response.put("closeContext", "true");
+		        } else {
+		            answer += quiz.getCurrentQuestion() + quiz.getPossibilities() ;        
+		        }
+	        }
+        	
+        } else {
+        	System.out.println("Assessment type: "+ assessmentType + " not known");
+        }
+        response.put("text", answer);
+        return response;
+    }
 
 
 	private String selectLevelMsg() {
@@ -454,6 +1204,11 @@ public class ReaderbenchService extends RESTService {
 		return response;
 	}
 	
+	private String selectLevel(JSONObject result)throws ParseException {
+		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONObject data = (JSONObject) result.get("data");
+		return data.getAsString("level");
+	}
 	/**
 	 * Filter Indices on Category and level
 	 * @param category categoryname for the Indices function will match it to
@@ -543,7 +1298,7 @@ public class ReaderbenchService extends RESTService {
 		selection.add("Syntaktische Indizes: Anordnung von Wörtern und Phrasen");
 		selection.add("Wortkomplexitaetsindizes:  Komplexität von Wörtern über ihre Form hinaus");
 
-		String response = "Der Text wurde bearbeitet, da die Classifiezirung noch nicht gemacht werden, können wir dir nur eine Zusammenfassung des wichtigsten induzen zeigen\n"
+		String response = ""
 				+ " welche aspecte der Text würdest du überprüfen?\n"
 				+ "Du kannst dir eine aussuchen: \n";
 
