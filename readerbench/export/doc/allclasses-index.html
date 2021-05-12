@@ -19,8 +19,8 @@
 <script type="text/javascript" src="script-dir/jquery-ui.js"></script>
 </head>
 <body class="all-classes-index">
-<script type="text/javascript">var data = {"i0":2,"i1":2,"i2":2,"i3":2,"i4":2,"i5":2,"i6":8};
-var tabs = {65535:["t0","All Classes"],2:["t2","Class Summary"],8:["t4","Exception Summary"]};
+<script type="text/javascript">var data = {"i0":2,"i1":2,"i2":2,"i3":2,"i4":2,"i5":2,"i6":8,"i7":2,"i8":4};
+var tabs = {65535:["t0","All Classes"],2:["t2","Class Summary"],4:["t3","Enum Summary"],8:["t4","Exception Summary"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -70,7 +70,7 @@ loadScripts(document, 'script');</script>
 </div>
 <div class="allClassesContainer">
 <div class="typeSummary">
-<div role="tablist" aria-orientation="horizontal"><button role="tab" aria-selected="true" aria-controls="typeSummary_tabpanel" tabindex="0" onkeydown="switchTab(event)" id="t0" class="activeTableTab">All Classes</button><button role="tab" aria-selected="false" aria-controls="typeSummary_tabpanel" tabindex="-1" onkeydown="switchTab(event)" id="t2" class="tableTab" onclick="show(2);">Class Summary</button><button role="tab" aria-selected="false" aria-controls="typeSummary_tabpanel" tabindex="-1" onkeydown="switchTab(event)" id="t4" class="tableTab" onclick="show(8);">Exception Summary</button></div>
+<div role="tablist" aria-orientation="horizontal"><button role="tab" aria-selected="true" aria-controls="typeSummary_tabpanel" tabindex="0" onkeydown="switchTab(event)" id="t0" class="activeTableTab">All Classes</button><button role="tab" aria-selected="false" aria-controls="typeSummary_tabpanel" tabindex="-1" onkeydown="switchTab(event)" id="t2" class="tableTab" onclick="show(2);">Class Summary</button><button role="tab" aria-selected="false" aria-controls="typeSummary_tabpanel" tabindex="-1" onkeydown="switchTab(event)" id="t3" class="tableTab" onclick="show(4);">Enum Summary</button><button role="tab" aria-selected="false" aria-controls="typeSummary_tabpanel" tabindex="-1" onkeydown="switchTab(event)" id="t4" class="tableTab" onclick="show(8);">Exception Summary</button></div>
 <div id="typeSummary_tabpanel" role="tabpanel">
 <table aria-labelledby="t0">
 <thead>
@@ -112,6 +112,18 @@ loadScripts(document, 'script');</script>
 <td class="colFirst"><a href="i5/las2peer/services/readerbenchService/ReaderbenchService.ChatException.html" title="class in i5.las2peer.services.readerbenchService">ReaderbenchService.ChatException</a></td>
 <th class="colLast" scope="row">
 <div class="block">Exceptions ,with messages, that should be returned in Chat</div>
+</th>
+</tr>
+<tr class="rowColor" id="i7">
+<td class="colFirst"><a href="i5/las2peer/services/socialBotManagerService/database/SQLDatabase.html" title="class in i5.las2peer.services.socialBotManagerService.database">SQLDatabase</a></td>
+<th class="colLast" scope="row">
+<div class="block">Stores the database credentials and provides access to query execution.</div>
+</th>
+</tr>
+<tr class="altColor" id="i8">
+<td class="colFirst"><a href="i5/las2peer/services/socialBotManagerService/database/SQLDatabaseType.html" title="enum in i5.las2peer.services.socialBotManagerService.database">SQLDatabaseType</a></td>
+<th class="colLast" scope="row">
+<div class="block">Enumeration class that provides the right drivers according to the database type.</div>
 </th>
 </tr>
 </tbody>

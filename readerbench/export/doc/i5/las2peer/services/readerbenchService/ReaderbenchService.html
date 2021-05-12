@@ -19,7 +19,7 @@
 <script type="text/javascript" src="../../../../script-dir/jquery-ui.js"></script>
 </head>
 <body class="class-declaration">
-<script type="text/javascript">var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
+<script type="text/javascript">var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -207,22 +207,27 @@ extends i5.las2peer.restMapper.RESTService</pre>
 </tr>
 <tr class="altColor" id="i4">
 <td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#nluAssessmentDe(java.lang.String)">nluAssessmentDe</a></span>&#8203;(java.lang.String&nbsp;body)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#insertAssessment(java.lang.String)">insertAssessment</a></span>&#8203;(java.lang.String&nbsp;body)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i5">
+<td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#nluAssessmentDe(java.lang.String)">nluAssessmentDe</a></span>&#8203;(java.lang.String&nbsp;body)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor" id="i6">
 <td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#postTemplate(java.lang.String)">postTemplate</a></span>&#8203;(java.lang.String&nbsp;myInput)</code></th>
 <td class="colLast">
 <div class="block">Template of a post function.</div>
 </td>
 </tr>
-<tr class="altColor" id="i6">
+<tr class="rowColor" id="i7">
 <td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#textsimilarity(java.lang.String)">textsimilarity</a></span>&#8203;(java.lang.String&nbsp;body)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor" id="i7">
+<tr class="altColor" id="i8">
 <td class="colFirst"><code>javax.ws.rs.core.Response</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#textualComplexity(java.lang.String)">textualComplexity</a></span>&#8203;(java.lang.String&nbsp;body)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -359,6 +364,15 @@ java.lang.String&nbsp;myInput)</span></div>
 @Path("/textual_complexity")
 @Produces("application/json")
 </span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">textualComplexity</span>&#8203;(<span class="arguments">java.lang.String&nbsp;body)</span></div>
+</section>
+</li>
+<li class="blockList">
+<section class="detail">
+<h3><a id="insertAssessment(java.lang.String)">insertAssessment</a></h3>
+<div class="memberSignature"><span class="annotations">@POST
+@Path("/insertAssessment")
+@Produces("application/json;charset=utf-8")
+</span><span class="modifiers">public</span>&nbsp;<span class="returnType">javax.ws.rs.core.Response</span>&nbsp;<span class="memberName">insertAssessment</span>&#8203;(<span class="arguments">java.lang.String&nbsp;body)</span></div>
 </section>
 </li>
 <li class="blockList">

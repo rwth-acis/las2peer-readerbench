@@ -39,6 +39,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.Blob;
+import java.sql.ResultSet;
+
 import com.google.gson.Gson;
 
 import i5.las2peer.api.Context;
@@ -80,6 +86,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import i5.las2peer.services.readerbenchService.AssessmentContent.*;
+import i5.las2peer.services.socialBotManagerService.database.SQLDatabase;
+import i5.las2peer.services.socialBotManagerService.database.SQLDatabaseType;
 
 // TODO Describe your own service
 /**
@@ -130,11 +138,34 @@ public class ReaderbenchService extends RESTService {
     // Saves the current Moodle Assessment for a specific user
     private static HashMap<String, MoodleQuiz> currentMoodleAssessment = new HashMap<String, MoodleQuiz>();
     // Keep track of the related channels to a bot. Needed to reset the assessments once a bot gets restarted.
-    private static HashMap<String, ArrayList<String>> botChannel = new HashMap<String, ArrayList<String>>();
+	private static HashMap<String, ArrayList<String>> botChannel = new HashMap<String, ArrayList<String>>();
+	
+	private static ArrayList<String> Assessment = new ArrayList<String>();
+
+	private String databaseName;
+	private int databaseTypeInt = 1; // See SQLDatabaseType for more information
+	private SQLDatabaseType databaseType;
+	private String databaseHost;
+	private int databasePort;
+	private String databaseUser;
+	private String databasePassword;
+	private SQLDatabase database; // The database instance to write to.
 
 	public ReaderbenchService(){
 		super();
 		setFieldValues();
+
+		this.databaseType = SQLDatabaseType.getSQLDatabaseType(databaseTypeInt);
+		System.out.println(this.databaseType +" " +  this.databaseUser +" " +  this.databasePassword+ " " + this.databaseName + " "
+	+			this.databaseHost + " " +this.databasePort);
+		this.database = new SQLDatabase(this.databaseType, this.databaseUser, this.databasePassword, this.databaseName,
+				this.databaseHost, this.databasePort);
+		try {
+			Connection con = database.getDataSource().getConnection();
+			con.close();
+		} catch (SQLException e) {
+			System.out.println("Failed to Connect: " + e.getMessage());
+		}
 
 	}
 	/**
@@ -530,6 +561,36 @@ public class ReaderbenchService extends RESTService {
 	}
 	
 	@POST
+	@Path("/insertAssessment")
+	@Produces(MediaType.APPLICATION_JSON+ ";charset=utf-8")
+	@ApiOperation(
+		value = "",
+		notes = "")
+	@ApiResponses(
+		value = {@ApiResponse(
+			code = HttpURLConnection.HTTP_OK,
+			message = "Assessement inserted"
+		)}
+	)
+	public Response insertAssessment(String body){
+		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		try {
+			JSONObject bodyJson = (JSONObject) p.parse(body);
+			System.out.println(bodyJson);
+			System.out.println("+++++++++++++++++++++++++++++++++++System.out.println(bodyJson);");
+			Assessment.add(bodyJson.toString());
+			System.out.println("+++++++++++++++++++++++++++++++++++assessment.add(bodyJson.toString());");
+
+
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return Response.ok("Assessment not inserted").build();
+		}
+		return Response.ok("Assessment inserted").build();
+	}
+
+
+	@POST
 	@Path("/nluAssessmentDE")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(
@@ -558,25 +619,25 @@ public class ReaderbenchService extends RESTService {
 			}
 			if(this.assessmentStarted.get(channel) == null){
 				// function needs assessmentContent parameter
-				if(!(bodyJson.get("assessmentContent") instanceof JSONArray)) {
+				/*if(!(bodyJson.get("assessmentContent") instanceof JSONArray)) {
 					JSONArray assessmentContent = new JSONArray();
 					assessmentContent.add(bodyJson.get("assessmentContent"));
 					bodyJson.put("assessmentContent", assessmentContent);
 				}
-				JSONArray jsonAssessment = (JSONArray) bodyJson.get("assessmentContent");
+				/*JSONArray jsonAssessment = (JSONArray) bodyJson.get("assessmentContent");
 				ArrayList<String> assessment = new ArrayList<String>();
 				if(jsonAssessment != null) {
 					int len = jsonAssessment.size();
 					for(int i=0; i<len ; i++){
 						assessment.add(jsonAssessment.get(i).toString());
-					}
+					}*/
 					JSONObject contentJson;
 					if(this.topicsProposed.get(channel) == null) {
 						String topicNames="";
 						int topicNumber = 1;
-						for(String content : assessment) {
+						for(String content : Assessment) {
 							 contentJson = (JSONObject) p.parse(content);
-							 topicNames += " • " + topicNumber + ". " + contentJson.getAsString("topic") + "\n";
+							 topicNames += " • " + topicNumber + ". " + contentJson.getAsString("topicName") + "\n";
 							 topicNumber++;
 						}
 						if(!topicNames.equals("")) {
@@ -596,19 +657,19 @@ public class ReaderbenchService extends RESTService {
 				        ArrayList<String> similarTopicNames = new ArrayList<String>();
 				        String smiliarNames = "";
 						int topicCount = 1;
-						for(String content : assessment) {
+						for(String content : Assessment) {
 							 contentJson = (JSONObject) p.parse(content);
-							if(contentJson.getAsString("topic").toLowerCase().equals(bodyJson.getAsString("msg").toLowerCase()) || chosenTopicNumber.equals(String.valueOf(topicCount))){
-								setUpNluAssessment(contentJson, channel, bodyJson.getAsString("quitIntent"), bodyJson.getAsString("helpIntent"),  bodyJson.getAsString("Type"), bodyJson.getAsString("modelType"));
+							if(contentJson.getAsString("topicName").toLowerCase().equals(bodyJson.getAsString("msg").toLowerCase()) || chosenTopicNumber.equals(String.valueOf(topicCount))){
+								setUpNluAssessment2(contentJson, channel, bodyJson.getAsString("quitIntent"), bodyJson.getAsString("helpIntent"),  bodyJson.getAsString("Type"), bodyJson.getAsString("modelType"));
 								this.topicsProposed.remove(channel);
 								this.assessmentStarted.put(channel, "true");
-								response.put("text", "Wir starten jetzt das Nlu Assessment über "+ contentJson.getAsString("topic") + " :)!\n" + this.currentNLUAssessment.get(channel).getCurrentQuestion());							
+								response.put("text", "Wir starten jetzt das Nlu Assessment über "+ contentJson.getAsString("topicName") + " :)!\n" + this.currentNLUAssessment.get(channel).getCurrentQuestion());							
 								response.put("closeContext", "false");
 								
 								return Response.ok().entity(response).build(); 
-							} else if(contentJson.getAsString("topic").toLowerCase().contains(bodyJson.getAsString("msg").toLowerCase())) {
-								similarTopicNames.add(contentJson.getAsString("topic"));
-								similarNames += " • " + topicCount + ". " + contentJson.getAsString("topic") + "\n";
+							} else if(contentJson.getAsString("topicName").toLowerCase().contains(bodyJson.getAsString("msg").toLowerCase())) {
+								similarTopicNames.add(contentJson.getAsString("topicName"));
+								similarNames += " • " + topicCount + ". " + contentJson.getAsString("topicName") + "\n";
 							}
 							topicCount++;
 						}
@@ -621,11 +682,11 @@ public class ReaderbenchService extends RESTService {
 							return Response.ok().entity(response).build();
 						}
 						JSONObject error = new JSONObject();
-						error.put("text", "Topic with name " + bodyJson.getAsString("topic")+ " not found");
+						error.put("text", "Topic with name " + bodyJson.getAsString("topicName")+ " not found");
 						error.put("closeContext", "true");
 						return Response.ok().entity(error).build();
 					}
-				}
+				/*}*/
 				
 
 			} else {
@@ -709,6 +770,46 @@ public class ReaderbenchService extends RESTService {
 			+ assessmentContent[i][4]+ " " + assessmentContent[i][5]);
         } 
         NLUAssessment assessment = new NLUAssessment(quitIntent, questions, intents, hints, helpIntent, type, lectureref, questionWeight, modelType, similarityScore, textlevel);
+        this.currentNLUAssessment.put(channel, assessment);
+        this.assessmentStarted.put(channel, "true");	
+  		
+	}
+	private void setUpNluAssessment2(JSONObject content , String channel, String quitIntent, String helpIntent, String type, String modelType) throws ParseException {
+        JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		JSONArray Question =(JSONArray) content.get("question");
+
+
+        int length = Question.size(); 
+        String[][] assessmentContent = new String[length][3];
+        for(int i = 0; i < length ; i++){
+			
+				String bodyJson = Question.get(i).toString();  
+				JSONObject contentJson = (JSONObject) p.parse(bodyJson);   
+				assessmentContent[i][0] = contentJson.getAsString("question");
+				assessmentContent[i][1] = contentJson.getAsString("textref"); 
+				assessmentContent[i][2] = contentJson.getAsString("questionWeights");
+			
+			
+        }
+        
+        
+       
+        Arrays.sort(assessmentContent, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
+        ArrayList<String> questions = new ArrayList<String>();
+		ArrayList<String> lectureref = new ArrayList<String>();
+		ArrayList<Double> questionWeight = new  ArrayList<Double>();
+		ArrayList<Double> similarityScore = new  ArrayList<Double>();
+		ArrayList<String> textlevel = new ArrayList<String>();
+
+        for(int i = 0; i < length ; i++){
+        	questions.add(assessmentContent[i][1]);
+			lectureref.add(assessmentContent[i][1]);
+			questionWeight.add(Double.parseDouble(assessmentContent[i][2]));
+			similarityScore.add(0.0);
+			textlevel.add("");
+			System.out.println(assessmentContent[i][0] + " " + assessmentContent[i][1] + " " + assessmentContent[i][2]);
+        } 
+        NLUAssessment assessment = new NLUAssessment(quitIntent, questions, null, null, helpIntent, type, lectureref, questionWeight, modelType, similarityScore, textlevel);
         this.currentNLUAssessment.put(channel, assessment);
         this.assessmentStarted.put(channel, "true");	
   		
@@ -1179,7 +1280,67 @@ public class ReaderbenchService extends RESTService {
         }
         response.put("text", answer);
         return response;
-    }
+	}
+	
+	/*public Response putTopic(@PathParam("name") String name, BotModel body) {
+		Connection con = null;
+		PreparedStatement ps = null;
+		Response resp = null;
+		
+		try {
+			// Open database connection
+			con = service.database.getDataSource().getConnection();
+			
+			// Write serialised model in Blob
+			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+			ObjectOutputStream out = new ObjectOutputStream(bOut);
+			out.writeObject(body);
+			Blob blob = con.createBlob();
+			blob.setBytes(1, bOut.toByteArray());
+			
+			// Check if model with given name already exists in database. If yes, update it. Else, insert it
+			ps = con.prepareStatement("SELECT * FROM models WHERE name = ?");
+			ps.setString(1, name);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				ps.close();
+				ps = con.prepareStatement("UPDATE models SET model = ? WHERE name = ?");
+				ps.setBlob(1, blob);
+				ps.setString(2, name);
+				ps.executeUpdate();
+			} else {
+				ps.close();
+				ps = con.prepareStatement("INSERT INTO models(name, model) VALUES (?, ?)");
+				ps.setString(1, name);
+				ps.setBlob(2, blob);
+				ps.executeUpdate();
+			}
+			
+			resp = Response.ok().entity("Model stored.").build();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		} catch (IOException e) {
+			e.printStackTrace();
+			resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+			;
+		}
+		
+		return resp;
+	}*/
+
 
 
 	private String selectLevelMsg() {
