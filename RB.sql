@@ -21,12 +21,11 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS  `topic` ;
 
 CREATE TABLE IF NOT EXISTS  `topic` (
-  `id` INT NOT NULL AUTO_INCREMENT,
   `topic_name` VARCHAR(255) NOT NULL,
   `processed` TINYINT NOT NULL,
   `topiccol` VARCHAR(45) NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB AUTO_INCREMENT = 1  CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+  PRIMARY KEY (`topic_name`))
+ENGINE = InnoDB  CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 
 -- -----------------------------------------------------
@@ -36,9 +35,10 @@ DROP TABLE IF EXISTS  `question` ;
 
 CREATE TABLE IF NOT EXISTS  `question` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `question_content` VARCHAR(255) NOT NULL,
+  `question` VARCHAR(255) NOT NULL,
   `topic_id` INT NULL,
   `textref` VARCHAR(1000) NULL,
+  `numberOfPoints` DOUBLE NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `question_content_UNIQUE` (`question_content` ASC) VISIBLE,
   INDEX `topic_id_idx` (`topic_id` ASC) VISIBLE,

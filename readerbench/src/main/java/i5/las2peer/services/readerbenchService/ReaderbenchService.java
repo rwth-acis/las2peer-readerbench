@@ -142,6 +142,11 @@ public class ReaderbenchService extends RESTService {
 	
 	private static ArrayList<String> Assessment = new ArrayList<String>();
 
+	// Used to keep track  the topics that were already given and executed for a specific user. The assessment function first gives a list on available topics and then expects an answer. 
+	private static ArrayList<String> proposedTopic = new ArrayList<String>();
+
+	private static ArrayList<String> processedTopic = new ArrayList<String>();
+
 	private String databaseName;
 	private int databaseTypeInt = 1; // See SQLDatabaseType for more information
 	private SQLDatabaseType databaseType;
@@ -580,6 +585,84 @@ public class ReaderbenchService extends RESTService {
 			System.out.println("+++++++++++++++++++++++++++++++++++System.out.println(bodyJson);");
 			Assessment.add(bodyJson.toString());
 			System.out.println("+++++++++++++++++++++++++++++++++++assessment.add(bodyJson.toString());");
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
+			try {
+				// Open database connection
+				con = service.database.getDataSource().getConnection();
+				
+				// Check if data with given name already exists in database. If yes, update it. Else, insert it
+				String topicName = bodyJson.getAsString("topicName");
+				String time =""+ System.currentTimeMillis();
+				ps = con.prepareStatement("SELECT * FROM topic WHERE name = ?");
+				ps.setString(1, topicName + time);
+				ResultSet rs = ps.executeQuery();
+				if (rs.next()) {
+					return Response.ok("Assessment not inserted").build();
+				} else {
+					ps.close();
+					ps = con.prepareStatement("INSERT INTO topic(topic_name,processed ,data) VALUES (?, ?, ?)");
+					ps.setString(1,  bodyJson.getAsString("topicName")+ time);
+					ps.setString(2, false);
+					ps.setString(2, body);
+					ps.executeUpdate();
+				}
+
+				
+				JSONArray Question =(JSONArray) content.get("question");
+		
+		
+				int length = Question.size(); 
+				String[][] assessmentContent = new String[length][3];
+				for(int i = 0; i < length ; i++){
+					
+						String bodyJson = Question.get(i).toString();  
+						JSONObject contentJson = (JSONObject) p.parse(bodyJson);   
+						assessmentContent[i][0] = contentJson.getAsString("question");
+						assessmentContent[i][1] = contentJson.getAsString("textref"); 
+						assessmentContent[i][2] = contentJson.getAsString("numberOfPoints");
+					
+					
+				}
+				
+				
+			   
+				Arrays.sort(assessmentContent, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
+				
+
+				for(int i = 0; i < length ; i++){
+					ps.close();
+					ps = con.prepareStatement("INSERT INTO question(question, topic_id, textref, numberOfPoints) VALUES (?, ?, ?, numberOfPoints)");
+					ps.setString(1, assessmentContent[i][1]);
+					ps.setString(2, bodyJson.getAsString("topicName")+ time);
+					ps.setString(3, assessmentContent[i][1]);
+					ps.setString(4, assessmentContent[i][1]);
+					ps.executeUpdate();
+				} 
+
+				resp = Response.ok().entity("Topic data stored.").build();
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} catch (IOException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
+			}
 
 
 		} catch (ParseException e) {
@@ -657,10 +740,43 @@ public class ReaderbenchService extends RESTService {
 				        ArrayList<String> similarTopicNames = new ArrayList<String>();
 				        String smiliarNames = "";
 						int topicCount = 1;
+
+						try {
+							// Open database connection
+							con = service.database.getDataSource().getConnection();
+							
+							
+							ps = con.prepareStatement("SELECT topic_name FROM topic WHERE processed = ?");
+							ps.setString(1, false);
+							ResultSet rs = ps.executeQuery();
+				
+							String topicName = "";
+							while(rs.next()) {
+								topic = rs.getString("topic_name");
+							}
+							
+							resp = Response.ok().entity(models.toJSONString()).build();
+						} catch (SQLException e) {
+							e.printStackTrace();
+							resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+						} finally {
+							try {
+								if (ps != null)
+									ps.close();
+							} catch (Exception e) {
+							}
+							;
+							try {
+								if (con != null)
+									con.close();
+							} catch (Exception e) {
+							}
+							;
+						}
 						for(String content : Assessment) {
 							 contentJson = (JSONObject) p.parse(content);
 							if(contentJson.getAsString("topicName").toLowerCase().equals(bodyJson.getAsString("msg").toLowerCase()) || chosenTopicNumber.equals(String.valueOf(topicCount))){
-								setUpNluAssessment2(contentJson, channel, bodyJson.getAsString("quitIntent"), bodyJson.getAsString("helpIntent"),  bodyJson.getAsString("Type"), bodyJson.getAsString("modelType"));
+								setUpNluAssessment(contentJson, channel, bodyJson.getAsString("quitIntent"), bodyJson.getAsString("helpIntent"),  bodyJson.getAsString("Type"), bodyJson.getAsString("modelType"));
 								this.topicsProposed.remove(channel);
 								this.assessmentStarted.put(channel, "true");
 								response.put("text", "Wir starten jetzt das Nlu Assessment über "+ contentJson.getAsString("topicName") + " :)!\n" + this.currentNLUAssessment.get(channel).getCurrentQuestion());							
@@ -704,77 +820,7 @@ public class ReaderbenchService extends RESTService {
 
 	}
 
-	private void setUpNluAssessment(JSONObject content , String channel, String quitIntent, String helpIntent, String type, String modelType) {
-        int noNum = 0;
-        JSONArray Sequence =(JSONArray) content.get("Sequence");
-        JSONArray Questions =(JSONArray) content.get("Questions");
-        JSONArray Intents =(JSONArray) content.get("Intents");
-		JSONArray Hints =(JSONArray) content.get("Hints");
-		//Adding the element for the text Assessment
-		JSONArray Lectureref =(JSONArray) content.get("Textrefs");
-		JSONArray QuestionWeight =(JSONArray) content.get("QuestionWeights");
-
-
-
-
-        int length = Questions.size(); 
-        int max = 0;
-        String[][] assessmentContent = new String[length][6];
-        for(int i = 0; i < length ; i++){
-            if(Sequence.get(i).equals("")){
-                noNum++;   
-            } else if(Integer.parseInt(Sequence.get(i).toString()) > max){
-                max = Integer.parseInt(Sequence.get(i).toString());    
-            } else if(Integer.parseInt(Sequence.get(i).toString()) == max) {
-            	Sequence.add(i, String.valueOf(max+1));
-            	max++;
-            }           
-            assessmentContent[i][0] = Sequence.get(i).toString();
-            assessmentContent[i][1] = Questions.get(i).toString();
-            assessmentContent[i][2] = Intents.get(i).toString();
-			assessmentContent[i][3] = Hints.get(i).toString();  
-			assessmentContent[i][4] = Lectureref.get(i).toString(); 
-			assessmentContent[i][5] = QuestionWeight.get(i).toString();      
-        }
-        
-        // to fill out the blank sequence slots
-        // last blank space will be at last place
-        
-        
-        
-        // change to nlu quiz object
-        for(int i = length-1; i >= 0 ; i--){
-            if(assessmentContent[i][0].equals("")){
-            	assessmentContent[i][0] = Integer.toString(max + noNum);
-            	noNum--;
-            }
-        }      
-        Arrays.sort(assessmentContent, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
-        ArrayList<String> questions = new ArrayList<String>();
-        ArrayList<String> intents = new ArrayList<String>();
-		ArrayList<String> hints = new ArrayList<String>();
-		ArrayList<String> lectureref = new ArrayList<String>();
-		ArrayList<Double> questionWeight = new  ArrayList<Double>();
-		ArrayList<Double> similarityScore = new  ArrayList<Double>();
-		ArrayList<String> textlevel = new ArrayList<String>();
-
-        for(int i = 0; i < length ; i++){
-        	questions.add(assessmentContent[i][1]);
-        	intents.add(assessmentContent[i][2]);
-			hints.add(assessmentContent[i][3]);
-			lectureref.add(assessmentContent[i][4]);
-			questionWeight.add(Double.parseDouble(assessmentContent[i][5]));
-			similarityScore.add(0.0);
-			textlevel.add("");
-			System.out.println(assessmentContent[i][0] + " " + assessmentContent[i][1] + " " + assessmentContent[i][2] + " " + assessmentContent[i][3]+ " " 
-			+ assessmentContent[i][4]+ " " + assessmentContent[i][5]);
-        } 
-        NLUAssessment assessment = new NLUAssessment(quitIntent, questions, intents, hints, helpIntent, type, lectureref, questionWeight, modelType, similarityScore, textlevel);
-        this.currentNLUAssessment.put(channel, assessment);
-        this.assessmentStarted.put(channel, "true");	
-  		
-	}
-	private void setUpNluAssessment2(JSONObject content , String channel, String quitIntent, String helpIntent, String type, String modelType) throws ParseException {
+	private void setUpNluAssessment(JSONObject content , String channel, String quitIntent, String helpIntent, String type, String modelType) throws ParseException {
         JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
 		JSONArray Question =(JSONArray) content.get("question");
 
@@ -787,7 +833,7 @@ public class ReaderbenchService extends RESTService {
 				JSONObject contentJson = (JSONObject) p.parse(bodyJson);   
 				assessmentContent[i][0] = contentJson.getAsString("question");
 				assessmentContent[i][1] = contentJson.getAsString("textref"); 
-				assessmentContent[i][2] = contentJson.getAsString("questionWeights");
+				assessmentContent[i][2] = contentJson.getAsString("numberOfPointss");
 			
 			
         }
@@ -797,19 +843,19 @@ public class ReaderbenchService extends RESTService {
         Arrays.sort(assessmentContent, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
         ArrayList<String> questions = new ArrayList<String>();
 		ArrayList<String> lectureref = new ArrayList<String>();
-		ArrayList<Double> questionWeight = new  ArrayList<Double>();
+		ArrayList<Double> numberOfPoints = new  ArrayList<Double>();
 		ArrayList<Double> similarityScore = new  ArrayList<Double>();
 		ArrayList<String> textlevel = new ArrayList<String>();
 
         for(int i = 0; i < length ; i++){
         	questions.add(assessmentContent[i][1]);
 			lectureref.add(assessmentContent[i][1]);
-			questionWeight.add(Double.parseDouble(assessmentContent[i][2]));
+			numberOfPoints.add(Double.parseDouble(assessmentContent[i][2]));
 			similarityScore.add(0.0);
 			textlevel.add("");
 			System.out.println(assessmentContent[i][0] + " " + assessmentContent[i][1] + " " + assessmentContent[i][2]);
         } 
-        NLUAssessment assessment = new NLUAssessment(quitIntent, questions, null, null, helpIntent, type, lectureref, questionWeight, modelType, similarityScore, textlevel);
+        NLUAssessment assessment = new NLUAssessment(quitIntent, questions, null, null, helpIntent, type, lectureref, numberOfPoints, modelType, similarityScore, textlevel);
         this.currentNLUAssessment.put(channel, assessment);
         this.assessmentStarted.put(channel, "true");	
   		
