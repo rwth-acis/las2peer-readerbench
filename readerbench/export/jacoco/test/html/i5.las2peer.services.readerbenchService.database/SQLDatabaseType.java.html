@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SQLDatabaseType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">readerbench</a> &gt; <a href="index.source.html" class="el_package">i5.las2peer.services.readerbenchService.database</a> &gt; <span class="el_source">SQLDatabaseType.java</span></div><h1>SQLDatabaseType.java</h1><pre class="source lang-java linenums">package i5.las2peer.services.readerbenchService.database;
+
+/**
+ *
+ * Enumeration class that provides the right drivers according to the database type. The original code was taken from
+ * the QueryVisualizationService.
+ *
+ * This implementation currently only supports MySQL.
+ *
+ */
+<span class="fc" id="L11">public enum SQLDatabaseType {</span>
+
+	/**
+	 * A MySQL database. Works with the &quot;mysqlConnectorJava-8.0.13.jar&quot; archive.
+	 */
+<span class="fc" id="L16">	MySQL(1, &quot;com.mysql.cj.jdbc.Driver&quot;, &quot;mysql&quot;);</span>
+
+	private final int code;
+	private final String driver;
+	private final String jdbc;
+
+<span class="fc" id="L22">	SQLDatabaseType(int code, String driverName, String jdbc) {</span>
+<span class="fc" id="L23">		this.driver = driverName;</span>
+<span class="fc" id="L24">		this.jdbc = jdbc;</span>
+<span class="fc" id="L25">		this.code = code;</span>
+<span class="fc" id="L26">	}</span>
+
+	/**
+	 *
+	 * Returns the code of the database.
+	 *
+	 * @return a code
+	 *
+	 */
+	public int getCode() {
+<span class="fc" id="L36">		return this.code;</span>
+	}
+
+	/**
+	 *
+	 * Returns the database type.
+	 *
+	 * @param code the number corresponding to a database type
+	 *
+	 * @return the corresponding {@link SQLDatabaseType} representation
+	 *
+	 */
+	public static SQLDatabaseType getSQLDatabaseType(int code) {
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">		switch (code) {</span>
+		case 1:
+<span class="fc" id="L51">			return SQLDatabaseType.MySQL;</span>
+		}
+<span class="nc" id="L53">		return null;</span>
+	}
+
+	/**
+	 *
+	 * Returns the driver name of the corresponding database. The library of this driver has to be in the &quot;lib&quot; folder.
+	 *
+	 * @return a driver name
+	 *
+	 */
+	public String getDriverName() {
+<span class="fc" id="L64">		return driver;</span>
+	}
+
+	/**
+	 *
+	 * Constructs a URL prefix that can be used for addressing a database.
+	 *
+	 * @param host a database host address
+	 * @param database the database name
+	 * @param port the port the database is running at
+	 *
+	 * @return a String representing the URL prefix
+	 *
+	 */
+	public String getURLPrefix(String host, String database, int port) {
+<span class="fc" id="L79">		return &quot;jdbc:&quot; + jdbc + &quot;://&quot; + host + &quot;:&quot; + port + &quot;/&quot; + database;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

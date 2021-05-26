@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SQLDatabase.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">readerbench</a> &gt; <a href="index.source.html" class="el_package">i5.las2peer.services.readerbenchService.database</a> &gt; <span class="el_source">SQLDatabase.java</span></div><h1>SQLDatabase.java</h1><pre class="source lang-java linenums">package i5.las2peer.services.readerbenchService.database;
+
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import org.apache.commons.dbcp2.BasicDataSource;
+
+/**
+ *
+ * Stores the database credentials and provides access to query execution. The original code was taken from the
+ * QueryVisualizationService.
+ *
+ * @author Peter de Lange
+ *
+ */
+public class SQLDatabase {
+
+	private BasicDataSource dataSource;
+
+<span class="fc" id="L20">	private SQLDatabaseType jdbcInfo = null;</span>
+<span class="fc" id="L21">	private String username = null;</span>
+<span class="fc" id="L22">	private String password = null;</span>
+<span class="fc" id="L23">	private String database = null;</span>
+<span class="fc" id="L24">	private String host = null;</span>
+<span class="fc" id="L25">	private int port = -1;</span>
+
+	/**
+	 *
+	 * Constructor for a database instance.
+	 *
+	 * @param jdbcInfo the driver you are using
+	 * @param username login name
+	 * @param password password
+	 * @param database database name
+	 * @param host host for the connection
+	 * @param port port of the SQL server
+	 *
+	 */
+	public SQLDatabase(SQLDatabaseType jdbcInfo, String username, String password, String database, String host,
+<span class="fc" id="L40">			int port) {</span>
+
+<span class="fc" id="L42">		this.jdbcInfo = jdbcInfo;</span>
+<span class="fc" id="L43">		this.username = username;</span>
+<span class="fc" id="L44">		this.password = password;</span>
+<span class="fc" id="L45">		this.host = host;</span>
+<span class="fc" id="L46">		this.port = port;</span>
+<span class="fc" id="L47">		this.database = database;</span>
+
+<span class="fc" id="L49">		BasicDataSource ds = new BasicDataSource();</span>
+<span class="fc" id="L50">		String urlPrefix = jdbcInfo.getURLPrefix(this.host, this.database, this.port)</span>
+				+ &quot;?autoReconnect=true&amp;useSSL=false&amp;serverTimezone=UTC&quot;;
+<span class="fc" id="L52">		ds.setUrl(urlPrefix);</span>
+<span class="fc" id="L53">		ds.setUsername(username);</span>
+<span class="fc" id="L54">		ds.setPassword(password);</span>
+<span class="fc" id="L55">		ds.setDriverClassName(jdbcInfo.getDriverName());</span>
+<span class="fc" id="L56">		ds.setPoolPreparedStatements(true);</span>
+<span class="fc" id="L57">		ds.setTestOnBorrow(true);</span>
+<span class="fc" id="L58">		ds.setRemoveAbandonedOnBorrow(true);</span>
+<span class="fc" id="L59">		ds.setRemoveAbandonedOnMaintenance(true);</span>
+<span class="fc" id="L60">		ds.setMaxOpenPreparedStatements(100);</span>
+<span class="fc" id="L61">		ds.setMaxConnLifetimeMillis(1000 * 60 * 60);</span>
+
+<span class="fc" id="L63">		dataSource = ds;</span>
+<span class="fc" id="L64">		setValidationQuery();</span>
+<span class="fc" id="L65">	}</span>
+
+	/**
+	 *
+	 * Executes a SQL statement to insert an entry into the database.
+	 *
+	 * @param SQLStatment a SQLStatement
+	 *
+	 * @return true, if correctly inserted
+	 *
+	 * @throws SQLException problems inserting
+	 *
+	 */
+	@Deprecated
+	public boolean store(String SQLStatment) throws SQLException {
+		// make sure one is connected to a database
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (!dataSource.getConnection().isValid(5000)) {</span>
+<span class="nc" id="L82">			System.err.println(&quot;No database connection.&quot;);</span>
+<span class="nc" id="L83">			return false;</span>
+		}
+<span class="nc" id="L85">		Statement statement = dataSource.getConnection().createStatement();</span>
+<span class="nc" id="L86">		statement.executeUpdate(SQLStatment);</span>
+<span class="nc" id="L87">		return true;</span>
+
+	}
+
+	public String getUser() {
+<span class="nc" id="L92">		return this.username;</span>
+	}
+
+	public String getPassword() {
+<span class="nc" id="L96">		return this.password;</span>
+	}
+
+	public String getDatabase() {
+<span class="nc" id="L100">		return this.database;</span>
+	}
+
+	public String getHost() {
+<span class="nc" id="L104">		return this.host;</span>
+	}
+
+	public int getPort() {
+<span class="nc" id="L108">		return this.port;</span>
+	}
+
+	public SQLDatabaseType getJdbcInfo() {
+<span class="nc" id="L112">		return jdbcInfo;</span>
+	}
+
+	public BasicDataSource getDataSource() {
+<span class="fc" id="L116">		return dataSource;</span>
+	}
+
+	private void setValidationQuery() {
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">		switch (jdbcInfo.getCode()) {</span>
+		case 1:
+<span class="fc" id="L122">			dataSource.setValidationQuery(&quot;SELECT 1;&quot;);</span>
+		}
+<span class="fc" id="L124">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

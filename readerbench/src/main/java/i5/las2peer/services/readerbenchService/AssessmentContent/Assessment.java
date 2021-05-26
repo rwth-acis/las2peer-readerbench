@@ -13,8 +13,9 @@ public abstract class Assessment {
 	private ArrayList<Double> similarityScore;
 	private ArrayList<String> textReference;
 	private String type;
-	private ArrayList<Double> questionWeight;
+	private ArrayList<Double> numberOfPoints;
 	private String modelType;
+	private String topicId;
 	
 	public Assessment(String quitIntent, ArrayList<String> questions) {
 		this.quitIntent = quitIntent;
@@ -23,8 +24,9 @@ public abstract class Assessment {
 		this.currentQuestion = 0;
 		this.currentWrongQuestions = "";
 	}
-	public Assessment(String quitIntent, ArrayList<String> questions, String type, ArrayList<String> textrefref,  ArrayList<Double> questionWeight, 
+	public Assessment(String topicName, String topicId, String quitIntent, ArrayList<String> questions, String type, ArrayList<String> textrefref,  ArrayList<Double> numberOfPoints, 
 	String modelType, ArrayList<Double> similarityScore, ArrayList<String> textlevel) {
+		this.topicName = topicName;
 		this.quitIntent = quitIntent;
 		this.questions = questions;
 		this.marks = 0;
@@ -34,13 +36,22 @@ public abstract class Assessment {
 		this.textlevel = textlevel;
 		this.textReference = textrefref;
 		this.type = type;
-		this.questionWeight =questionWeight;
+		this.numberOfPoints =numberOfPoints;
 		this.modelType = modelType;
+		this.topicId = topicId;
 	}
 
 	
 	public String getType(){
 		return this.type;
+	}
+
+	public String gettopicId(){
+		return this.topicId;
+	}
+
+	public String getTopicName(){
+		return this.topicName;
 	}
 
 	public String getQuitIntent() {
@@ -78,8 +89,8 @@ public abstract class Assessment {
 	public String getCurrentQuestion() {
 		return this.questions.get(this.getCurrentQuestionNumber());
 	}
-	public Double getCurrentQuestionWeight() {
-		return this.questionWeight.get(this.getCurrentQuestionNumber());
+	public Double getCurrentNumberOfPoints() {
+		return this.numberOfPoints.get(this.getCurrentQuestionNumber());
 	}
 
 	public void setLevel(String level){
@@ -87,8 +98,11 @@ public abstract class Assessment {
 	}
 
 	public void setSimilarity(double value){
-		this.similarityScore.set(this.getCurrentQuestionNumber(), value*100.0*this.questionWeight.get(this.getCurrentQuestionNumber()));
+		this.similarityScore.set(this.getCurrentQuestionNumber(), value*this.numberOfPoints.get(this.getCurrentQuestionNumber()));
 	}
+
+	
+
 	public ArrayList<Double> getSimilarityScoreList(){
 		return this.similarityScore;
 	}

@@ -6,6 +6,9 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS  `results` ;
+DROP TABLE IF EXISTS  `question` ;
+DROP TABLE IF EXISTS  `topic` ;
 -- -----------------------------------------------------
 -- Schema mydb
 -- -----------------------------------------------------
@@ -18,57 +21,48 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- -----------------------------------------------------
 -- Table  `topic`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS  `topic` ;
+
 
 CREATE TABLE IF NOT EXISTS  `topic` (
+  `topic_id` VARCHAR(255) NOT NULL,
   `topic_name` VARCHAR(255) NOT NULL,
-  `processed` TINYINT NOT NULL,
-  `topiccol` VARCHAR(45) NULL,
-  PRIMARY KEY (`topic_name`))
+  `processed` BOOLEAN NOT NULL,
+  `due_date` VARCHAR(255) NULL,
+  PRIMARY KEY (`topic_id`))
 ENGINE = InnoDB  CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 
 -- -----------------------------------------------------
 -- Table  `question`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS  `question` ;
+
 
 CREATE TABLE IF NOT EXISTS  `question` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `question` VARCHAR(255) NOT NULL,
-  `topic_id` INT NULL,
-  `textref` VARCHAR(1000) NULL,
+  `topic_id` VARCHAR(255) NOT NULL,
+  `textref` TEXT NULL,
   `numberOfPoints` DOUBLE NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `question_content_UNIQUE` (`question_content` ASC) VISIBLE,
-  INDEX `topic_id_idx` (`topic_id` ASC) VISIBLE,
-  CONSTRAINT `topic_id`
-    FOREIGN KEY (`topic_id`)
-    REFERENCES  `topic` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  PRIMARY KEY (`id`)
+    )
 ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 
--- -----------------------------------------------------
--- Table  `feedback`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS  `feedback` ;
 
-CREATE TABLE IF NOT EXISTS  `feedback` (
-  `id` INT NOT NULL,
-  `questionid` VARCHAR(45) NULL,
-  `answer` VARCHAR(45) NULL,
+
+-- -----------------------------------------------------
+-- Table  `results`
+-- -----------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS  `results` (
+  `topic_id` VARCHAR(255) NOT NULL,
+  `questionid` INT NOT NULL,
+   `channel` VARCHAR(255) NULL,
   `complexity` VARCHAR(45) NULL,
-  `userid` VARCHAR(45) NULL,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `questionid`
-    FOREIGN KEY (`id`)
-    REFERENCES  `question` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  `numberOfPoints` VARCHAR(45) NULL,
+ 
+  PRIMARY KEY (`topic_id`, `questionid`) USING BTREE
+    )
 ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
-
-SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=1;

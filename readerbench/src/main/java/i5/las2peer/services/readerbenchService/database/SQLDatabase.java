@@ -1,4 +1,4 @@
-package i5.las2peer.services.socialBotManagerService.database;
+package i5.las2peer.services.readerbenchService.database;
 
 import java.sql.SQLException;
 import java.sql.Statement;

@@ -18,7 +18,7 @@ export CREATE_DB_SQL='RB.sql'
 
 function set_in_service_config {
     sed -i "s?${1}[[:blank:]]*=.*?${1}=${2}?g" ${SERVICE_PROPERTY_FILE}
-}   
+}  
 set_in_service_config databaseName ${DATABASE_NAME}
 set_in_service_config databaseHost ${DATABASE_HOST}
 set_in_service_config databasePort ${DATABASE_PORT}
@@ -31,8 +31,18 @@ while ! mysqladmin ping -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER}
     sleep 1
 done
 echo "${DATABASE_HOST}:${DATABASE_PORT} is available. Continuing..."
+
+# Create and migrate the database on first run
+if ! mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} -e "desc ${DATABASE_NAME}.MESSAGE" > /dev/null 2>&1; then
+    echo "Creating database schema..."
+    mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} ${DATABASE_NAME} < ${CREATE_DB_SQL}
+fi
+echo "Creating database schema..."
+mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} ${DATABASE_NAME} < ${CREATE_DB_SQL}
+
+
 # set defaults for optional service parameters
-[[ -z "${SERVICE_PASSPHRASE}" ]] && export SERVICE_PASSPHRASE='sbf'
+[[ -z "${SERVICE_PASSPHRASE}" ]] && export SERVICE_PASSPHRASE='readerbench'
 
 
 # wait for any bootstrap host to be available
