@@ -9,8 +9,8 @@ public class NLUAssessment extends Assessment {
 	private ArrayList<String> hints;
 	private String type;
 	public NLUAssessment(String topicName,String topicId, String quitIntent, ArrayList<String> questions, ArrayList<String> intents, ArrayList<String> hints,
-	 String helpIntent, String type, ArrayList<String> textref, ArrayList<Double> numberOfPoints, String modelType,  ArrayList<Double> similarityScore, ArrayList<String> textlevel) {
-		super(topicName, topicId, quitIntent, questions, type, textref, numberOfPoints, modelType, similarityScore, textlevel );
+	 String helpIntent, String type, ArrayList<String> textref, ArrayList<Double> numberOfPoints, String modelType,  ArrayList<Double> similarityScore, ArrayList<String> textlevel, ArrayList<String> answers) {
+		super(topicName, topicId, quitIntent, questions, type, textref, numberOfPoints, modelType, similarityScore, textlevel, answers);
 		this.helpIntent = helpIntent;
 		this.intents = intents;
 		this.hints = hints;
@@ -29,3 +29,4 @@ public class NLUAssessment extends Assessment {
 	}
 	
 }
+	

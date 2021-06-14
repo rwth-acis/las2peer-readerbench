@@ -16,6 +16,7 @@ public abstract class Assessment {
 	private ArrayList<Double> numberOfPoints;
 	private String modelType;
 	private String topicId;
+	private ArrayList<String> answers;
 	
 	public Assessment(String quitIntent, ArrayList<String> questions) {
 		this.quitIntent = quitIntent;
@@ -25,7 +26,7 @@ public abstract class Assessment {
 		this.currentWrongQuestions = "";
 	}
 	public Assessment(String topicName, String topicId, String quitIntent, ArrayList<String> questions, String type, ArrayList<String> textrefref,  ArrayList<Double> numberOfPoints, 
-	String modelType, ArrayList<Double> similarityScore, ArrayList<String> textlevel) {
+	String modelType, ArrayList<Double> similarityScore, ArrayList<String> textlevel, ArrayList<String> answers) {
 		this.topicName = topicName;
 		this.quitIntent = quitIntent;
 		this.questions = questions;
@@ -39,6 +40,7 @@ public abstract class Assessment {
 		this.numberOfPoints =numberOfPoints;
 		this.modelType = modelType;
 		this.topicId = topicId;
+		this.answers = answers;
 	}
 
 	
@@ -89,6 +91,19 @@ public abstract class Assessment {
 	public String getCurrentQuestion() {
 		return this.questions.get(this.getCurrentQuestionNumber());
 	}
+	public String getQuestionByNumber(int number) {
+		return this.questions.get(number);
+	}
+	public String getAnswerByNumber(int number) {
+		return this.answers.get(number);
+	}
+	public String getCurrentAnswer() {
+		return this.questions.get(this.getCurrentQuestionNumber());
+	}
+
+	public void setCurrentAnswer(String answer) {
+		this.answers.set(this.getCurrentQuestionNumber(), answer);
+	}
 	public Double getCurrentNumberOfPoints() {
 		return this.numberOfPoints.get(this.getCurrentQuestionNumber());
 	}
@@ -96,10 +111,19 @@ public abstract class Assessment {
 	public void setLevel(String level){
 		this.textlevel.set(this.getCurrentQuestionNumber(), level);
 	}
+	public void setLevelByNumber(int number, String level){
+		this.textlevel.set(number, level);
+	}
 
 	public void setSimilarity(double value){
-		this.similarityScore.set(this.getCurrentQuestionNumber(), value*this.numberOfPoints.get(this.getCurrentQuestionNumber()));
+		System.out.println("This CurrentQuestionNumber is..........."+ this.getCurrentQuestionNumber());
+		System.out.println("This NumberOfPoints is..........."+ this.getCurrentQuestionNumber());
+		this.similarityScore.set(this.getCurrentQuestionNumber(), value);
 	}
+	public void setSimilarityByNumber(int number,double value){
+		this.similarityScore.set(number, value);
+	}
+
 
 	
 
@@ -110,9 +134,11 @@ public abstract class Assessment {
 		return this.textlevel;
 	}
 	public String gettextReference(){
-		return textReference.get(this.getCurrentQuestionNumber());
+		return this.textReference.get(this.getCurrentQuestionNumber());
 	}
-
+	public String gettextReferenceByNumber(int number){
+		return this.textReference.get(number);
+	}
 	public String getModelType(){
 		return this.modelType;
 	}

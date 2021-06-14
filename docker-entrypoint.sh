@@ -24,6 +24,8 @@ set_in_service_config databaseHost ${DATABASE_HOST}
 set_in_service_config databasePort ${DATABASE_PORT}
 set_in_service_config databaseUser ${DATABASE_USER}
 set_in_service_config databasePassword ${DATABASE_PASSWORD}
+set_in_service_config readerbenchEndpoint ${RB_API_URL}
+set_in_service_config l2pEndpoint ${L2P_ENDPOINT}
 
 # ensure the database is ready
 while ! mysqladmin ping -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} --silent; do
@@ -37,9 +39,6 @@ if ! mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE
     echo "Creating database schema..."
     mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} ${DATABASE_NAME} < ${CREATE_DB_SQL}
 fi
-echo "Creating database schema..."
-mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} ${DATABASE_NAME} < ${CREATE_DB_SQL}
-
 
 # set defaults for optional service parameters
 [[ -z "${SERVICE_PASSPHRASE}" ]] && export SERVICE_PASSPHRASE='readerbench'

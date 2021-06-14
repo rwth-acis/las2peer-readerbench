@@ -6,7 +6,8 @@ ENV DATABASE_HOST=mysql-service.ma-zeufack
 ENV DATABASE_PORT=3306
 ENV DATABASE_USER=user
 ENV DATABASE_PASSWORD=root
-ENV RB_API_URL=http://localhost:6006
+ENV RB_API_URL=http://rb-controller.ma-zeufack:32446
+ENV L2P_ENDPOINT=http://137.226.232.75:32445/
 
 RUN apk add --update bash mysql-client tzdata curl && rm -f /var/cache/apk/*
 ENV TZ=Europe/Berlin
