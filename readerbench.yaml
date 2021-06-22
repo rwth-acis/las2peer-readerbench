@@ -1,0 +1,70 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: readerbench
+  name: readerbench
+  namespace: ma-zeufack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: readerbench
+  template:
+    metadata:
+      labels:
+        app: readerbench
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - detel
+      containers:
+      - name: readerbench
+        image: "karlydiamond214/readerbench:test"
+        imagePullPolicy: Always
+        env:
+        - name: BOOTSTRAP
+          value: "las2peer:31321"
+        - name: LAS2PEER_PORT
+          value: "31014"
+        - name: DATABASE_NAME
+          value: "LAS2PEERMON"
+        - name: DATABASE_HOST
+          value: "mysql-service"
+        - name: DATABASE_PORT
+          value: "3306"
+        - name: DATABASE_USER
+          value: "user"
+        - name: DATABASE_PASSWORD
+          value: "root"
+        
+
+
+#This is Service Configuration Kube definition
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: readerbench
+  namespace: ma-zeufack
+spec:
+  selector:
+    app: readerbench 
+  ports:
+  - port: 31014
+    name: las2peer
+    targetPort: 31014
+    protocol: TCP
+  - port: 31014
+    targetPort: 31014
+    name: las2peer-pastry
+    protocol: UDP
+  type: ClusterIP
+

@@ -17,7 +17,9 @@ public abstract class Assessment {
 	private String modelType;
 	private String topicId;
 	private ArrayList<String> answers;
-	
+	private ArrayList<String> refComplexity;
+	private ArrayList<String> feedbackText;
+
 	public Assessment(String quitIntent, ArrayList<String> questions) {
 		this.quitIntent = quitIntent;
 		this.questions = questions;
@@ -26,7 +28,7 @@ public abstract class Assessment {
 		this.currentWrongQuestions = "";
 	}
 	public Assessment(String topicName, String topicId, String quitIntent, ArrayList<String> questions, String type, ArrayList<String> textrefref,  ArrayList<Double> numberOfPoints, 
-	String modelType, ArrayList<Double> similarityScore, ArrayList<String> textlevel, ArrayList<String> answers) {
+	String modelType, ArrayList<Double> similarityScore, ArrayList<String> textlevel, ArrayList<String> refComplexity, ArrayList<String> answers, ArrayList<String> feedbackText) {
 		this.topicName = topicName;
 		this.quitIntent = quitIntent;
 		this.questions = questions;
@@ -41,6 +43,8 @@ public abstract class Assessment {
 		this.modelType = modelType;
 		this.topicId = topicId;
 		this.answers = answers;
+		this.refComplexity = refComplexity;
+		this.feedbackText = feedbackText;
 	}
 
 	
@@ -97,6 +101,9 @@ public abstract class Assessment {
 	public String getAnswerByNumber(int number) {
 		return this.answers.get(number);
 	}
+	public String getrefComplexityByNumber(int number) {
+		return this.refComplexity.get(number);
+	}
 	public String getCurrentAnswer() {
 		return this.questions.get(this.getCurrentQuestionNumber());
 	}
@@ -110,6 +117,13 @@ public abstract class Assessment {
 
 	public void setLevel(String level){
 		this.textlevel.set(this.getCurrentQuestionNumber(), level);
+	}
+
+	public String getFeedbackText(int i){
+		return this.feedbackText.get(i);
+	}
+	public void setFeedbackText(String feedback){
+		this.feedbackText.set(this.getCurrentQuestionNumber(), feedback);
 	}
 	public void setLevelByNumber(int number, String level){
 		this.textlevel.set(number, level);
@@ -130,8 +144,8 @@ public abstract class Assessment {
 	public ArrayList<Double> getSimilarityScoreList(){
 		return this.similarityScore;
 	}
-	public ArrayList<String> getLevelList(){
-		return this.textlevel;
+	public String getLevelList(int i){
+		return this.textlevel.get(i);
 	}
 	public String gettextReference(){
 		return this.textReference.get(this.getCurrentQuestionNumber());

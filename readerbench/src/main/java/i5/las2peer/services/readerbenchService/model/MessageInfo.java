@@ -1,53 +1,53 @@
-/**
- * 
- */
 package i5.las2peer.services.readerbenchService.model;
+import i5.las2peer.services.readerbenchService.chat.*;
+import i5.las2peer.services.readerbenchService.nlu.*;
 
 /**
  * @author Karl Zeufack
  *
  */
 public class MessageInfo {
-	String msg;
+	ChatMessage message;
+	Intent intent;
+	String triggeredFunctionId;
 	String botName;
-	String channel;
-	String text;
-	String intent;
-	String email;
-	String category;
-	boolean contextOn;
-	public MessageInfo(String msg, String botName,	String channel,	
-			String text, String intent, String email, String category, boolean contextOn)
+	String serviceAlias;
+	boolean contextWithService;
+
+	public MessageInfo(ChatMessage message,	Intent intent,
+			String triggeredFunctionId, String botName,
+			String serviceAlias, boolean contextWithService)
 	{
-		this.msg = msg;
-		this.botName = botName;
-		this.channel= channel;
-		this.text = text;
+		this.message = message;
 		this.intent = intent;
-		this.email = email;
-		this.category = category;
-		this.contextOn = contextOn;
+		this.triggeredFunctionId = triggeredFunctionId;
+		this.botName = botName;
+		this.serviceAlias = serviceAlias;
+		this.contextWithService = contextWithService;
 	}
-	public String msg() {
-		return this.msg;
+
+	public ChatMessage getMessage() {
+		return this.message;
 	}
-	public String botName() {
-		return this.botName;
-	}
-	public String channel() {
-		return this.channel;
-	}
-	public String text() {
-		return this.text;
-	}
-	public String intent() {
+
+	public Intent getIntent() {
 		return this.intent;
 	}
-	public String email() {
-		return this.email;
+
+	public String getTriggeredFunctionId() {
+		return this.triggeredFunctionId;
 	}
-	public boolean contextOn() {
-		return this.contextOn;
+
+	public String getBotName() {
+		return this.botName;
+	}
+
+	public String getServiceAlias() {
+		return this.serviceAlias;
+	}
+	
+	public boolean contextActive() {
+		return this.contextWithService;
 	}
 	
 	

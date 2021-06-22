@@ -1056,3 +1056,170 @@ javax.ws.rs.NotFoundException: HTTP 404 Not Found
 2021 Juni 11 02:20:22 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-4863087289621780722 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
 2021 Juni 11 02:20:22 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	-4863087289621780722 (java.lang.Long)	15d49d860396ef99acc99f467e25189a67f29739722ed12846240710044fa8ecd70c2288bc6972faa796c7e46daa376415045564d6b88b439727c62d6ef45bf1	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
 2021 Juni 11 02:20:22 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	-4863087289621780722 (java.lang.Long)	-	-	-	-	
+2021 Juni 17 21:08:42 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 17 21:08:42 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 17 21:08:44 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	7022229385296802352 (java.lang.Long)	19e8545a641cc31a76b098f3cacac21e260f30cd4b4fd57e556cd8c39d11c8a7de27b4ce386e984d56bea6811135c241421cfcee5e2b8da5f3caf5efdd8927f4	-	-	ServiceAgent	
+2021 Juni 17 21:08:54 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	7022229385296802352 (java.lang.Long)	19e8545a641cc31a76b098f3cacac21e260f30cd4b4fd57e556cd8c39d11c8a7de27b4ce386e984d56bea6811135c241421cfcee5e2b8da5f3caf5efdd8927f4	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 17 21:08:54 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	7022229385296802352 (java.lang.Long)	19e8545a641cc31a76b098f3cacac21e260f30cd4b4fd57e556cd8c39d11c8a7de27b4ce386e984d56bea6811135c241421cfcee5e2b8da5f3caf5efdd8927f4	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 17 21:08:55 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	7022229385296802352 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:55504	
+2021 Juni 17 21:08:56 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 17 21:08:56 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 17 21:08:56 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 17 21:09:01 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	7022229385296802352 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 17 21:09:01 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	7022229385296802352 (java.lang.Long)	19e8545a641cc31a76b098f3cacac21e260f30cd4b4fd57e556cd8c39d11c8a7de27b4ce386e984d56bea6811135c241421cfcee5e2b8da5f3caf5efdd8927f4	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 17 21:09:01 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	7022229385296802352 (java.lang.Long)	-	-	-	-	
+2021 Juni 17 21:09:01 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 17 21:09:01 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 17 21:09:01 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	-1449559724102124740 (java.lang.Long)	0456fcb2db0a9d45668ab7fda8f338606776fe5fdddae3ffca0573671ba015ed025409427e969f224447872990ad3f2610809deb27a89f33034f15e1091cfefd	-	-	ServiceAgent	
+2021 Juni 17 21:09:08 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	-1449559724102124740 (java.lang.Long)	0456fcb2db0a9d45668ab7fda8f338606776fe5fdddae3ffca0573671ba015ed025409427e969f224447872990ad3f2610809deb27a89f33034f15e1091cfefd	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 17 21:09:08 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	-1449559724102124740 (java.lang.Long)	0456fcb2db0a9d45668ab7fda8f338606776fe5fdddae3ffca0573671ba015ed025409427e969f224447872990ad3f2610809deb27a89f33034f15e1091cfefd	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 17 21:09:08 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-1449559724102124740 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:55509	
+2021 Juni 17 21:09:08 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 17 21:09:08 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 17 21:09:08 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 17 21:09:08 INFO i5.las2peer.restMapper.GenericExceptionMapper: Request failed: javax.ws.rs.NotFoundException: HTTP 404 Not Found
+javax.ws.rs.NotFoundException: HTTP 404 Not Found
+	at org.glassfish.jersey.server.ServerRuntime$1.run(ServerRuntime.java:252)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:248)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:244)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:292)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:274)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:244)
+	at org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:265)
+	at org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:234)
+	at org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:680)
+	at i5.las2peer.restMapper.RESTService.handle(RESTService.java:148)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:564)
+	at i5.las2peer.execution.ServiceHelper.execute(ServiceHelper.java:139)
+	at i5.las2peer.security.ServiceAgentImpl.invoke(ServiceAgentImpl.java:453)
+	at i5.las2peer.security.ServiceAgentImpl.lambda$handle$0(ServiceAgentImpl.java:479)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:630)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+2021 Juni 17 21:09:08 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-1449559724102124740 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 17 21:09:08 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	-1449559724102124740 (java.lang.Long)	0456fcb2db0a9d45668ab7fda8f338606776fe5fdddae3ffca0573671ba015ed025409427e969f224447872990ad3f2610809deb27a89f33034f15e1091cfefd	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 17 21:09:08 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	-1449559724102124740 (java.lang.Long)	-	-	-	-	
+2021 Juni 17 21:11:12 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 17 21:11:12 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 17 21:11:13 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	2085445952075589820 (java.lang.Long)	33f406bb72acbb100fc2bec5af84be2062ad29ff3a14e9a8b8ed6c198d7efcdb75757d8b455b3acc9905c01b1ac6a8d3d994bc7a348ca4dcfe57c3a4101a35aa	-	-	ServiceAgent	
+2021 Juni 17 21:11:21 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	2085445952075589820 (java.lang.Long)	33f406bb72acbb100fc2bec5af84be2062ad29ff3a14e9a8b8ed6c198d7efcdb75757d8b455b3acc9905c01b1ac6a8d3d994bc7a348ca4dcfe57c3a4101a35aa	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 17 21:11:21 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	2085445952075589820 (java.lang.Long)	33f406bb72acbb100fc2bec5af84be2062ad29ff3a14e9a8b8ed6c198d7efcdb75757d8b455b3acc9905c01b1ac6a8d3d994bc7a348ca4dcfe57c3a4101a35aa	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 17 21:11:22 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	2085445952075589820 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:51250	
+2021 Juni 17 21:11:22 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 17 21:11:22 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 17 21:11:22 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 17 21:11:27 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	2085445952075589820 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 17 21:11:27 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	2085445952075589820 (java.lang.Long)	33f406bb72acbb100fc2bec5af84be2062ad29ff3a14e9a8b8ed6c198d7efcdb75757d8b455b3acc9905c01b1ac6a8d3d994bc7a348ca4dcfe57c3a4101a35aa	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 17 21:11:27 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	2085445952075589820 (java.lang.Long)	-	-	-	-	
+2021 Juni 18 01:29:10 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 18 01:29:10 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 18 01:29:11 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	2682722760213073880 (java.lang.Long)	3301c11b8600236cf9000ec76641e007776915b33eb3382e1b5919a41964b8b58b38d93f2a161328111ceb91e5d217b546e43b3b64817d8d50d0bf4e709cbb3b	-	-	ServiceAgent	
+2021 Juni 18 01:29:20 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	2682722760213073880 (java.lang.Long)	3301c11b8600236cf9000ec76641e007776915b33eb3382e1b5919a41964b8b58b38d93f2a161328111ceb91e5d217b546e43b3b64817d8d50d0bf4e709cbb3b	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 18 01:29:20 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	2682722760213073880 (java.lang.Long)	3301c11b8600236cf9000ec76641e007776915b33eb3382e1b5919a41964b8b58b38d93f2a161328111ceb91e5d217b546e43b3b64817d8d50d0bf4e709cbb3b	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 18 01:29:22 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	2682722760213073880 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:64513	
+2021 Juni 18 01:29:22 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 18 01:29:22 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 18 01:29:22 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 18 01:29:31 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	2682722760213073880 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 18 01:29:31 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	2682722760213073880 (java.lang.Long)	3301c11b8600236cf9000ec76641e007776915b33eb3382e1b5919a41964b8b58b38d93f2a161328111ceb91e5d217b546e43b3b64817d8d50d0bf4e709cbb3b	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 18 01:29:31 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	2682722760213073880 (java.lang.Long)	-	-	-	-	
+2021 Juni 18 01:38:41 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 18 01:38:41 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 18 01:38:42 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	-5683959013453833717 (java.lang.Long)	58124c15468ccf136559f99b1dbb5130cd3cf6241689a1dbed992aa5f4616c1d25b43561c84d442afd1d5eb309639d7633937e59d8d83e30cba496d8686330e0	-	-	ServiceAgent	
+2021 Juni 18 01:38:50 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	-5683959013453833717 (java.lang.Long)	58124c15468ccf136559f99b1dbb5130cd3cf6241689a1dbed992aa5f4616c1d25b43561c84d442afd1d5eb309639d7633937e59d8d83e30cba496d8686330e0	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 18 01:38:50 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	-5683959013453833717 (java.lang.Long)	58124c15468ccf136559f99b1dbb5130cd3cf6241689a1dbed992aa5f4616c1d25b43561c84d442afd1d5eb309639d7633937e59d8d83e30cba496d8686330e0	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 18 01:38:50 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-5683959013453833717 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:60420	
+2021 Juni 18 01:38:51 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 18 01:38:51 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 18 01:38:51 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 18 01:38:55 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-5683959013453833717 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 18 01:38:55 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	-5683959013453833717 (java.lang.Long)	58124c15468ccf136559f99b1dbb5130cd3cf6241689a1dbed992aa5f4616c1d25b43561c84d442afd1d5eb309639d7633937e59d8d83e30cba496d8686330e0	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 18 01:38:55 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	-5683959013453833717 (java.lang.Long)	-	-	-	-	
+2021 Juni 20 23:44:50 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 20 23:44:50 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 20 23:44:51 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	-8445161227437080712 (java.lang.Long)	16bd906efb9472256cf0e3fcc04302dc859a5bb58fb791159711edacac9ef3309f6b2627d2b8bb73db693839c747efd34665c63aa3b3762dc1667485eddb10cf	-	-	ServiceAgent	
+2021 Juni 20 23:45:00 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	-8445161227437080712 (java.lang.Long)	16bd906efb9472256cf0e3fcc04302dc859a5bb58fb791159711edacac9ef3309f6b2627d2b8bb73db693839c747efd34665c63aa3b3762dc1667485eddb10cf	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 20 23:45:00 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	-8445161227437080712 (java.lang.Long)	16bd906efb9472256cf0e3fcc04302dc859a5bb58fb791159711edacac9ef3309f6b2627d2b8bb73db693839c747efd34665c63aa3b3762dc1667485eddb10cf	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 20 23:45:01 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-8445161227437080712 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:52243	
+2021 Juni 20 23:45:01 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 20 23:45:01 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 20 23:45:01 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 20 23:45:06 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-8445161227437080712 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 20 23:45:06 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	-8445161227437080712 (java.lang.Long)	16bd906efb9472256cf0e3fcc04302dc859a5bb58fb791159711edacac9ef3309f6b2627d2b8bb73db693839c747efd34665c63aa3b3762dc1667485eddb10cf	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 20 23:45:06 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	-8445161227437080712 (java.lang.Long)	-	-	-	-	
+2021 Juni 22 02:58:31 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 22 02:58:31 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 22 02:58:32 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	-1736824719159513059 (java.lang.Long)	2281d261ae6d136afbda4d964277dd83b2e4000b1c9917244cde20ca1758eaa20ff4723d1e5ab85ec56ebcea81ca00617d7dfd97f338b1cb3eaaba8c2f1cec71	-	-	ServiceAgent	
+2021 Juni 22 02:58:40 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	-1736824719159513059 (java.lang.Long)	2281d261ae6d136afbda4d964277dd83b2e4000b1c9917244cde20ca1758eaa20ff4723d1e5ab85ec56ebcea81ca00617d7dfd97f338b1cb3eaaba8c2f1cec71	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 22 02:58:40 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	-1736824719159513059 (java.lang.Long)	2281d261ae6d136afbda4d964277dd83b2e4000b1c9917244cde20ca1758eaa20ff4723d1e5ab85ec56ebcea81ca00617d7dfd97f338b1cb3eaaba8c2f1cec71	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 22 02:58:42 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-1736824719159513059 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:61946	
+2021 Juni 22 02:58:42 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 22 02:58:42 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 22 02:58:42 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 22 02:58:47 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-1736824719159513059 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 22 02:58:47 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	-1736824719159513059 (java.lang.Long)	2281d261ae6d136afbda4d964277dd83b2e4000b1c9917244cde20ca1758eaa20ff4723d1e5ab85ec56ebcea81ca00617d7dfd97f338b1cb3eaaba8c2f1cec71	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 22 02:58:47 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	-1736824719159513059 (java.lang.Long)	-	-	-	-	
+2021 Juni 22 18:14:24 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 22 18:14:24 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 22 18:14:30 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	4686992379632979115 (java.lang.Long)	464fa5aceaa6e347fea0ca2e537c1bc558cb52556a0f4218db4684317a42afbd3a94f4c0ce0f6d2b4eb10c3c7b53e948a9a55a0e8a2b0e5c46f56d9a604cd9d5	-	-	ServiceAgent	
+2021 Juni 22 18:14:41 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	4686992379632979115 (java.lang.Long)	464fa5aceaa6e347fea0ca2e537c1bc558cb52556a0f4218db4684317a42afbd3a94f4c0ce0f6d2b4eb10c3c7b53e948a9a55a0e8a2b0e5c46f56d9a604cd9d5	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 22 18:14:41 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	4686992379632979115 (java.lang.Long)	464fa5aceaa6e347fea0ca2e537c1bc558cb52556a0f4218db4684317a42afbd3a94f4c0ce0f6d2b4eb10c3c7b53e948a9a55a0e8a2b0e5c46f56d9a604cd9d5	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 22 18:14:56 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	4686992379632979115 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:50990	
+2021 Juni 22 18:14:56 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 22 18:14:56 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 22 18:14:56 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 22 18:15:04 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	4686992379632979115 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 22 18:15:04 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	4686992379632979115 (java.lang.Long)	464fa5aceaa6e347fea0ca2e537c1bc558cb52556a0f4218db4684317a42afbd3a94f4c0ce0f6d2b4eb10c3c7b53e948a9a55a0e8a2b0e5c46f56d9a604cd9d5	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 22 18:15:04 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	4686992379632979115 (java.lang.Long)	-	-	-	-	
+2021 Juni 22 22:56:29 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 22 22:56:29 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 22 22:56:30 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	3095432901671865941 (java.lang.Long)	9384067ad4fa31f70f8767ac5c921c961307279308fc340a8dcc7d9c26134be84727ed4103a83067ade6f91a1760a36010d034d6ca2cd4df883e621b367a1147	-	-	ServiceAgent	
+2021 Juni 22 22:56:38 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	3095432901671865941 (java.lang.Long)	9384067ad4fa31f70f8767ac5c921c961307279308fc340a8dcc7d9c26134be84727ed4103a83067ade6f91a1760a36010d034d6ca2cd4df883e621b367a1147	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 22 22:56:38 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	3095432901671865941 (java.lang.Long)	9384067ad4fa31f70f8767ac5c921c961307279308fc340a8dcc7d9c26134be84727ed4103a83067ade6f91a1760a36010d034d6ca2cd4df883e621b367a1147	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 22 22:56:40 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	3095432901671865941 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:52222	
+2021 Juni 22 22:56:40 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 22 22:56:40 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 22 22:56:40 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 22 22:56:45 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	3095432901671865941 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 22 22:56:45 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	3095432901671865941 (java.lang.Long)	9384067ad4fa31f70f8767ac5c921c961307279308fc340a8dcc7d9c26134be84727ed4103a83067ade6f91a1760a36010d034d6ca2cd4df883e621b367a1147	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 22 22:56:45 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	3095432901671865941 (java.lang.Long)	-	-	-	-	
+2021 Juni 23 00:38:41 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 23 00:38:41 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 23 00:38:41 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	4907795022534733844 (java.lang.Long)	e921777771373f1a4be87a8fc563ff7995d9a2c65ef18fccd9044f12f010c5982cdcd94cb8bf9141e132cc7eb482174e1c441d901a904d1873b74c34781df884	-	-	ServiceAgent	
+2021 Juni 23 00:38:49 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	4907795022534733844 (java.lang.Long)	e921777771373f1a4be87a8fc563ff7995d9a2c65ef18fccd9044f12f010c5982cdcd94cb8bf9141e132cc7eb482174e1c441d901a904d1873b74c34781df884	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 23 00:38:49 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	4907795022534733844 (java.lang.Long)	e921777771373f1a4be87a8fc563ff7995d9a2c65ef18fccd9044f12f010c5982cdcd94cb8bf9141e132cc7eb482174e1c441d901a904d1873b74c34781df884	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 23 00:38:50 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	4907795022534733844 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:49483	
+2021 Juni 23 00:38:50 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 23 00:38:50 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 23 00:38:50 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 23 00:38:55 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	4907795022534733844 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 23 00:38:55 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	4907795022534733844 (java.lang.Long)	e921777771373f1a4be87a8fc563ff7995d9a2c65ef18fccd9044f12f010c5982cdcd94cb8bf9141e132cc7eb482174e1c441d901a904d1873b74c34781df884	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 23 00:38:55 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	4907795022534733844 (java.lang.Long)	-	-	-	-	
+2021 Juni 23 00:40:20 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 23 00:40:20 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 23 00:40:21 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	639375727618902934 (java.lang.Long)	1ba8b1209b0d967458f9860e58b6659098d0d10f6d7f5d156ba39945239ee209c4c72ffc2a6f5e619935cd3719a04d74793fa90af2e6cf7b4042b82179156366	-	-	ServiceAgent	
+2021 Juni 23 00:40:29 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	639375727618902934 (java.lang.Long)	1ba8b1209b0d967458f9860e58b6659098d0d10f6d7f5d156ba39945239ee209c4c72ffc2a6f5e619935cd3719a04d74793fa90af2e6cf7b4042b82179156366	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 23 00:40:29 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	639375727618902934 (java.lang.Long)	1ba8b1209b0d967458f9860e58b6659098d0d10f6d7f5d156ba39945239ee209c4c72ffc2a6f5e619935cd3719a04d74793fa90af2e6cf7b4042b82179156366	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 23 00:40:30 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	639375727618902934 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:49368	
+2021 Juni 23 00:40:30 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 23 00:40:30 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 23 00:40:30 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 23 00:40:35 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	639375727618902934 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 23 00:40:35 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	639375727618902934 (java.lang.Long)	1ba8b1209b0d967458f9860e58b6659098d0d10f6d7f5d156ba39945239ee209c4c72ffc2a6f5e619935cd3719a04d74793fa90af2e6cf7b4042b82179156366	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 23 00:40:35 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	639375727618902934 (java.lang.Long)	-	-	-	-	
+2021 Juni 23 00:44:17 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	CONFIGURED	
+2021 Juni 23 00:44:17 FINER i5.las2peer.p2p.LocalNode: NODE_STATUS_CHANGE (300)	-	-	-	-	RUNNING	
+2021 Juni 23 00:44:17 FINER i5.las2peer.p2p.LocalNode: AGENT_REGISTERED (3000)	-4712592644969647449 (java.lang.Long)	561f4c7f3e6d41dab0f807ed33df1c9626f34661bb773bccc8836c144d8d5e4d20f7c97369dc0f6d483e4e16dc0720b5353d023eca30a9a4177730994e8caf11	-	-	ServiceAgent	
+2021 Juni 23 00:44:26 FINER i5.las2peer.p2p.LocalNode: SERVICE_ADD_TO_MONITORING (7300)	-4712592644969647449 (java.lang.Long)	561f4c7f3e6d41dab0f807ed33df1c9626f34661bb773bccc8836c144d8d5e4d20f7c97369dc0f6d483e4e16dc0720b5353d023eca30a9a4177730994e8caf11	-	-	{"serviceName":"i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0","serviceAlias":"readerbench"}	
+2021 Juni 23 00:44:26 FINER i5.las2peer.p2p.LocalNode: SERVICE_STARTUP (7000)	-4712592644969647449 (java.lang.Long)	561f4c7f3e6d41dab0f807ed33df1c9626f34661bb773bccc8836c144d8d5e4d20f7c97369dc0f6d483e4e16dc0720b5353d023eca30a9a4177730994e8caf11	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 23 00:44:27 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-4712592644969647449 (java.lang.Long)	-	-	-	WebConnector: Web-Connector in HTTP mode running at http://localhost:64614	
+2021 Juni 23 00:44:27 INFO i5.las2peer.connectors.webConnector.util.AuthenticationManager: attempting login with id: 86109d17e62c60cf01fa1e4e968e8cdc69219d59a04587648f253d71d49a3af51eea113ac37be9501cb196126b56d24de638e0d3f3c8cf1991aab89e215a3cb9
+2021 Juni 23 00:44:27 FINE i5.las2peer.connectors.webConnector.util.AuthenticationManager: passphrase accepted. Agent unlocked
+2021 Juni 23 00:44:27 FINER i5.las2peer.persistency.EnvelopeVersion: Could not get service class loader using default. java.lang.IllegalStateException: Not executed in a ServiceThread environment!
+2021 Juni 23 00:44:32 FINER i5.las2peer.p2p.LocalNode: CONNECTOR_MESSAGE (9000)	-4712592644969647449 (java.lang.Long)	-	-	-	WebConnector: Web-Connector has been stopped	
+2021 Juni 23 00:44:32 FINER i5.las2peer.p2p.LocalNode: SERVICE_SHUTDOWN (7100)	-4712592644969647449 (java.lang.Long)	561f4c7f3e6d41dab0f807ed33df1c9626f34661bb773bccc8836c144d8d5e4d20f7c97369dc0f6d483e4e16dc0720b5353d023eca30a9a4177730994e8caf11	-	-	i5.las2peer.services.readerbenchService.ReaderbenchService@1.0.0	
+2021 Juni 23 00:44:32 FINER i5.las2peer.p2p.LocalNode: NODE_SHUTDOWN (200)	-4712592644969647449 (java.lang.Long)	-	-	-	-	

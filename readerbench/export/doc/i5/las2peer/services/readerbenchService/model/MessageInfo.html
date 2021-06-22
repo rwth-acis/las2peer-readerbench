@@ -19,7 +19,7 @@
 <script type="text/javascript" src="../../../../../script-dir/jquery-ui.js"></script>
 </head>
 <body class="class-declaration">
-<script type="text/javascript">var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
+<script type="text/javascript">var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -113,14 +113,12 @@ extends java.lang.Object</pre>
 </thead>
 <tbody>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,boolean)">MessageInfo</a></span>&#8203;(java.lang.String&nbsp;msg,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(i5.las2peer.services.readerbenchService.chat.ChatMessage,i5.las2peer.services.readerbenchService.nlu.Intent,java.lang.String,java.lang.String,java.lang.String,boolean)">MessageInfo</a></span>&#8203;(<a href="../chat/ChatMessage.html" title="class in i5.las2peer.services.readerbenchService.chat">ChatMessage</a>&nbsp;message,
+<a href="../nlu/Intent.html" title="class in i5.las2peer.services.readerbenchService.nlu">Intent</a>&nbsp;intent,
+java.lang.String&nbsp;triggeredFunctionId,
 java.lang.String&nbsp;botName,
-java.lang.String&nbsp;channel,
-java.lang.String&nbsp;text,
-java.lang.String&nbsp;intent,
-java.lang.String&nbsp;email,
-java.lang.String&nbsp;category,
-boolean&nbsp;contextOn)</code></th>
+java.lang.String&nbsp;serviceAlias,
+boolean&nbsp;contextWithService)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -147,38 +145,33 @@ boolean&nbsp;contextOn)</code></th>
 </thead>
 <tbody>
 <tr class="altColor" id="i0">
-<td class="colFirst"><code>java.lang.String</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#botName()">botName</a></span>()</code></th>
+<td class="colFirst"><code>boolean</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#contextActive()">contextActive</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i1">
 <td class="colFirst"><code>java.lang.String</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#channel()">channel</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getBotName()">getBotName</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i2">
-<td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#contextOn()">contextOn</a></span>()</code></th>
+<td class="colFirst"><code><a href="../nlu/Intent.html" title="class in i5.las2peer.services.readerbenchService.nlu">Intent</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getIntent()">getIntent</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i3">
-<td class="colFirst"><code>java.lang.String</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#email()">email</a></span>()</code></th>
+<td class="colFirst"><code><a href="../chat/ChatMessage.html" title="class in i5.las2peer.services.readerbenchService.chat">ChatMessage</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getMessage()">getMessage</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor" id="i4">
 <td class="colFirst"><code>java.lang.String</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#intent()">intent</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getServiceAlias()">getServiceAlias</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor" id="i5">
 <td class="colFirst"><code>java.lang.String</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#msg()">msg</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="altColor" id="i6">
-<td class="colFirst"><code>java.lang.String</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#text()">text</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getTriggeredFunctionId()">getTriggeredFunctionId</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -205,15 +198,13 @@ boolean&nbsp;contextOn)</code></th>
 <ul class="blockList">
 <li class="blockList">
 <section class="detail">
-<h3><a id="&lt;init&gt;(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,boolean)">MessageInfo</a></h3>
-<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="memberName">MessageInfo</span>&#8203;(<span class="arguments">java.lang.String&nbsp;msg,
+<h3><a id="&lt;init&gt;(i5.las2peer.services.readerbenchService.chat.ChatMessage,i5.las2peer.services.readerbenchService.nlu.Intent,java.lang.String,java.lang.String,java.lang.String,boolean)">MessageInfo</a></h3>
+<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="memberName">MessageInfo</span>&#8203;(<span class="arguments"><a href="../chat/ChatMessage.html" title="class in i5.las2peer.services.readerbenchService.chat">ChatMessage</a>&nbsp;message,
+<a href="../nlu/Intent.html" title="class in i5.las2peer.services.readerbenchService.nlu">Intent</a>&nbsp;intent,
+java.lang.String&nbsp;triggeredFunctionId,
 java.lang.String&nbsp;botName,
-java.lang.String&nbsp;channel,
-java.lang.String&nbsp;text,
-java.lang.String&nbsp;intent,
-java.lang.String&nbsp;email,
-java.lang.String&nbsp;category,
-boolean&nbsp;contextOn)</span></div>
+java.lang.String&nbsp;serviceAlias,
+boolean&nbsp;contextWithService)</span></div>
 </section>
 </li>
 </ul>
@@ -228,44 +219,38 @@ boolean&nbsp;contextOn)</span></div>
 <ul class="blockList">
 <li class="blockList">
 <section class="detail">
-<h3><a id="msg()">msg</a></h3>
-<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">java.lang.String</span>&nbsp;<span class="memberName">msg</span>()</div>
+<h3><a id="getMessage()">getMessage</a></h3>
+<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType"><a href="../chat/ChatMessage.html" title="class in i5.las2peer.services.readerbenchService.chat">ChatMessage</a></span>&nbsp;<span class="memberName">getMessage</span>()</div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="botName()">botName</a></h3>
-<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">java.lang.String</span>&nbsp;<span class="memberName">botName</span>()</div>
+<h3><a id="getIntent()">getIntent</a></h3>
+<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType"><a href="../nlu/Intent.html" title="class in i5.las2peer.services.readerbenchService.nlu">Intent</a></span>&nbsp;<span class="memberName">getIntent</span>()</div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="channel()">channel</a></h3>
-<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">java.lang.String</span>&nbsp;<span class="memberName">channel</span>()</div>
+<h3><a id="getTriggeredFunctionId()">getTriggeredFunctionId</a></h3>
+<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">java.lang.String</span>&nbsp;<span class="memberName">getTriggeredFunctionId</span>()</div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="text()">text</a></h3>
-<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">java.lang.String</span>&nbsp;<span class="memberName">text</span>()</div>
+<h3><a id="getBotName()">getBotName</a></h3>
+<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">java.lang.String</span>&nbsp;<span class="memberName">getBotName</span>()</div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="intent()">intent</a></h3>
-<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">java.lang.String</span>&nbsp;<span class="memberName">intent</span>()</div>
+<h3><a id="getServiceAlias()">getServiceAlias</a></h3>
+<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">java.lang.String</span>&nbsp;<span class="memberName">getServiceAlias</span>()</div>
 </section>
 </li>
 <li class="blockList">
 <section class="detail">
-<h3><a id="email()">email</a></h3>
-<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">java.lang.String</span>&nbsp;<span class="memberName">email</span>()</div>
-</section>
-</li>
-<li class="blockList">
-<section class="detail">
-<h3><a id="contextOn()">contextOn</a></h3>
-<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">contextOn</span>()</div>
+<h3><a id="contextActive()">contextActive</a></h3>
+<div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="returnType">boolean</span>&nbsp;<span class="memberName">contextActive</span>()</div>
 </section>
 </li>
 </ul>

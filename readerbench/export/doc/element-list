@@ -1,4 +1,6 @@
 i5.las2peer.services.readerbenchService
 i5.las2peer.services.readerbenchService.AssessmentContent
+i5.las2peer.services.readerbenchService.chat
 i5.las2peer.services.readerbenchService.database
 i5.las2peer.services.readerbenchService.model
+i5.las2peer.services.readerbenchService.nlu

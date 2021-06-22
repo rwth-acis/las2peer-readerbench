@@ -113,6 +113,7 @@ public class ServiceTest {
 		 * Test the example method that consumes one path parameter which we give the value "testInput" in this test.
 		 * 
 		 */
+		/*
 		@Test
 		public void testPost() {
 			try {
@@ -131,7 +132,7 @@ public class ServiceTest {
 				Assert.fail(e.toString());
 			}
 		}
-		
+		*/
 		/**
 		 * 
 		 * Tests if the RB-Controller is living.

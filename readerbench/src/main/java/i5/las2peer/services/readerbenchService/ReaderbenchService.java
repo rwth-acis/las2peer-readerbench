@@ -63,7 +63,7 @@ import i5.las2peer.api.persistency.EnvelopeAccessDeniedException;
 import i5.las2peer.api.persistency.EnvelopeNotFoundException;
 import i5.las2peer.api.persistency.EnvelopeOperationFailedException;
 
-import i5.las2peer.services.readerbenchService.model.MessageInfo;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -91,8 +91,12 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import i5.las2peer.services.readerbenchService.AssessmentContent.*;
+import i5.las2peer.services.readerbenchService.chat.ChatMessage;
 import i5.las2peer.services.readerbenchService.database.SQLDatabase;
 import i5.las2peer.services.readerbenchService.database.SQLDatabaseType;
+import i5.las2peer.services.readerbenchService.model.MessageInfo;
+import i5.las2peer.services.readerbenchService.nlu.Intent;
+import i5.las2peer.services.readerbenchService.chat.ChatMessage;
 
 // TODO Describe your own service
 /**
@@ -160,7 +164,7 @@ public class ReaderbenchService extends RESTService {
 	private String databasePassword;
 	private SQLDatabase database; // The database instance to write to.
 	private String readerbenchEndpoint="http://rb-controller.ma-zeufack:32446";
-	private String l2pEndpoint = "http://137.226.232.75:32445/";
+	private String l2pEndpoint = "http://137.226.232.75:32445";
 
 
 	public ReaderbenchService(){
@@ -201,57 +205,6 @@ public class ReaderbenchService extends RESTService {
 		String name = userAgent.getLoginName();
 		System.out.println("readerbenchEndpoint: " + this.readerbenchEndpoint);
 		return Response.ok().entity(name).build();
-	}
-	/*@GET
-	@Path("/getstatus")
-	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(
-			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
-			notes = "REPLACE THIS WITH YOUR NOTES TO THE FUNCTION")
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
-	public Response getstatus() {
-		Double OverallScore = 0.0;
-		for(int i=0; i <  assessment.getAssessmentSize(); i++){
-			OverallScore += assessment.getSimilarityScoreList().get(i);
-			System.out.println("Overallscore is............"+ assessment.getSimilarityScoreList().get(i));
-		}
-		
-		answer += "Das Assessment ist fertig \n" + "Du hast insgesamt  " + OverallScore	 + " Punkte erreicht\n";
-		answer+= "Ihre Texte haben folgenden Komplexitätsgrad:\n";
-		int currentQuestion = 0;
-		for(int i=0; i <  assessment.getAssessmentSize(); i++){
-			answer += "Frage " + (currentQuestion + 1) + ": " + assessment.getLevelList().get(i) + "\n"; 
-			currentQuestion += 1;
-			System.out.println("level is............"+ assessment.getLevelList().get(i));
-		}
-		this.assessmentStarted.put(channel, null);
-		response.put("closeContext", "true");
-		return Response.ok().entity(name).build();
-	}*/
-
-	/**
-	 * Template of a post function.
-	 * 
-	 * @param myInput The post input the user will provide.
-	 * @return Returns an HTTP response with plain text string content derived from the path input param.
-	 */
-	@POST
-	@Path("/post/{input}")
-	@Produces(MediaType.TEXT_PLAIN)
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
-	@ApiOperation(
-			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
-			notes = "Example method that returns a phrase containing the received input.")
-	public Response postTemplate(@PathParam("input") String myInput) {
-		String returnString = "";
-		returnString += "Input " + myInput;
-		return Response.ok().entity(returnString).build();
 	}
 
 
@@ -318,7 +271,7 @@ public class ReaderbenchService extends RESTService {
 
 		try {
 			con = database.getDataSource().getConnection();
-			ps = con.prepareStatement("SELECT * FROM topic");
+			ps = con.prepareStatement("SELECT * FROM topic1");
 			ResultSet rs = ps.executeQuery();
 			while(rs.next()) {
 				String topic_id = rs.getString("topic_id");
@@ -333,7 +286,7 @@ public class ReaderbenchService extends RESTService {
 				
 				try {
 					con2 = database.getDataSource().getConnection();
-					ps2 = con2.prepareStatement("SELECT * FROM question WHERE topic_id = ?");
+					ps2 = con2.prepareStatement("SELECT * FROM question1 WHERE topic_id = ?");
 					ps2.setString(1, topic_id);
 					ResultSet rs2 = ps2.executeQuery();
 					while(rs2.next()) {
@@ -389,7 +342,8 @@ public class ReaderbenchService extends RESTService {
 		return Response.ok().entity(Topics).build();
 		//return Response.ok().entity("Topic data deleted.").build();
 	}
-
+	
+	//TODO
 	@POST
 	@Path("/deleteAssessment")
 	@Produces(MediaType.APPLICATION_JSON+ ";charset=utf-8")
@@ -457,43 +411,48 @@ public class ReaderbenchService extends RESTService {
 		
 		
 				int length = Questions.size(); 
-				//String[][] assessmentContent = new String[length][3];
-				String[][] assessmentContent = new String[length][2];
+				System.out.println("Got"+ length +"Questions");
+				String[][] assessmentContent = new String[length][3];
 				for(int i = 0; i < length ; i++){
 					
 						String question = Questions.get(i).toString();  
 						JSONObject questionJson = (JSONObject) p.parse(question);   
-						assessmentContent[i][0] = questionJson.getAsString("question");
-						assessmentContent[i][1] = questionJson.getAsString("textref"); 
-						//assessmentContent[i][2] = questionJson.getAsString("numberOfPoints");
-					
-					
-				}
-				
-				
-			   
-				//Arrays.sort(assessmentContent, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
-				
+					JSONObject complexity_Body = new JSONObject();
+					complexity_Body.put("language", "de");
+					complexity_Body.put("text", replaceUmlaut(questionJson.getAsString("textref")));
 
-				for(int i = 0; i < length ; i++){
-					ps.close();
-					ps = con.prepareStatement("INSERT INTO question(question, topic_id, textref, numberOfPoints) VALUES (?, ?, ?, ?)");
-					ps.setString(1, assessmentContent[i][0]);
-					ps.setString(2, bodyJson.getAsString("topicName")+ time);
-					ps.setString(3, assessmentContent[i][1]);
-					//ps.setString(4, assessmentContent[i][2]);
-					ps.setString(4, "1");
-					ps.executeUpdate();
+								System.out.println("................Started to compute expert complexity................");	
+								StringEntity entity = new StringEntity(complexity_Body.toString());
+								HttpClient httpClient = HttpClientBuilder.create().build();
+								HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/expert-complexity");
+								request.setEntity(entity);
+								HttpResponse res = httpClient.execute(request);
+								HttpEntity entity2 = res.getEntity();
+								String complexity_result = EntityUtils.toString(entity2);
+								System.out.println("................expert Complexity computed from readerbench................");
+								JSONObject result = (JSONObject) p.parse(complexity_result); 
+								String Expert_Comp =  result.getAsString("data");
+								System.out.println(Expert_Comp);
+								ps.close();
+								ps = con.prepareStatement("INSERT INTO question(question, topic_id, textref, complexity, numberOfPoints) VALUES (?, ?, ?, ?, ?)");
+								ps.setString(1, questionJson.getAsString("question"));
+								ps.setString(2, bodyJson.getAsString("topicName")+ time);
+								ps.setString(3, questionJson.getAsString("textref"));
+								ps.setString(4, Expert_Comp);
+								ps.setString(5, "1");
+								ps.executeUpdate();
+
+					
 				} 
 				System.out.println("................Topic data stored.................");
 				return Response.ok().entity("Topic data stored.").build();
 				
 			} catch (SQLException e) {
 				e.printStackTrace();
-				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			} catch (Exception e) {
 				e.printStackTrace();
-				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 			} finally {
 				try {
 					if (ps != null)
@@ -514,7 +473,6 @@ public class ReaderbenchService extends RESTService {
 			e.printStackTrace();
 			return Response.ok("Assessment not inserted").build();
 		}
-		return Response.ok("Assessment inserted").build();
 	}
 
 	@POST
@@ -546,19 +504,6 @@ public class ReaderbenchService extends RESTService {
 				botChannel.put(bodyJson.getAsString("botName"), channels);
 			}
 			if(this.assessmentStarted.get(channel) == null){
-				// function needs assessmentContent parameter
-				/*if(!(bodyJson.get("assessmentContent") instanceof JSONArray)) {
-					JSONArray assessmentContent = new JSONArray();
-					assessmentContent.add(bodyJson.get("assessmentContent"));
-					bodyJson.put("assessmentContent", assessmentContent);
-				}
-				/*JSONArray jsonAssessment = (JSONArray) bodyJson.get("assessmentContent");
-				ArrayList<String> assessment = new ArrayList<String>();
-				if(jsonAssessment != null) {
-					int len = jsonAssessment.size();
-					for(int i=0; i<len ; i++){
-						assessment.add(jsonAssessment.get(i).toString());
-					}*/
 					JSONObject contentJson;
 					if(this.topicsProposed.get(channel) == null) {
 						String topicNames="";
@@ -581,7 +526,7 @@ public class ReaderbenchService extends RESTService {
 								index++;
 								System.out.println("................Topic"+" founded.................");
 							}	
-							System.out.println("................Topics found data stored.................");
+							System.out.println("................Matching Topics founded  data stored.................");
 						} catch (SQLException e) {
 							e.printStackTrace();
 							resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -641,14 +586,14 @@ public class ReaderbenchService extends RESTService {
 								
 								if(topicName.toLowerCase().equals(bodyJson.getAsString("msg").toLowerCase()) || chosenTopicNumber.equals(String.valueOf(topicCount))){
 									
-									System.out.print("line 641.................");
+									System.out.println("line 641.................");
 									similarTopicNames.add(topicName);
 									similarNames += " • " + topicCount + ". " + topicName + "\n";
 								} 
 								topicCount++;
 							}
 							if(similarTopicNames.size() == 1) {
-								System.out.print("similarTopicNames.size() is one.................");
+								System.out.println("similarTopicNames.size() is one.................");
 								setUpNluAssessment2(topicName, topicId, channel,  bodyJson.getAsString("Type"), bodyJson.getAsString("modelType"));
 								response.put("text", "Wir starten jetzt das Nlu Assessment über "+ topicName + " :)!\n" + this.currentNLUAssessment.get(channel).getCurrentQuestion());							
 								response.put("closeContext", "false");
@@ -721,13 +666,13 @@ public class ReaderbenchService extends RESTService {
 			}
 			rs = ps.executeQuery();
 			// Fetch all model names in the database
-			String[][] assessmentContent = new String[length][2];
+			String[][] assessmentContent = new String[length][3];
 			//String[][] assessmentContent = new String[length][3];
 			int index=0;
 			while(rs.next()) {
 				assessmentContent[index][0] = rs.getString("question");
 				assessmentContent[index][1] = rs.getString("textref"); 
-				//assessmentContent[index][2] = rs.getString("numberOfPoints");
+				assessmentContent[index][2] = rs.getString("complexity");
 				index++;
 			}
 			//Arrays.sort(assessmentContent, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
@@ -737,6 +682,8 @@ public class ReaderbenchService extends RESTService {
 			ArrayList<Double> similarityScore = new  ArrayList<Double>();
 			ArrayList<String> textlevel = new ArrayList<String>();
 			ArrayList<String> answers = new ArrayList<String>();
+			ArrayList<String> refComplexity = new ArrayList<String>();
+			ArrayList<String> feedbackText = new ArrayList<String>();
 
 			for(int i = 0; i < length ; i++){
 				questions.add(assessmentContent[i][0]);
@@ -746,8 +693,11 @@ public class ReaderbenchService extends RESTService {
 				similarityScore.add(0.0);
 				textlevel.add("");
 				answers.add("");
+				refComplexity.add(assessmentContent[i][2]);
+				feedbackText.add("");
 			}
-			NLUAssessment assessment = new NLUAssessment(topicName, topicId, "stopAssessment", questions, null, null, "help", type, lectureref, numberOfPoints, modelType, similarityScore, textlevel, answers);
+			NLUAssessment assessment = new NLUAssessment(topicName, topicId, "stopAssessment", questions, null, null, "help", type, lectureref, numberOfPoints, modelType, 
+				similarityScore, textlevel, refComplexity, answers, feedbackText);
 			this.currentNLUAssessment.put(channel, assessment);	
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -790,17 +740,20 @@ public class ReaderbenchService extends RESTService {
 						
 						answer += "Ihre Ergebnisse:\n";
 						int currentQuestion = 0;
+
 						for(int i=0; i <  assessment.getAssessmentSize(); i++){
-							if(assessment.getLevelList().get(i)==""){
+							if(assessment.getLevelList(i)==""){
 								answer="Bewertungen werden berechnet...";
 								response.put("closeContext", "false");
 								response.put("text", answer);
         						return response;
 							}
-							answer += "Frage " + (currentQuestion + 1) + ": Komplexitätstufe is " + assessment.getLevelList().get(i) +
-							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n"; 
+							answer += "Frage " + (currentQuestion + 1) + ": Komplexitätstufe is " + assessment.getLevelList(i) +
+							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n";
+							answer +="Empfehlungen: \n";
+							answer+= assessment.getFeedbackText(i);
 							currentQuestion += 1;
-							System.out.println("level is............"+ assessment.getLevelList().get(i));
+							System.out.println("level is............"+ assessment.getLevelList(i));
 						}
 						response.put("closeContext", "false");
 					} catch (Exception e) {
@@ -829,6 +782,7 @@ public class ReaderbenchService extends RESTService {
 						for(int i=0; i <  assessment.getAssessmentSize(); i++){
 							String ref = assessment.gettextReferenceByNumber(i);
 							String ans = assessment.getAnswerByNumber(i);
+							String refComplexity = assessment.getrefComplexityByNumber(i) ;
 							System.out.println("................ref................");
 							System.out.println(ref);
 							System.out.println("................answer................");
@@ -843,10 +797,74 @@ public class ReaderbenchService extends RESTService {
 							JSONObject complexity_Body = new JSONObject();
 							complexity_Body.put("language", "de");
 							complexity_Body.put("text", ans);
-							
+							JSONObject compare_Body = new JSONObject();
+							compare_Body.put("language", "de");
+							compare_Body.put("text", ans);
+							compare_Body.put("expert", refComplexity);
 
 							try{
-								System.out.println("................Started to compute the results................");
+								String email = triggeredBody.getAsString("email");
+								JSONObject context = getContext(email, p);	
+								StringEntity entity = new StringEntity(compare_Body.toString());
+								HttpClient httpClient = HttpClientBuilder.create().build();
+								HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/complexity-compare");
+								request.setEntity(entity);
+								HttpResponse res = httpClient.execute(request);
+								HttpEntity entity2 = res.getEntity();
+								String similarity_result = EntityUtils.toString(entity2);
+								context.put("compare_result", similarity_result);
+								ContextInfo.put(email, context);
+								System.out.println("................result SIMILARITY computed from readerbench................");
+								System.out.println(context.getAsString("compare_result"));
+								JSONObject result = (JSONObject) p.parse(context.getAsString("compare_result")); 
+								String feedbackString ="";
+								JSONObject data = (JSONObject) result.get("data");
+
+								String level = data.getAsString("level");
+								assessment.setLevelByNumber(i,level);
+								JSONObject feedback = (JSONObject) data.get("feedback");
+								
+
+								JSONArray document = (JSONArray) p.parse(feedback.getAsString("document"));
+
+								for (Object item : document) {
+									JSONObject obj = (JSONObject) item;
+									feedbackString  += obj.getAsString("message")+ "\n \n";
+								}
+
+								JSONArray block = (JSONArray) p.parse(feedback.getAsString("block"));
+								int blockNumber = 1;
+								for (Object item : block) {
+									JSONArray arrayitem = (JSONArray) item;
+									for (Object item1 : arrayitem) {
+										JSONObject obj = (JSONObject) item1;
+										feedbackString += "Absatznummer " + blockNumber +": ";
+										feedbackString += obj.getAsString("message")+ "\n";
+									}
+									blockNumber+=1;
+								}
+								JSONArray sentence = (JSONArray) p.parse(feedback.getAsString("sentence"));
+								int sentenceNumber = 1;
+								for (Object item : sentence) {
+									JSONArray arrayitem = (JSONArray) item;
+									for (Object item1 : arrayitem) {
+										JSONObject obj = (JSONObject) item1;
+										feedbackString += "Satznummer " + sentenceNumber +": ";
+										feedbackString += obj.getAsString("message")+ "\n";
+									}
+									sentenceNumber+=1;
+								}
+
+								assessment.setFeedbackText(feedbackString);
+							}  catch (Exception e) {
+								e.printStackTrace();
+								System.out.println("................Problem with Compare................");
+								error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
+								error.put("closeContext", true);
+								return error;
+							}
+							
+							try {
 								String email = triggeredBody.getAsString("email");
 								JSONObject context = getContext(email, p);	
 								StringEntity entity = new StringEntity(similarity_Body.toString());
@@ -871,58 +889,55 @@ public class ReaderbenchService extends RESTService {
 								System.out.println("Score is ...... "+ score);
 								assessment.setSimilarityByNumber(i,score);
 								
-								entity = new StringEntity(complexity_Body.toString());
-								httpClient = HttpClientBuilder.create().build();
-								request = new HttpPost(this.readerbenchEndpoint+"/api/v1/textual-complexity");
-								request.setEntity(entity);
-								res = httpClient.execute(request);
-								entity2 = res.getEntity();
-								String complexity_result = EntityUtils.toString(entity2);
-								context.put("complexity_result", complexity_result);
-								ContextInfo.put(email, context);
-								System.out.println("................result Complexity computed from readerbench................");
-								System.out.println(context.getAsString("complexity_result"));
-								result = (JSONObject) p.parse(context.getAsString("complexity_result")); 
-								p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-								data = (JSONObject) result.get("data");
-								String level = data.getAsString("level");
-								assessment.setLevelByNumber(i,level);
-	
-								
-	
-							}  catch (Exception e) {
+							} catch (Exception e) {
 								e.printStackTrace();
+								System.out.println("................Problem with Similarity................");
 								error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
 								error.put("closeContext", true);
 								return error;
-							}
+							}			
 							
 						}
 					
+						try {
+							MiniClient client = new MiniClient();
+							client.setConnectorEndpoint(this.l2pEndpoint);
+							HashMap<String, String> headers = new HashMap<String, String>();
+							Intent intent2 = new Intent("status", "status", "status");
+							Gson gson = new Gson();
+							MessageInfo m = gson.fromJson(triggeredBody.toString(), MessageInfo.class);
+							ChatMessage message = m.getMessage();
+							message.setText("status");	
+							MessageInfo messageInfo = new MessageInfo(message, intent2, "NluAssessmentDE",  "readerbot",  "readerbench", true );
+							ClientResponse result = client.sendRequest("POST", "SBFManager" + "{readerbot}/trigger/intent", gson.toJson(messageInfo),
+							MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
+							System.out.println(result.getResponse());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}	
 						
-						
-					try {
+					/*try {
 						
 						answer += "Ihre Ergebnisse:\n";
 						int currentQuestion = 0;
 						for(int i=0; i <  assessment.getAssessmentSize(); i++){
-							if(assessment.getLevelList().get(i)==""){
+							if(assessment.getLevelList(i)==""){
 								answer="Bewertungen werden berechnet...";
 								response.put("closeContext", "false");
 								response.put("text", answer);
         						return response;
 							}
-							answer += "Frage " + (currentQuestion + 1) + ": Komplexitätstufe is " + assessment.getLevelList().get(i) +
+							answer += "Frage " + (currentQuestion + 1) + ": Komplexitätstufe is " + assessment.getLevelList(i) +
 							", Ähnlichkeitsgrad mit der Korrektur	"+  Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n"; 
 							currentQuestion += 1;
-							System.out.println("level is............"+ assessment.getLevelList().get(i));
+							System.out.println("level is............"+ assessment.getLevelList(i));
 						}
 						response.put("closeContext", "false");
 					} catch (Exception e) {
 						e.printStackTrace();
 						answer+="Fehler bei dem auslesen der Ergebnisse. \n Die Übung wird verlassen.\n Entschuldigung dafür\n Auf wiedersehen :|";
 						response.put("closeContext", "true");
-					}
+					}*/
 					} else {
 						assessment.incrementCurrentQuestionNumber();
 						answer += assessment.getCurrentQuestion();        
@@ -935,68 +950,6 @@ public class ReaderbenchService extends RESTService {
 		response.put("text", answer);
         return response;
 	}
-
-	
-	/*public Response putTopic(@PathParam("name") String name, BotModel body) {
-		Connection con = null;
-		PreparedStatement ps = null;
-		Response resp = null;
-		
-		try {
-			// Open database connection
-			con = database.getDataSource().getConnection();
-			
-			// Write serialised model in Blob
-			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-			ObjectOutputStream out = new ObjectOutputStream(bOut);
-			out.writeObject(body);
-			Blob blob = con.createBlob();
-			blob.setBytes(1, bOut.toByteArray());
-			
-			// Check if model with given name already exists in database. If yes, update it. Else, insert it
-			ps = con.prepareStatement("SELECT * FROM models WHERE name = ?");
-			ps.setString(1, name);
-			ResultSet rs = ps.executeQuery();
-			if (rs.next()) {
-				ps.close();
-				ps = con.prepareStatement("UPDATE models SET model = ? WHERE name = ?");
-				ps.setBlob(1, blob);
-				ps.setString(2, name);
-				ps.executeUpdate();
-			} else {
-				ps.close();
-				ps = con.prepareStatement("INSERT INTO models(name, model) VALUES (?, ?)");
-				ps.setString(1, name);
-				ps.setBlob(2, blob);
-				ps.executeUpdate();
-			}
-			
-			resp = Response.ok().entity("Model stored.").build();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		} catch (IOException e) {
-			e.printStackTrace();
-			resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		} finally {
-			try {
-				if (ps != null)
-					ps.close();
-			} catch (Exception e) {
-			}
-			;
-			try {
-				if (con != null)
-					con.close();
-			} catch (Exception e) {
-			}
-			;
-		}
-		
-		return resp;
-	}*/
-
-
 
 	private String selectLevelMsg() {
 		// TODO Auto-generated method stub
