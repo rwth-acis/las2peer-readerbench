@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS  `question` (
   `question` VARCHAR(255) NOT NULL,
   `topic_id` VARCHAR(255) NOT NULL,
   `textref` TEXT NULL,
-  `complexity` TEXT NULL,
   `numberOfPoints` DOUBLE NOT NULL,
   PRIMARY KEY (`id`)
     )

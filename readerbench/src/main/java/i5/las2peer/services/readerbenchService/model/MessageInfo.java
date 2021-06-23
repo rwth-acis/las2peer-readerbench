@@ -25,6 +25,7 @@ public class MessageInfo {
 		this.serviceAlias = serviceAlias;
 		this.contextWithService = contextWithService;
 	}
+	
 
 	public ChatMessage getMessage() {
 		return this.message;

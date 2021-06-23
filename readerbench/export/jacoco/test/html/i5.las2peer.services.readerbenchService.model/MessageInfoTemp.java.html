@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageInfoTemp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">readerbench</a> &gt; <a href="index.source.html" class="el_package">i5.las2peer.services.readerbenchService.model</a> &gt; <span class="el_source">MessageInfoTemp.java</span></div><h1>MessageInfoTemp.java</h1><pre class="source lang-java linenums">package i5.las2peer.services.readerbenchService.model;
+import i5.las2peer.services.readerbenchService.chat.*;
+import i5.las2peer.services.readerbenchService.nlu.*;
+
+/**
+ * @author Karl Zeufack
+ *
+ */
+public class MessageInfoTemp {
+	String message;
+	String intent;
+	String triggeredFunctionId;
+	String botName;
+	String serviceAlias;
+	boolean contextWithService;
+
+	
+	public MessageInfoTemp(String message,	String intent,
+			String triggeredFunctionId, String botName,
+			String serviceAlias, boolean contextWithService)
+<span class="nc" id="L21">	{</span>
+<span class="nc" id="L22">		this.message = message;</span>
+<span class="nc" id="L23">		this.triggeredFunctionId = triggeredFunctionId;</span>
+<span class="nc" id="L24">        this.botName = botName;</span>
+<span class="nc" id="L25">        this.intent = intent;</span>
+<span class="nc" id="L26">		this.serviceAlias = serviceAlias;</span>
+<span class="nc" id="L27">		this.contextWithService = contextWithService;</span>
+<span class="nc" id="L28">	}</span>
+
+	public String getMessage() {
+<span class="nc" id="L31">		return this.message;</span>
+	}
+
+	public String getIntent() {
+<span class="nc" id="L35">		return this.intent;</span>
+	}
+
+	public String getTriggeredFunctionId() {
+<span class="nc" id="L39">		return this.triggeredFunctionId;</span>
+	}
+
+	public String getBotName() {
+<span class="nc" id="L43">		return this.botName;</span>
+	}
+
+	public String getServiceAlias() {
+<span class="nc" id="L47">		return this.serviceAlias;</span>
+	}
+	
+	public boolean contextActive() {
+<span class="nc" id="L51">		return this.contextWithService;</span>
+	}
+	
+	
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

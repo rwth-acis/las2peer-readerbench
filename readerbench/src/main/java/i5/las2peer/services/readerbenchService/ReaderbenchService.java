@@ -95,6 +95,7 @@ import i5.las2peer.services.readerbenchService.chat.ChatMessage;
 import i5.las2peer.services.readerbenchService.database.SQLDatabase;
 import i5.las2peer.services.readerbenchService.database.SQLDatabaseType;
 import i5.las2peer.services.readerbenchService.model.MessageInfo;
+import i5.las2peer.services.readerbenchService.model.MessageInfoTemp;
 import i5.las2peer.services.readerbenchService.nlu.Intent;
 import i5.las2peer.services.readerbenchService.chat.ChatMessage;
 
@@ -417,30 +418,13 @@ public class ReaderbenchService extends RESTService {
 					
 						String question = Questions.get(i).toString();  
 						JSONObject questionJson = (JSONObject) p.parse(question);   
-					JSONObject complexity_Body = new JSONObject();
-					complexity_Body.put("language", "de");
-					complexity_Body.put("text", replaceUmlaut(questionJson.getAsString("textref")));
-
-								System.out.println("................Started to compute expert complexity................");	
-								StringEntity entity = new StringEntity(complexity_Body.toString());
-								HttpClient httpClient = HttpClientBuilder.create().build();
-								HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/expert-complexity");
-								request.setEntity(entity);
-								HttpResponse res = httpClient.execute(request);
-								HttpEntity entity2 = res.getEntity();
-								String complexity_result = EntityUtils.toString(entity2);
-								System.out.println("................expert Complexity computed from readerbench................");
-								JSONObject result = (JSONObject) p.parse(complexity_result); 
-								String Expert_Comp =  result.getAsString("data");
-								System.out.println(Expert_Comp);
-								ps.close();
-								ps = con.prepareStatement("INSERT INTO question(question, topic_id, textref, complexity, numberOfPoints) VALUES (?, ?, ?, ?, ?)");
-								ps.setString(1, questionJson.getAsString("question"));
-								ps.setString(2, bodyJson.getAsString("topicName")+ time);
-								ps.setString(3, questionJson.getAsString("textref"));
-								ps.setString(4, Expert_Comp);
-								ps.setString(5, "1");
-								ps.executeUpdate();
+						ps.close();
+						ps = con.prepareStatement("INSERT INTO question(question, topic_id, textref, numberOfPoints) VALUES ( ?, ?, ?, ?)");
+						ps.setString(1, questionJson.getAsString("question"));
+						ps.setString(2, bodyJson.getAsString("topicName")+ time);
+						ps.setString(3, questionJson.getAsString("textref"));
+						ps.setString(4, "1");
+						ps.executeUpdate();
 
 					
 				} 
@@ -635,7 +619,7 @@ public class ReaderbenchService extends RESTService {
 
 			} else {
 				System.out.println(bodyJson.getAsString("intent"));
-				return Response.ok().entity(continueAssessment2(channel, bodyJson.getAsString("intent"), bodyJson, "NLUAssessmentDe")).build();
+				return Response.ok().entity(continueAssessment2(channel, bodyJson.getAsString("intent"), bodyJson, "NLUAssessmentDe", body)).build();
 			}		
 			
 		} catch (ParseException e) {
@@ -666,13 +650,12 @@ public class ReaderbenchService extends RESTService {
 			}
 			rs = ps.executeQuery();
 			// Fetch all model names in the database
-			String[][] assessmentContent = new String[length][3];
+			String[][] assessmentContent = new String[length][2];
 			//String[][] assessmentContent = new String[length][3];
 			int index=0;
 			while(rs.next()) {
 				assessmentContent[index][0] = rs.getString("question");
 				assessmentContent[index][1] = rs.getString("textref"); 
-				assessmentContent[index][2] = rs.getString("complexity");
 				index++;
 			}
 			//Arrays.sort(assessmentContent, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
@@ -693,7 +676,7 @@ public class ReaderbenchService extends RESTService {
 				similarityScore.add(0.0);
 				textlevel.add("");
 				answers.add("");
-				refComplexity.add(assessmentContent[i][2]);
+				refComplexity.add("");
 				feedbackText.add("");
 			}
 			NLUAssessment assessment = new NLUAssessment(topicName, topicId, "stopAssessment", questions, null, null, "help", type, lectureref, numberOfPoints, modelType, 
@@ -719,7 +702,7 @@ public class ReaderbenchService extends RESTService {
 	}
 	
 
-	private JSONObject continueAssessment2(String channel, String intent, JSONObject triggeredBody, String assessmentType){
+	private JSONObject continueAssessment2(String channel, String intent, JSONObject triggeredBody, String assessmentType, String bodyJsonOriginal){
 		JSONObject response = new JSONObject();
 		JSONObject error = new JSONObject();
 		String answer = ""; 
@@ -800,7 +783,7 @@ public class ReaderbenchService extends RESTService {
 							JSONObject compare_Body = new JSONObject();
 							compare_Body.put("language", "de");
 							compare_Body.put("text", ans);
-							compare_Body.put("expert", refComplexity);
+							compare_Body.put("expert", replaceUmlaut(ref));
 
 							try{
 								String email = triggeredBody.getAsString("email");
@@ -905,10 +888,12 @@ public class ReaderbenchService extends RESTService {
 							HashMap<String, String> headers = new HashMap<String, String>();
 							Intent intent2 = new Intent("status", "status", "status");
 							Gson gson = new Gson();
-							MessageInfo m = gson.fromJson(triggeredBody.toString(), MessageInfo.class);
-							ChatMessage message = m.getMessage();
-							message.setText("status");	
-							MessageInfo messageInfo = new MessageInfo(message, intent2, "NluAssessmentDE",  "readerbot",  "readerbench", true );
+							System.out.println("bodyJsonOriginal"+ bodyJsonOriginal);
+							MessageInfoTemp m = gson.fromJson(bodyJsonOriginal, MessageInfoTemp.class);
+							String message = m.getMessage();
+							ChatMessage  chatMessage= new ChatMessage(triggeredBody.getAsString("channel"), "user", "status");
+							chatMessage.setText("status");	
+							MessageInfo messageInfo = new MessageInfo(chatMessage, intent2, "NluAssessmentDE",  "readerbot",  "readerbench", true );
 							ClientResponse result = client.sendRequest("POST", "SBFManager" + "{readerbot}/trigger/intent", gson.toJson(messageInfo),
 							MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 							System.out.println(result.getResponse());
