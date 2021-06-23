@@ -894,7 +894,7 @@ public class ReaderbenchService extends RESTService {
 <span class="nc" id="L894">							ChatMessage  chatMessage= new ChatMessage(triggeredBody.getAsString(&quot;channel&quot;), &quot;user&quot;, &quot;status&quot;);</span>
 <span class="nc" id="L895">							chatMessage.setText(&quot;status&quot;);	</span>
 <span class="nc" id="L896">							MessageInfo messageInfo = new MessageInfo(chatMessage, intent2, &quot;NluAssessmentDE&quot;,  &quot;readerbot&quot;,  &quot;readerbench&quot;, true );</span>
-<span class="nc" id="L897">							ClientResponse result = client.sendRequest(&quot;POST&quot;, &quot;SBFManager&quot; + &quot;{readerbot}/trigger/intent&quot;, gson.toJson(messageInfo),</span>
+<span class="nc" id="L897">							ClientResponse result = client.sendRequest(&quot;POST&quot;, &quot;SBFManager/bots/readerbot/trigger/intent&quot;, gson.toJson(messageInfo),</span>
 							MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
 <span class="nc" id="L899">							System.out.println(result.getResponse());</span>
 <span class="nc" id="L900">						} catch (Exception e) {</span>
