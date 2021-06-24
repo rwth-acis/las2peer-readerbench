@@ -19,7 +19,7 @@ public abstract class Assessment {
 	private ArrayList&lt;String&gt; answers;
 	private ArrayList&lt;String&gt; refComplexity;
 	private ArrayList&lt;String&gt; feedbackText;
-
+	private int currentFeedback;
 <span class="nc" id="L23">	public Assessment(String quitIntent, ArrayList&lt;String&gt; questions) {</span>
 <span class="nc" id="L24">		this.quitIntent = quitIntent;</span>
 <span class="nc" id="L25">		this.questions = questions;</span>
@@ -45,116 +45,126 @@ public abstract class Assessment {
 <span class="nc" id="L45">		this.answers = answers;</span>
 <span class="nc" id="L46">		this.refComplexity = refComplexity;</span>
 <span class="nc" id="L47">		this.feedbackText = feedbackText;</span>
-<span class="nc" id="L48">	}</span>
+<span class="nc" id="L48">		this.currentFeedback=0;</span>
+<span class="nc" id="L49">	}</span>
 
 	
 	public String getType(){
-<span class="nc" id="L52">		return this.type;</span>
+<span class="nc" id="L53">		return this.type;</span>
 	}
 
 	public String gettopicId(){
-<span class="nc" id="L56">		return this.topicId;</span>
+<span class="nc" id="L57">		return this.topicId;</span>
 	}
 
 	public String getTopicName(){
-<span class="nc" id="L60">		return this.topicName;</span>
+<span class="nc" id="L61">		return this.topicName;</span>
 	}
 
 	public String getQuitIntent() {
-<span class="nc" id="L64">		return this.quitIntent;</span>
+<span class="nc" id="L65">		return this.quitIntent;</span>
 	}
 	
 	public double getMarks() {
-<span class="nc" id="L68">		return this.marks; </span>
+<span class="nc" id="L69">		return this.marks; </span>
 	}
 	
 	public void incrementMark(double value) {
-<span class="nc" id="L72">    	this.marks += (Math.round(value*100.0)/100.0);</span>
-<span class="nc" id="L73">    } </span>
+<span class="nc" id="L73">    	this.marks += (Math.round(value*100.0)/100.0);</span>
+<span class="nc" id="L74">    } </span>
 	
+	public int getCurrentFeedback() {
+<span class="nc" id="L77">		return this.currentFeedback;</span>
+	}
 	public int getCurrentQuestionNumber() {
-<span class="nc" id="L76">		return this.currentQuestion;</span>
+<span class="nc" id="L80">		return this.currentQuestion;</span>
 	}
 	
 	public void incrementCurrentQuestionNumber() {
-<span class="nc" id="L80">		this.currentQuestion++ ;</span>
-<span class="nc" id="L81">	}</span>
+<span class="nc" id="L84">		this.currentQuestion++ ;</span>
+<span class="nc" id="L85">	}</span>
+	public void incrementgetCurrentFeedback() {
+<span class="nc" id="L87">		this.currentFeedback++ ;</span>
+<span class="nc" id="L88">	}</span>
 	
 	public int getAssessmentSize() {
-<span class="nc" id="L84">		return this.questions.size();</span>
+<span class="nc" id="L91">		return this.questions.size();</span>
 	} 
 	
 	public String getWrongQuestions() {
-<span class="nc" id="L88">		return this.currentWrongQuestions;	</span>
+<span class="nc" id="L95">		return this.currentWrongQuestions;	</span>
 	}
 	
 	public void addWrongQuestion(){
-<span class="nc" id="L92">	    	this.currentWrongQuestions += questions.get(getCurrentQuestionNumber()) + &quot;\n&quot; ;</span>
-<span class="nc" id="L93">	} </span>
+<span class="nc" id="L99">	    	this.currentWrongQuestions += questions.get(getCurrentQuestionNumber()) + &quot;\n&quot; ;</span>
+<span class="nc" id="L100">	} </span>
 	
 	public String getCurrentQuestion() {
-<span class="nc" id="L96">		return this.questions.get(this.getCurrentQuestionNumber());</span>
+<span class="nc" id="L103">		return this.questions.get(this.getCurrentQuestionNumber());</span>
 	}
 	public String getQuestionByNumber(int number) {
-<span class="nc" id="L99">		return this.questions.get(number);</span>
+<span class="nc" id="L106">		return this.questions.get(number);</span>
 	}
 	public String getAnswerByNumber(int number) {
-<span class="nc" id="L102">		return this.answers.get(number);</span>
+<span class="nc" id="L109">		return this.answers.get(number);</span>
 	}
 	public String getrefComplexityByNumber(int number) {
-<span class="nc" id="L105">		return this.refComplexity.get(number);</span>
+<span class="nc" id="L112">		return this.refComplexity.get(number);</span>
 	}
 	public String getCurrentAnswer() {
-<span class="nc" id="L108">		return this.questions.get(this.getCurrentQuestionNumber());</span>
+<span class="nc" id="L115">		return this.questions.get(this.getCurrentQuestionNumber());</span>
 	}
 
 	public void setCurrentAnswer(String answer) {
-<span class="nc" id="L112">		this.answers.set(this.getCurrentQuestionNumber(), answer);</span>
-<span class="nc" id="L113">	}</span>
+<span class="nc" id="L119">		this.answers.set(this.getCurrentQuestionNumber(), answer);</span>
+<span class="nc" id="L120">	}</span>
 	public Double getCurrentNumberOfPoints() {
-<span class="nc" id="L115">		return this.numberOfPoints.get(this.getCurrentQuestionNumber());</span>
+<span class="nc" id="L122">		return this.numberOfPoints.get(this.getCurrentQuestionNumber());</span>
 	}
 
 	public void setLevel(String level){
-<span class="nc" id="L119">		this.textlevel.set(this.getCurrentQuestionNumber(), level);</span>
-<span class="nc" id="L120">	}</span>
+<span class="nc" id="L126">		this.textlevel.set(this.getCurrentQuestionNumber(), level);</span>
+<span class="nc" id="L127">	}</span>
 
 	public String getFeedbackText(int i){
-<span class="nc" id="L123">		return this.feedbackText.get(i);</span>
+<span class="nc" id="L130">		return this.feedbackText.get(i);</span>
 	}
 	public void setFeedbackText(String feedback){
-<span class="nc" id="L126">		this.feedbackText.set(this.getCurrentQuestionNumber(), feedback);</span>
-<span class="nc" id="L127">	}</span>
+<span class="nc" id="L133">		this.feedbackText.set(this.getCurrentQuestionNumber(), feedback);</span>
+<span class="nc" id="L134">	}</span>
 	public void setLevelByNumber(int number, String level){
-<span class="nc" id="L129">		this.textlevel.set(number, level);</span>
-<span class="nc" id="L130">	}</span>
+<span class="nc" id="L136">		this.textlevel.set(number, level);</span>
+<span class="nc" id="L137">	}</span>
 
 	public void setSimilarity(double value){
-<span class="nc" id="L133">		System.out.println(&quot;This CurrentQuestionNumber is...........&quot;+ this.getCurrentQuestionNumber());</span>
-<span class="nc" id="L134">		System.out.println(&quot;This NumberOfPoints is...........&quot;+ this.getCurrentQuestionNumber());</span>
-<span class="nc" id="L135">		this.similarityScore.set(this.getCurrentQuestionNumber(), value);</span>
-<span class="nc" id="L136">	}</span>
+<span class="nc" id="L140">		System.out.println(&quot;This CurrentQuestionNumber is...........&quot;+ this.getCurrentQuestionNumber());</span>
+<span class="nc" id="L141">		System.out.println(&quot;This NumberOfPoints is...........&quot;+ this.getCurrentQuestionNumber());</span>
+<span class="nc" id="L142">		this.similarityScore.set(this.getCurrentQuestionNumber(), value);</span>
+<span class="nc" id="L143">	}</span>
 	public void setSimilarityByNumber(int number,double value){
-<span class="nc" id="L138">		this.similarityScore.set(number, value);</span>
-<span class="nc" id="L139">	}</span>
+<span class="nc" id="L145">		this.similarityScore.set(number, value);</span>
+<span class="nc" id="L146">	}</span>
 
+	public void setFeedbackTextByNumber(int number, String feedback){
+<span class="nc" id="L149">		this.feedbackText.set(number, feedback);</span>
+<span class="nc" id="L150">	}</span>
 
 	
 
 	public ArrayList&lt;Double&gt; getSimilarityScoreList(){
-<span class="nc" id="L145">		return this.similarityScore;</span>
+<span class="nc" id="L155">		return this.similarityScore;</span>
 	}
 	public String getLevelList(int i){
-<span class="nc" id="L148">		return this.textlevel.get(i);</span>
+<span class="nc" id="L158">		return this.textlevel.get(i);</span>
 	}
 	public String gettextReference(){
-<span class="nc" id="L151">		return this.textReference.get(this.getCurrentQuestionNumber());</span>
+<span class="nc" id="L161">		return this.textReference.get(this.getCurrentQuestionNumber());</span>
 	}
 	public String gettextReferenceByNumber(int number){
-<span class="nc" id="L154">		return this.textReference.get(number);</span>
+<span class="nc" id="L164">		return this.textReference.get(number);</span>
 	}
 	public String getModelType(){
-<span class="nc" id="L157">		return this.modelType;</span>
+<span class="nc" id="L167">		return this.modelType;</span>
 	}
 	
 	

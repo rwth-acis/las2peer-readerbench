@@ -19,7 +19,7 @@ public abstract class Assessment {
 	private ArrayList<String> answers;
 	private ArrayList<String> refComplexity;
 	private ArrayList<String> feedbackText;
-
+	private int currentFeedback;
 	public Assessment(String quitIntent, ArrayList<String> questions) {
 		this.quitIntent = quitIntent;
 		this.questions = questions;
@@ -45,6 +45,7 @@ public abstract class Assessment {
 		this.answers = answers;
 		this.refComplexity = refComplexity;
 		this.feedbackText = feedbackText;
+		this.currentFeedback=0;
 	}
 
 	
@@ -72,12 +73,18 @@ public abstract class Assessment {
     	this.marks += (Math.round(value*100.0)/100.0);
     } 
 	
+	public int getCurrentFeedback() {
+		return this.currentFeedback;
+	}
 	public int getCurrentQuestionNumber() {
 		return this.currentQuestion;
 	}
 	
 	public void incrementCurrentQuestionNumber() {
 		this.currentQuestion++ ;
+	}
+	public void incrementgetCurrentFeedback() {
+		this.currentFeedback++ ;
 	}
 	
 	public int getAssessmentSize() {
@@ -138,6 +145,9 @@ public abstract class Assessment {
 		this.similarityScore.set(number, value);
 	}
 
+	public void setFeedbackTextByNumber(int number, String feedback){
+		this.feedbackText.set(number, feedback);
+	}
 
 	
 

@@ -82,6 +82,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Iterator;
 
+
 import static java.nio.charset.StandardCharsets.*;
 import java.nio.charset.Charset;
 
@@ -720,8 +721,73 @@ public class ReaderbenchService extends RESTService {
 					response.put("closeContext", "false");
 				} else if(triggeredBody.getAsString("msg").equals("status") & intent.equals("status")){
 					try {
+						if(assessment.getCurrentFeedback()+1 >= assessment.getAssessmentSize()){
+							System.out.println("..............over the Limit");
+							response.put("closeContext", "true");
+							response.put("text", "");
+							return response;
+						}
+						else{
+							int i= assessment.getCurrentFeedback();
+							System.out.println("Feedback number ............"+ assessment.getCurrentFeedback());
+							System.out.println("feedback is............"+ assessment.getLevelList(i));
+							System.out.println("level is............"+ assessment.getLevelList(i));
+							if(i==0){
+								answer += "Ihre Ergebnisse:\n \n";
+							}
+							
+							answer += "Frage " + (i + 1) + ": Komplexitätstufe is " + assessment.getLevelList(i) +
+							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n ";
+							answer +="Empfehlungen: \n";
+							answer+= assessment.getFeedbackText(i);
+							assessment.incrementgetCurrentFeedback();
+							
+
+							try {
+								String BodyString= "{"+
+								"\"message\": {"+
+										"\"channel\": \"QHendCGJyceGXLwkWdaCrpvTktAQeZi4Ap\","+
+										"\"user\": \"karl252073\","+
+										"\"role\": 0,"+
+										"\"email\": \"karl.zeufack@rwth-aachen.de\","+
+										"\"text\": \"status\","+
+										"\"domain\": \"https://chat.tech4comp.dbis.rwth-aachen.de\" "+
+									"},"+
+									" \"intent\": {"+
+										"\"intentKeyword\": \"status\","+
+										"\"confidence\": 1.0,"+
+										"\"entities\": {"+
+											"\"status\": {"+
+												"\"entityName\": \"status\","+
+												"\"value\": \"status\","+
+												"\"confidence\": 1.0"+
+											"}"+
+										"}"+
+									"},"+
+									"\"botName\": \"textgrader\","+
+									"\"serviceAlias\": \"Gruppe1\","+
+									"\"contextWithService\": true,"+
+									"\"recognizedEntities\": [],"+
+									"\"triggeredFunctionId\": \"4ca1264ede58703622a9ccdd\""+
+								"}";
+								StringEntity entity = new StringEntity(BodyString);
+								HttpClient httpClient = HttpClientBuilder.create().build();
+								HttpPost request = new HttpPost("http://137.226.232.75:32445/SBFManager/bots/textgrader/trigger/intent");
+								request.setEntity(entity);
+								request.setHeader("Content-type", "application/json");
+								HttpResponse res = httpClient.execute(request);
+								HttpEntity entity2 = res.getEntity();
+								String triggerresult = EntityUtils.toString(entity2);
+								System.out.println("triggerresults "+ triggerresult);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+							response.put("closeContext", "false");
+							response.put("text", answer);
+        					return response;
+						}
 						
-						answer += "Ihre Ergebnisse:\n";
+						/*answer += "Ihre Ergebnisse:\n \n";
 						int currentQuestion = 0;
 
 						for(int i=0; i <  assessment.getAssessmentSize(); i++){
@@ -732,17 +798,18 @@ public class ReaderbenchService extends RESTService {
         						return response;
 							}
 							answer += "Frage " + (currentQuestion + 1) + ": Komplexitätstufe is " + assessment.getLevelList(i) +
-							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n";
+							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + u"\n ";
 							answer +="Empfehlungen: \n";
 							answer+= assessment.getFeedbackText(i);
 							currentQuestion += 1;
+							System.out.println("feedback is............"+ assessment.getLevelList(i));
 							System.out.println("level is............"+ assessment.getLevelList(i));
 						}
-						response.put("closeContext", "false");
+						response.put("closeContext", "false");*/
 					} catch (Exception e) {
 						e.printStackTrace();
-						answer+="Bewertungen werden berechnet...";
-						response.put("closeContext", "false");
+						answer+="Mistake in Status...";
+						response.put("closeContext", "true");
 					}
 					
 				} else {
@@ -812,7 +879,7 @@ public class ReaderbenchService extends RESTService {
 
 								for (Object item : document) {
 									JSONObject obj = (JSONObject) item;
-									feedbackString  += obj.getAsString("message")+ "\n \n";
+									feedbackString  += obj.getAsString("message")+ "\n";
 								}
 
 								JSONArray block = (JSONArray) p.parse(feedback.getAsString("block"));
@@ -838,7 +905,7 @@ public class ReaderbenchService extends RESTService {
 									sentenceNumber+=1;
 								}
 
-								assessment.setFeedbackText(feedbackString);
+								assessment.setFeedbackTextByNumber(i,feedbackString);
 							}  catch (Exception e) {
 								e.printStackTrace();
 								System.out.println("................Problem with Compare................");
@@ -883,46 +950,49 @@ public class ReaderbenchService extends RESTService {
 						}
 					
 						try {
-							MiniClient client = new MiniClient();
-							client.setConnectorEndpoint(this.l2pEndpoint);
-							HashMap<String, String> headers = new HashMap<String, String>();
-							Intent intent2 = new Intent("status", "status", "status");
-							Gson gson = new Gson();
-							System.out.println("bodyJsonOriginal"+ bodyJsonOriginal);
-							MessageInfoTemp m = gson.fromJson(bodyJsonOriginal, MessageInfoTemp.class);
-							String message = m.getMessage();
-							ChatMessage  chatMessage= new ChatMessage(triggeredBody.getAsString("channel"), "user", "status");
-							chatMessage.setText("status");	
-							MessageInfo messageInfo = new MessageInfo(chatMessage, intent2, "NluAssessmentDE",  "readerbot",  "readerbench", true );
-							ClientResponse result = client.sendRequest("POST", "SBFManager/bots/readerbot/trigger/intent", gson.toJson(messageInfo),
-							MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN, headers);
-							System.out.println(result.getResponse());
+							String BodyString= "{"+
+							"\"message\": {"+
+									"\"channel\": \"QHendCGJyceGXLwkWdaCrpvTktAQeZi4Ap\","+
+									"\"user\": \"karl252073\","+
+									"\"role\": 0,"+
+									"\"email\": \"karl.zeufack@rwth-aachen.de\","+
+									"\"text\": \"status\","+
+									"\"domain\": \"https://chat.tech4comp.dbis.rwth-aachen.de\" "+
+								"},"+
+								" \"intent\": {"+
+									"\"intentKeyword\": \"status\","+
+									"\"confidence\": 1.0,"+
+									"\"entities\": {"+
+										"\"status\": {"+
+											"\"entityName\": \"status\","+
+											"\"value\": \"status\","+
+											"\"confidence\": 1.0"+
+										"}"+
+									"}"+
+								"},"+
+								"\"botName\": \"textgrader\","+
+								"\"serviceAlias\": \"Gruppe1\","+
+								"\"contextWithService\": true,"+
+								"\"recognizedEntities\": [],"+
+								"\"triggeredFunctionId\": \"4ca1264ede58703622a9ccdd\""+
+							"}";
+							StringEntity entity = new StringEntity(BodyString);
+							HttpClient httpClient = HttpClientBuilder.create().build();
+							HttpPost request = new HttpPost("http://137.226.232.75:32445/SBFManager/bots/textgrader/trigger/intent");
+							request.setEntity(entity);
+							request.setHeader("Content-type", "application/json");
+							HttpResponse res = httpClient.execute(request);
+							HttpEntity entity2 = res.getEntity();
+							String triggerresult = EntityUtils.toString(entity2);
+							System.out.println("triggerresults "+ triggerresult);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}	
 						
-					/*try {
-						
-						answer += "Ihre Ergebnisse:\n";
-						int currentQuestion = 0;
-						for(int i=0; i <  assessment.getAssessmentSize(); i++){
-							if(assessment.getLevelList(i)==""){
-								answer="Bewertungen werden berechnet...";
-								response.put("closeContext", "false");
-								response.put("text", answer);
-        						return response;
-							}
-							answer += "Frage " + (currentQuestion + 1) + ": Komplexitätstufe is " + assessment.getLevelList(i) +
-							", Ähnlichkeitsgrad mit der Korrektur	"+  Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n"; 
-							currentQuestion += 1;
-							System.out.println("level is............"+ assessment.getLevelList(i));
-						}
+						response.put("text", "Bewertung ist fertig");
 						response.put("closeContext", "false");
-					} catch (Exception e) {
-						e.printStackTrace();
-						answer+="Fehler bei dem auslesen der Ergebnisse. \n Die Übung wird verlassen.\n Entschuldigung dafür\n Auf wiedersehen :|";
-						response.put("closeContext", "true");
-					}*/
+						return response;
+					
 					} else {
 						assessment.incrementCurrentQuestionNumber();
 						answer += assessment.getCurrentQuestion();        
