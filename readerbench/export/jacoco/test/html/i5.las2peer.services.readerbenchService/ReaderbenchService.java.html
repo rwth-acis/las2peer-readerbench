@@ -727,7 +727,7 @@ public class ReaderbenchService extends RESTService {
 <span class="nc bnc" id="L727" title="All 2 branches missed.">				} else if(triggeredBody.getAsString(&quot;msg&quot;).equals(&quot;status&quot;) &amp; intent.equals(&quot;status&quot;)){</span>
 					try {
 						
-<span class="nc" id="L730">						answer += &quot;Ihre Ergebnisse:\n \n&quot;;</span>
+<span class="nc" id="L730">						answer += &quot;Ihre Ergebnisse:\n \n &quot;;</span>
 <span class="nc" id="L731">						int currentQuestion = 0;</span>
 
 <span class="nc bnc" id="L733" title="All 2 branches missed.">						for(int i=0; i &lt;  assessment.getAssessmentSize(); i++){</span>
@@ -745,7 +745,7 @@ public class ReaderbenchService extends RESTService {
 <span class="nc" id="L745">							System.out.println(&quot;feedback is............&quot;+ assessment.getLevelList(i));</span>
 <span class="nc" id="L746">							System.out.println(&quot;level is............&quot;+ assessment.getLevelList(i));</span>
 						}
-<span class="nc" id="L748">						response.put(&quot;closeContext&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L748">						response.put(&quot;closeContext&quot;, &quot;true&quot;);</span>
 <span class="nc" id="L749">					} catch (Exception e) {</span>
 <span class="nc" id="L750">						e.printStackTrace();</span>
 <span class="nc" id="L751">						answer+=&quot;Bewertungen werden berechnet...&quot;;</span>
@@ -821,30 +821,30 @@ public class ReaderbenchService extends RESTService {
 <span class="nc" id="L821">									JSONObject obj = (JSONObject) item;</span>
 <span class="nc" id="L822">									feedbackString  += obj.getAsString(&quot;message&quot;)+ &quot;\n \n&quot;;</span>
 <span class="nc" id="L823">								}</span>
-
-<span class="nc" id="L825">								JSONArray block = (JSONArray) p.parse(feedback.getAsString(&quot;block&quot;));</span>
-<span class="nc" id="L826">								int blockNumber = 1;</span>
-<span class="nc bnc" id="L827" title="All 2 branches missed.">								for (Object item : block) {</span>
-<span class="nc" id="L828">									JSONArray arrayitem = (JSONArray) item;</span>
-<span class="nc bnc" id="L829" title="All 2 branches missed.">									for (Object item1 : arrayitem) {</span>
-<span class="nc" id="L830">										JSONObject obj = (JSONObject) item1;</span>
-<span class="nc" id="L831">										feedbackString += &quot;Absatznummer &quot; + blockNumber +&quot;: &quot;;</span>
-<span class="nc" id="L832">										feedbackString += obj.getAsString(&quot;message&quot;)+ &quot;\n&quot;;</span>
-<span class="nc" id="L833">									}</span>
-<span class="nc" id="L834">									blockNumber+=1;</span>
-<span class="nc" id="L835">								}</span>
-<span class="nc" id="L836">								JSONArray sentence = (JSONArray) p.parse(feedback.getAsString(&quot;sentence&quot;));</span>
-<span class="nc" id="L837">								int sentenceNumber = 1;</span>
-<span class="nc bnc" id="L838" title="All 2 branches missed.">								for (Object item : sentence) {</span>
-<span class="nc" id="L839">									JSONArray arrayitem = (JSONArray) item;</span>
-<span class="nc bnc" id="L840" title="All 2 branches missed.">									for (Object item1 : arrayitem) {</span>
-<span class="nc" id="L841">										JSONObject obj = (JSONObject) item1;</span>
-<span class="nc" id="L842">										feedbackString += &quot;Satznummer &quot; + sentenceNumber +&quot;: &quot;;</span>
-<span class="nc" id="L843">										feedbackString += obj.getAsString(&quot;message&quot;)+ &quot;\n&quot;;</span>
-<span class="nc" id="L844">									}</span>
-<span class="nc" id="L845">									sentenceNumber+=1;</span>
-<span class="nc" id="L846">								}</span>
-
+								/*
+								JSONArray block = (JSONArray) p.parse(feedback.getAsString(&quot;block&quot;));
+								int blockNumber = 1;
+								for (Object item : block) {
+									JSONArray arrayitem = (JSONArray) item;
+									for (Object item1 : arrayitem) {
+										JSONObject obj = (JSONObject) item1;
+										feedbackString += &quot;Absatznummer &quot; + blockNumber +&quot;: &quot;;
+										feedbackString += obj.getAsString(&quot;message&quot;)+ &quot;\n&quot;;
+									}
+									blockNumber+=1;
+								}
+								JSONArray sentence = (JSONArray) p.parse(feedback.getAsString(&quot;sentence&quot;));
+								int sentenceNumber = 1;
+								for (Object item : sentence) {
+									JSONArray arrayitem = (JSONArray) item;
+									for (Object item1 : arrayitem) {
+										JSONObject obj = (JSONObject) item1;
+										feedbackString += &quot;Satznummer &quot; + sentenceNumber +&quot;: &quot;;
+										feedbackString += obj.getAsString(&quot;message&quot;)+ &quot;\n&quot;;
+									}
+									sentenceNumber+=1;
+								}
+								*/
 <span class="nc" id="L848">								assessment.setFeedbackTextByNumber(i,feedbackString);</span>
 <span class="nc" id="L849">							}  catch (Exception e) {</span>
 <span class="nc" id="L850">								e.printStackTrace();</span>

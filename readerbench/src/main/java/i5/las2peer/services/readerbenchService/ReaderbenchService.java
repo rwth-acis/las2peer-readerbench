@@ -727,7 +727,7 @@ public class ReaderbenchService extends RESTService {
 				} else if(triggeredBody.getAsString("msg").equals("status") & intent.equals("status")){
 					try {
 						
-						answer += "Ihre Ergebnisse:\n \n";
+						answer += "Ihre Ergebnisse:\n \n ";
 						int currentQuestion = 0;
 
 						for(int i=0; i <  assessment.getAssessmentSize(); i++){
@@ -745,7 +745,7 @@ public class ReaderbenchService extends RESTService {
 							System.out.println("feedback is............"+ assessment.getLevelList(i));
 							System.out.println("level is............"+ assessment.getLevelList(i));
 						}
-						response.put("closeContext", "false");
+						response.put("closeContext", "true");
 					} catch (Exception e) {
 						e.printStackTrace();
 						answer+="Bewertungen werden berechnet...";
@@ -821,7 +821,7 @@ public class ReaderbenchService extends RESTService {
 									JSONObject obj = (JSONObject) item;
 									feedbackString  += obj.getAsString("message")+ "\n \n";
 								}
-
+								/*
 								JSONArray block = (JSONArray) p.parse(feedback.getAsString("block"));
 								int blockNumber = 1;
 								for (Object item : block) {
@@ -844,7 +844,7 @@ public class ReaderbenchService extends RESTService {
 									}
 									sentenceNumber+=1;
 								}
-
+								*/
 								assessment.setFeedbackTextByNumber(i,feedbackString);
 							}  catch (Exception e) {
 								e.printStackTrace();
