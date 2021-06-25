@@ -27,7 +27,7 @@ spec:
                 - detel
       containers:
       - name: readerbench
-        image: "karlydiamond214/readerbench:test"
+        image: "registry.tech4comp.dbis.rwth-aachen.de/rwthacis/las2peer-readerbench:main"
         imagePullPolicy: Always
         env:
         - name: BOOTSTRAP

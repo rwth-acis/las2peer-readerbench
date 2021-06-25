@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS  `topic` ;
 
 
 CREATE TABLE IF NOT EXISTS  `topic` (
-  `topic_id` VARCHAR(1000) NOT NULL,
+  `topic_id` VARCHAR(500) NOT NULL,
   `topic_name` TEXT NOT NULL,
   `processed` BOOLEAN NOT NULL,
   `due_date` TEXT NULL,
@@ -39,7 +39,7 @@ ENGINE = InnoDB  CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dyn
 
 CREATE TABLE IF NOT EXISTS  `question` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `question` VARCHAR(1000) NOT NULL,
+  `question` TEXT NOT NULL,
   `topic_id` TEXT NOT NULL,
   `textref` TEXT NULL,
   `numberOfPoints` DOUBLE NOT NULL,
@@ -55,8 +55,8 @@ ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dyna
 -- -----------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS  `results` (
-  `topic_id` VARCHAR(1000) NOT NULL,
-  `questionid` VARCHAR(1000) NOT NULL,
+  `topic_id` VARCHAR(500) NOT NULL,
+  `questionid` INT NOT NULL,
    `channel` TEXT NULL,
   `complexity` TEXT NULL,
   `numberOfPoints` TEXT NULL,
