@@ -394,14 +394,26 @@ public class ReaderbenchService extends RESTService {
 				String topicName = bodyJson.getAsString("topicName");
 				String time =""+ System.currentTimeMillis();
 				ps = con.prepareStatement("SELECT * FROM topic WHERE topic_id = ?");
-				ps.setString(1, topicName + time);
+				ps.setString(1, topicName );
 				ResultSet rs = ps.executeQuery();
 				if (rs.next()) {
-					return Response.ok("Assessment not inserted").build();
+					ps.close();
+					ps = con.prepareStatement("UPDATE topic SET processed=? due_date=? WHERE topic_name=?");
+					ps.setString(3,  bodyJson.getAsString("topicName"));
+					ps.setBoolean(1, false);
+					ps.setString(2, "");
+					ps.executeUpdate();
+
+					//Delete old questions
+					ps.close();
+					ps = con.prepareStatement("DELETE FROM question  WHERE topic_id=?");
+					ps.setString(1, bodyJson.getAsString("topicName"));
+					ps.executeUpdate();  
 				} else {
+					
 					ps.close();
 					ps = con.prepareStatement("INSERT INTO topic(topic_id, topic_name,processed ,due_date) VALUES (?, ?, ?, ?)");
-					ps.setString(1,  bodyJson.getAsString("topicName")+ time);
+					ps.setString(1,  bodyJson.getAsString("topicName"));
 					ps.setString(2,  bodyJson.getAsString("topicName"));
 					ps.setBoolean(3, false);
 					ps.setString(4, "");
@@ -410,7 +422,9 @@ public class ReaderbenchService extends RESTService {
 
 				
 				JSONArray Questions =(JSONArray) bodyJson.get("question");
-		
+				
+				
+
 		
 				int length = Questions.size(); 
 				System.out.println("Got"+ length +"Questions");
@@ -418,11 +432,11 @@ public class ReaderbenchService extends RESTService {
 				for(int i = 0; i < length ; i++){
 					
 						String question = Questions.get(i).toString();  
-						JSONObject questionJson = (JSONObject) p.parse(question);   
+						JSONObject questionJson = (JSONObject) p.parse(question); 
 						ps.close();
 						ps = con.prepareStatement("INSERT INTO question(question, topic_id, textref, numberOfPoints) VALUES ( ?, ?, ?, ?)");
 						ps.setString(1, questionJson.getAsString("question"));
-						ps.setString(2, bodyJson.getAsString("topicName")+ time);
+						ps.setString(2, bodyJson.getAsString("topicName"));
 						ps.setString(3, questionJson.getAsString("textref"));
 						ps.setString(4, "1");
 						ps.executeUpdate();
@@ -531,7 +545,7 @@ public class ReaderbenchService extends RESTService {
 						}
 						
 						if(!topicNames.equals("")) {
-							response.put("text", "Wähle ein Thema indem du mit der entsprechenden Nummer oder dem entsprechenden Name antwortest:\n" + topicNames);
+							response.put("text", "Wähle ein Thema indem du mit dem entsprechenden Name des Thema antwortest:\n" + topicNames);
 							response.put("closeContext", false);
 							this.topicsProposed.put(channel, true);
 							return Response.ok().entity(response).build();
@@ -569,30 +583,21 @@ public class ReaderbenchService extends RESTService {
 								topicName =  rs.getString("topic_name");
 								topicId =  rs.getString("topic_id");
 								
-								if(topicName.toLowerCase().equals(bodyJson.getAsString("msg").toLowerCase()) || chosenTopicNumber.equals(String.valueOf(topicCount))){
+								if(topicName.toLowerCase().equals(bodyJson.getAsString("msg").toLowerCase()) ){
 									
-									System.out.println("line 641.................");
-									similarTopicNames.add(topicName);
-									similarNames += " • " + topicCount + ". " + topicName + "\n";
+									setUpNluAssessment2(topicName, topicId, channel,  bodyJson.getAsString("Type"), bodyJson.getAsString("modelType"));
+									response.put("text", "Wir starten jetzt das  Assessment über "+ topicName + " :)!\n" + this.currentNLUAssessment.get(channel).getCurrentQuestion());							
+									response.put("closeContext", "false");
+									this.topicsProposed.remove(channel);
+									this.assessmentStarted.put(channel, "true");
+									bodyJson.put("msg", topicName);
+									return Response.ok().entity(response).build();
 								} 
 								topicCount++;
 							}
-							if(similarTopicNames.size() == 1) {
-								System.out.println("similarTopicNames.size() is one.................");
-								setUpNluAssessment2(topicName, topicId, channel,  bodyJson.getAsString("Type"), bodyJson.getAsString("modelType"));
-								response.put("text", "Wir starten jetzt das Nlu Assessment über "+ topicName + " :)!\n" + this.currentNLUAssessment.get(channel).getCurrentQuestion());							
-								response.put("closeContext", "false");
-								this.topicsProposed.remove(channel);
-								this.assessmentStarted.put(channel, "true");
-								bodyJson.put("msg", similarTopicNames.get(0));
-							} else if(similarTopicNames.size() > 1) {
-								System.out.print("mehrere NLU.................");
-								response.put("text", "Mehrere Nlu Assessments entsprechen deiner Antwort, welche von diesen möchtest du denn anfangen?\n" + similarNames);							
-								response.put("closeContext", "false");
-							}else if(similarTopicNames.size()< 1){
 								response.put("text", "Assessment mit der name " + bodyJson.getAsString("msg")+ " wurde nicht gefunden");
 								response.put("closeContext", "true");
-							}
+							
 							return Response.ok().entity(response).build();
 							
 							
@@ -721,73 +726,8 @@ public class ReaderbenchService extends RESTService {
 					response.put("closeContext", "false");
 				} else if(triggeredBody.getAsString("msg").equals("status") & intent.equals("status")){
 					try {
-						if(assessment.getCurrentFeedback()+1 >= assessment.getAssessmentSize()){
-							System.out.println("..............over the Limit");
-							response.put("closeContext", "true");
-							response.put("text", "");
-							return response;
-						}
-						else{
-							int i= assessment.getCurrentFeedback();
-							System.out.println("Feedback number ............"+ assessment.getCurrentFeedback());
-							System.out.println("feedback is............"+ assessment.getLevelList(i));
-							System.out.println("level is............"+ assessment.getLevelList(i));
-							if(i==0){
-								answer += "Ihre Ergebnisse:\n \n";
-							}
-							
-							answer += "Frage " + (i + 1) + ": Komplexitätstufe is " + assessment.getLevelList(i) +
-							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n ";
-							answer +="Empfehlungen: \n";
-							answer+= assessment.getFeedbackText(i);
-							assessment.incrementgetCurrentFeedback();
-							
-
-							try {
-								String BodyString= "{"+
-								"\"message\": {"+
-										"\"channel\": \"QHendCGJyceGXLwkWdaCrpvTktAQeZi4Ap\","+
-										"\"user\": \"karl252073\","+
-										"\"role\": 0,"+
-										"\"email\": \"karl.zeufack@rwth-aachen.de\","+
-										"\"text\": \"status\","+
-										"\"domain\": \"https://chat.tech4comp.dbis.rwth-aachen.de\" "+
-									"},"+
-									" \"intent\": {"+
-										"\"intentKeyword\": \"status\","+
-										"\"confidence\": 1.0,"+
-										"\"entities\": {"+
-											"\"status\": {"+
-												"\"entityName\": \"status\","+
-												"\"value\": \"status\","+
-												"\"confidence\": 1.0"+
-											"}"+
-										"}"+
-									"},"+
-									"\"botName\": \"textgrader\","+
-									"\"serviceAlias\": \"Gruppe1\","+
-									"\"contextWithService\": true,"+
-									"\"recognizedEntities\": [],"+
-									"\"triggeredFunctionId\": \"4ca1264ede58703622a9ccdd\""+
-								"}";
-								StringEntity entity = new StringEntity(BodyString);
-								HttpClient httpClient = HttpClientBuilder.create().build();
-								HttpPost request = new HttpPost("http://137.226.232.75:32445/SBFManager/bots/textgrader/trigger/intent");
-								request.setEntity(entity);
-								request.setHeader("Content-type", "application/json");
-								HttpResponse res = httpClient.execute(request);
-								HttpEntity entity2 = res.getEntity();
-								String triggerresult = EntityUtils.toString(entity2);
-								System.out.println("triggerresults "+ triggerresult);
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-							response.put("closeContext", "false");
-							response.put("text", answer);
-        					return response;
-						}
 						
-						/*answer += "Ihre Ergebnisse:\n \n";
+						answer += "Ihre Ergebnisse:\n \n";
 						int currentQuestion = 0;
 
 						for(int i=0; i <  assessment.getAssessmentSize(); i++){
@@ -798,17 +738,17 @@ public class ReaderbenchService extends RESTService {
         						return response;
 							}
 							answer += "Frage " + (currentQuestion + 1) + ": Komplexitätstufe is " + assessment.getLevelList(i) +
-							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + u"\n ";
+							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n ";
 							answer +="Empfehlungen: \n";
 							answer+= assessment.getFeedbackText(i);
 							currentQuestion += 1;
 							System.out.println("feedback is............"+ assessment.getLevelList(i));
 							System.out.println("level is............"+ assessment.getLevelList(i));
 						}
-						response.put("closeContext", "false");*/
+						response.put("closeContext", "false");
 					} catch (Exception e) {
 						e.printStackTrace();
-						answer+="Mistake in Status...";
+						answer+="Bewertungen werden berechnet...";
 						response.put("closeContext", "true");
 					}
 					
@@ -879,7 +819,7 @@ public class ReaderbenchService extends RESTService {
 
 								for (Object item : document) {
 									JSONObject obj = (JSONObject) item;
-									feedbackString  += obj.getAsString("message")+ "\n";
+									feedbackString  += obj.getAsString("message")+ "\n \n";
 								}
 
 								JSONArray block = (JSONArray) p.parse(feedback.getAsString("block"));

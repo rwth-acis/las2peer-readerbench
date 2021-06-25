@@ -24,10 +24,10 @@ DROP TABLE IF EXISTS  `topic` ;
 
 
 CREATE TABLE IF NOT EXISTS  `topic` (
-  `topic_id` VARCHAR(255) NOT NULL,
-  `topic_name` VARCHAR(255) NOT NULL,
+  `topic_id` VARCHAR(1000) NOT NULL,
+  `topic_name` TEXT NOT NULL,
   `processed` BOOLEAN NOT NULL,
-  `due_date` VARCHAR(255) NULL,
+  `due_date` TEXT NULL,
   PRIMARY KEY (`topic_id`))
 ENGINE = InnoDB  CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
@@ -39,8 +39,8 @@ ENGINE = InnoDB  CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dyn
 
 CREATE TABLE IF NOT EXISTS  `question` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `question` VARCHAR(255) NOT NULL,
-  `topic_id` VARCHAR(255) NOT NULL,
+  `question` VARCHAR(1000) NOT NULL,
+  `topic_id` TEXT NOT NULL,
   `textref` TEXT NULL,
   `numberOfPoints` DOUBLE NOT NULL,
   PRIMARY KEY (`id`)
@@ -55,11 +55,11 @@ ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dyna
 -- -----------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS  `results` (
-  `topic_id` VARCHAR(255) NOT NULL,
-  `questionid` INT NOT NULL,
-   `channel` VARCHAR(255) NULL,
-  `complexity` VARCHAR(45) NULL,
-  `numberOfPoints` VARCHAR(45) NULL,
+  `topic_id` VARCHAR(1000) NOT NULL,
+  `questionid` VARCHAR(1000) NOT NULL,
+   `channel` TEXT NULL,
+  `complexity` TEXT NULL,
+  `numberOfPoints` TEXT NULL,
  
   PRIMARY KEY (`topic_id`, `questionid`) USING BTREE
     )

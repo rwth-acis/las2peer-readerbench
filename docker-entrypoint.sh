@@ -39,6 +39,8 @@ if ! mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE
     echo "Creating database schema..."
     mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} ${DATABASE_NAME} < ${CREATE_DB_SQL}
 fi
+echo "Creating database schema..."
+mysql -h${DATABASE_HOST} -P${DATABASE_PORT} -u${DATABASE_USER} -p${DATABASE_PASSWORD} ${DATABASE_NAME} < ${CREATE_DB_SQL}
 
 # set defaults for optional service parameters
 [[ -z "${SERVICE_PASSPHRASE}" ]] && export SERVICE_PASSPHRASE='readerbench'
