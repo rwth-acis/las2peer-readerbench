@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.*;
 import java.lang.*;
 import java.io.*;
+import java.text.DecimalFormat;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -140,7 +141,9 @@ public class ReaderbenchService extends RESTService {
     // Key is the channelId
     private static HashMap<String, String> assessmentStarted = new HashMap<String, String>();
    // Used to keep track if the topics were already given for a specific user. The assessment function first gives a list on available topics and then expects an answer. 
-    private static HashMap<String, Boolean> topicsProposed = new HashMap<String, Boolean>();  
+	private static HashMap<String, Boolean> topicsProposed = new HashMap<String, Boolean>();  
+	//Analysis Started
+	private static HashMap<String, Boolean> analysisStarted = new HashMap<String, Boolean>();  
     // Used to make sure that the same moodle quiz is not being started twice at the same time. You can only start a quiz once on moodle until you submit it. 
     private static HashMap<String, Boolean> topicProcessed = new HashMap<String, Boolean>();
     // Saves the current NLUAssessment object for a specific user
@@ -673,6 +676,7 @@ public class ReaderbenchService extends RESTService {
 			ArrayList<String> answers = new ArrayList<String>();
 			ArrayList<String> refComplexity = new ArrayList<String>();
 			ArrayList<String> feedbackText = new ArrayList<String>();
+			ArrayList<String> cnaText = new ArrayList<String>();
 
 			for(int i = 0; i < length ; i++){
 				questions.add(assessmentContent[i][0]);
@@ -684,9 +688,10 @@ public class ReaderbenchService extends RESTService {
 				answers.add("");
 				refComplexity.add("");
 				feedbackText.add("");
+				cnaText.add("");
 			}
 			NLUAssessment assessment = new NLUAssessment(topicName, topicId, "stopAssessment", questions, null, null, "help", type, lectureref, numberOfPoints, modelType, 
-				similarityScore, textlevel, refComplexity, answers, feedbackText);
+				similarityScore, textlevel, refComplexity, answers, feedbackText, cnaText);
 			this.currentNLUAssessment.put(channel, assessment);	
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -741,6 +746,7 @@ public class ReaderbenchService extends RESTService {
 							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n ";
 							answer +="Empfehlungen: \n";
 							answer+= assessment.getFeedbackText(i);
+							answer+= assessment.getCnaText(i);
 							currentQuestion += 1;
 							System.out.println("feedback is............"+ assessment.getLevelList(i));
 							System.out.println("level is............"+ assessment.getLevelList(i));
@@ -751,6 +757,7 @@ public class ReaderbenchService extends RESTService {
 						answer+="Bewertungen werden berechnet...";
 						response.put("closeContext", "true");
 					}
+					this.analysisStarted.put(channel, null);
 					
 				} else {
 					String msg = triggeredBody.getAsString("msg");
@@ -768,171 +775,228 @@ public class ReaderbenchService extends RESTService {
 					
 					
 					if(assessment.getCurrentQuestionNumber()+1 >= assessment.getAssessmentSize()){
-						
-						for(int i=0; i <  assessment.getAssessmentSize(); i++){
-							String ref = assessment.gettextReferenceByNumber(i);
-							String ans = assessment.getAnswerByNumber(i);
-							String refComplexity = assessment.getrefComplexityByNumber(i) ;
-							System.out.println("................ref................");
-							System.out.println(ref);
-							System.out.println("................answer................");
-							System.out.println(ans);
-							JSONArray texts = new JSONArray(); 
-							texts.add(ref);
-							texts.add(ans);
-							JSONObject similarity_Body = new JSONObject();
-							similarity_Body.put("texts", texts);
-							similarity_Body.put("language", "de");
-							similarity_Body.put("corpus", "wiki");
-							JSONObject complexity_Body = new JSONObject();
-							complexity_Body.put("language", "de");
-							complexity_Body.put("text", ans);
-							JSONObject compare_Body = new JSONObject();
-							compare_Body.put("language", "de");
-							compare_Body.put("text", ans);
-							compare_Body.put("expert", replaceUmlaut(ref));
+						if(this.analysisStarted.get(channel) == null) {
+							this.analysisStarted.put(channel, true);
 
-							try{
-								String email = triggeredBody.getAsString("email");
-								JSONObject context = getContext(email, p);	
-								StringEntity entity = new StringEntity(compare_Body.toString());
-								HttpClient httpClient = HttpClientBuilder.create().build();
-								HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/complexity-compare");
-								request.setEntity(entity);
-								HttpResponse res = httpClient.execute(request);
-								HttpEntity entity2 = res.getEntity();
-								String similarity_result = EntityUtils.toString(entity2);
-								context.put("compare_result", similarity_result);
-								ContextInfo.put(email, context);
-								System.out.println("................result SIMILARITY computed from readerbench................");
-								System.out.println(context.getAsString("compare_result"));
-								JSONObject result = (JSONObject) p.parse(context.getAsString("compare_result")); 
-								String feedbackString ="";
-								JSONObject data = (JSONObject) result.get("data");
+							DecimalFormat df = new DecimalFormat("#.##");
+							for(int i=0; i <  assessment.getAssessmentSize(); i++){
+								String ref = assessment.gettextReferenceByNumber(i);
+								String ans = assessment.getAnswerByNumber(i);
+								String refComplexity = assessment.getrefComplexityByNumber(i) ;
+								System.out.println("................ref................");
+								System.out.println(ref);
+								System.out.println("................answer................");
+								System.out.println(ans);
+								JSONArray texts = new JSONArray(); 
+								texts.add(ref);
+								texts.add(ans);
+								JSONObject similarity_Body = new JSONObject();
+								similarity_Body.put("texts", texts);
+								similarity_Body.put("language", "de");
+								similarity_Body.put("corpus", "wiki");
+								JSONObject complexity_Body = new JSONObject();
+								complexity_Body.put("language", "de");
+								complexity_Body.put("text", ans);
+								JSONObject compare_Body = new JSONObject();
+								compare_Body.put("language", "de");
+								compare_Body.put("text", ans);
+								compare_Body.put("expert", replaceUmlaut(ref));
+								JSONObject cna_Body = new JSONObject();
+								JSONObject doc1 = new JSONObject();
+								doc1.put("text", ans);
+								JSONObject doc2 = new JSONObject();
+								doc2.put("text", ref);
+								JSONArray docs = new JSONArray(); 
+								docs.add(doc1);
+								docs.add(doc2);
+								cna_Body.put("texts", docs);
+								cna_Body.put("lang", "de");
+								JSONArray models = new JSONArray();
+								JSONObject w2v = new JSONObject();
+								w2v.put("model", "WORD2VEC"); 
+								w2v.put("corpus", "wiki"); 
+								models.add(w2v);
+								cna_Body.put("models", models);
 
-								String level = data.getAsString("level");
-								assessment.setLevelByNumber(i,level);
-								JSONObject feedback = (JSONObject) data.get("feedback");
+								try{
+									String email = triggeredBody.getAsString("email");
+									JSONObject context = getContext(email, p);	
+									StringEntity entity = new StringEntity(cna_Body.toString());
+									HttpClient httpClient = HttpClientBuilder.create().build();
+									HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/cna-graph");
+									request.setEntity(entity);
+									HttpResponse res = httpClient.execute(request);
+									HttpEntity entity2 = res.getEntity();
+									String cna_result = EntityUtils.toString(entity2);
+									context.put("cna_result", cna_result);
+									ContextInfo.put(email, context);
+									System.out.println("................result SIMILARITY computed from readerbench................");
+									System.out.println(context.getAsString("cna_result"));
+									JSONObject result = (JSONObject) p.parse(context.getAsString("cna_result")); 
+									String cnaString ="Ähnlichkeit unter CNA(Cohesion Network Graph):\n";
+									JSONObject data = (JSONObject) result.get("data");
+
+									
+
+									JSONArray edges = (JSONArray) p.parse(data.getAsString("edges"));
+
+									for (Object item : edges) {
+										JSONObject obj = (JSONObject) item;
+										if(obj.getAsString("source")=="Document 1" && obj.getAsString("target")=="Document 2"  ){
+											JSONArray types = (JSONArray) p.parse(data.getAsString("types"));
+											cnaString+="Überlappungstyp | Score\n";
+											double str1 = Double.parseDouble(obj.getAsString("weight")); 
+											for (Object item1 : types) {
+												JSONObject obj1 = (JSONObject) item1;
+												if(obj1.getAsString("name")=="LEXICAL_OVERLAP: CONTENT_OVERLAP"){
+													
+													cnaString+="Lexical: Content| "+df.format(str1);
+												}
+												if(obj1.getAsString("name")=="LEXICAL_OVERLAP: TOPIC_OVERLAP"){
+													cnaString+="Lexical: Topic| "+df.format(str1);
+												}
+												if(obj1.getAsString("name")=="LEXICAL_OVERLAP: ARGUMENT_OVERLAP"){
+													cnaString+="Lexical: Argument| "+df.format(str1);
+												}
+												if(obj1.getAsString("name")=="SEMANTIC: WORD2VEC(wiki)"){
+													cnaString+="SEMANTIC:  WORD2VEC(wiki)| "+df.format(str1);
+												}
+												
+											}
+											break;
+										}                          
+									}
+									assessment.setCnaTextByNumber(i,cnaString);
+								}  catch (Exception e) {
+									e.printStackTrace();
+									System.out.println("................Problem with cna................");
+									error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
+									error.put("closeContext", true);
+									return error;
+								}
+
+								try{
+									String email = triggeredBody.getAsString("email");
+									JSONObject context = getContext(email, p);	
+									StringEntity entity = new StringEntity(compare_Body.toString());
+									HttpClient httpClient = HttpClientBuilder.create().build();
+									HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/complexity-compare");
+									request.setEntity(entity);
+									HttpResponse res = httpClient.execute(request);
+									HttpEntity entity2 = res.getEntity();
+									String similarity_result = EntityUtils.toString(entity2);
+									context.put("compare_result", similarity_result);
+									ContextInfo.put(email, context);
+									System.out.println("................result SIMILARITY computed from readerbench................");
+									System.out.println(context.getAsString("compare_result"));
+									JSONObject result = (JSONObject) p.parse(context.getAsString("compare_result")); 
+									String feedbackString ="";
+									feedbackString+="Text-Indizes | Dein Score | Musterlösung | Feedback\n";
+									JSONObject data = (JSONObject) result.get("data");
+
+									String level = data.getAsString("level");
+									assessment.setLevelByNumber(i,level);
+									JSONObject feedback = (JSONObject) data.get("feedback");
+									
+
+									JSONArray document = (JSONArray) p.parse(feedback.getAsString("document"));
+
+									for (Object item : document) {
+										JSONObject obj = (JSONObject) item;
+										feedbackString  += obj.getAsString("name")+" | "+df.format(Double.parseDouble(obj.getAsString("metric")))+" | "+df.format(Double.parseDouble(obj.getAsString("expert_metric")))+" | "+obj.getAsString("description") +"\n \n";
+									}
+									assessment.setFeedbackTextByNumber(i,feedbackString);
+								}  catch (Exception e) {
+									e.printStackTrace();
+									System.out.println("................Problem with Compare................");
+									error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
+									error.put("closeContext", true);
+									return error;
+								}
 								
-
-								JSONArray document = (JSONArray) p.parse(feedback.getAsString("document"));
-
-								for (Object item : document) {
-									JSONObject obj = (JSONObject) item;
-									feedbackString  += obj.getAsString("message")+ "\n \n";
-								}
-								/*
-								JSONArray block = (JSONArray) p.parse(feedback.getAsString("block"));
-								int blockNumber = 1;
-								for (Object item : block) {
-									JSONArray arrayitem = (JSONArray) item;
-									for (Object item1 : arrayitem) {
-										JSONObject obj = (JSONObject) item1;
-										feedbackString += "Absatznummer " + blockNumber +": ";
-										feedbackString += obj.getAsString("message")+ "\n";
-									}
-									blockNumber+=1;
-								}
-								JSONArray sentence = (JSONArray) p.parse(feedback.getAsString("sentence"));
-								int sentenceNumber = 1;
-								for (Object item : sentence) {
-									JSONArray arrayitem = (JSONArray) item;
-									for (Object item1 : arrayitem) {
-										JSONObject obj = (JSONObject) item1;
-										feedbackString += "Satznummer " + sentenceNumber +": ";
-										feedbackString += obj.getAsString("message")+ "\n";
-									}
-									sentenceNumber+=1;
-								}
-								*/
-								assessment.setFeedbackTextByNumber(i,feedbackString);
-							}  catch (Exception e) {
-								e.printStackTrace();
-								System.out.println("................Problem with Compare................");
-								error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
-								error.put("closeContext", true);
-								return error;
+								try {
+									String email = triggeredBody.getAsString("email");
+									JSONObject context = getContext(email, p);	
+									StringEntity entity = new StringEntity(similarity_Body.toString());
+									HttpClient httpClient = HttpClientBuilder.create().build();
+									HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/text-similarity");
+									request.setEntity(entity);
+									HttpResponse res = httpClient.execute(request);
+									HttpEntity entity2 = res.getEntity();
+									String similarity_result = EntityUtils.toString(entity2);
+									context.put("similarity_result", similarity_result);
+									ContextInfo.put(email, context);
+									System.out.println("................result SIMILARITY computed from readerbench................");
+									System.out.println(context.getAsString("similarity_result"));
+									JSONObject result = (JSONObject) p.parse(context.getAsString("similarity_result")); 
+									JSONObject data = (JSONObject) result.get("data");
+									JSONArray pairs = (JSONArray) data.get("pairs");
+									
+									JSONObject pair = (JSONObject) pairs.get(0);
+									JSONArray scores = (JSONArray) pair.get("scores");
+									Double score =  Double.parseDouble( ((JSONObject) scores.get(0)).getAsString("score"));
+									System.out.println("Score 0 is ...... "+ ((JSONObject) scores.get(0)).getAsString("score"));
+									System.out.println("Score is ...... "+ score);
+									assessment.setSimilarityByNumber(i,score);
+									
+								} catch (Exception e) {
+									e.printStackTrace();
+									System.out.println("................Problem with Similarity................");
+									error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
+									error.put("closeContext", true);
+									return error;
+								}			
+								
 							}
-							
+						
 							try {
-								String email = triggeredBody.getAsString("email");
-								JSONObject context = getContext(email, p);	
-								StringEntity entity = new StringEntity(similarity_Body.toString());
+								String BodyString= "{"+
+								"\"message\": {"+
+										"\"channel\": \"QHendCGJyceGXLwkWdaCrpvTktAQeZi4Ap\","+
+										"\"user\": \"karl252073\","+
+										"\"role\": 0,"+
+										"\"email\": \"karl.zeufack@rwth-aachen.de\","+
+										"\"text\": \"status\","+
+										"\"domain\": \"https://chat.tech4comp.dbis.rwth-aachen.de\" "+
+									"},"+
+									" \"intent\": {"+
+										"\"intentKeyword\": \"status\","+
+										"\"confidence\": 1.0,"+
+										"\"entities\": {"+
+											"\"status\": {"+
+												"\"entityName\": \"status\","+
+												"\"value\": \"status\","+
+												"\"confidence\": 1.0"+
+											"}"+
+										"}"+
+									"},"+
+									"\"botName\": \"textgrader\","+
+									"\"serviceAlias\": \"Gruppe1\","+
+									"\"contextWithService\": true,"+
+									"\"recognizedEntities\": [],"+
+									"\"triggeredFunctionId\": \"4ca1264ede58703622a9ccdd\""+
+								"}";
+								StringEntity entity = new StringEntity(BodyString);
 								HttpClient httpClient = HttpClientBuilder.create().build();
-								HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/text-similarity");
+								HttpPost request = new HttpPost("http://137.226.232.75:32445/SBFManager/bots/textgrader/trigger/intent");
 								request.setEntity(entity);
+								request.setHeader("Content-type", "application/json");
 								HttpResponse res = httpClient.execute(request);
 								HttpEntity entity2 = res.getEntity();
-								String similarity_result = EntityUtils.toString(entity2);
-								context.put("similarity_result", similarity_result);
-								ContextInfo.put(email, context);
-								System.out.println("................result SIMILARITY computed from readerbench................");
-								System.out.println(context.getAsString("similarity_result"));
-								JSONObject result = (JSONObject) p.parse(context.getAsString("similarity_result")); 
-								JSONObject data = (JSONObject) result.get("data");
-								JSONArray pairs = (JSONArray) data.get("pairs");
-								
-								JSONObject pair = (JSONObject) pairs.get(0);
-								JSONArray scores = (JSONArray) pair.get("scores");
-								Double score =  Double.parseDouble( ((JSONObject) scores.get(0)).getAsString("score"));
-								System.out.println("Score 0 is ...... "+ ((JSONObject) scores.get(0)).getAsString("score"));
-								System.out.println("Score is ...... "+ score);
-								assessment.setSimilarityByNumber(i,score);
-								
+								String triggerresult = EntityUtils.toString(entity2);
+								System.out.println("triggerresults "+ triggerresult);
 							} catch (Exception e) {
 								e.printStackTrace();
-								System.out.println("................Problem with Similarity................");
-								error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
-								error.put("closeContext", true);
-								return error;
-							}			
+							}	
 							
+							response.put("text", "Bewertung ist fertig");
+							response.put("closeContext", "false");
+							return response;
+					
 						}
-					
-						try {
-							String BodyString= "{"+
-							"\"message\": {"+
-									"\"channel\": \"QHendCGJyceGXLwkWdaCrpvTktAQeZi4Ap\","+
-									"\"user\": \"karl252073\","+
-									"\"role\": 0,"+
-									"\"email\": \"karl.zeufack@rwth-aachen.de\","+
-									"\"text\": \"status\","+
-									"\"domain\": \"https://chat.tech4comp.dbis.rwth-aachen.de\" "+
-								"},"+
-								" \"intent\": {"+
-									"\"intentKeyword\": \"status\","+
-									"\"confidence\": 1.0,"+
-									"\"entities\": {"+
-										"\"status\": {"+
-											"\"entityName\": \"status\","+
-											"\"value\": \"status\","+
-											"\"confidence\": 1.0"+
-										"}"+
-									"}"+
-								"},"+
-								"\"botName\": \"textgrader\","+
-								"\"serviceAlias\": \"Gruppe1\","+
-								"\"contextWithService\": true,"+
-								"\"recognizedEntities\": [],"+
-								"\"triggeredFunctionId\": \"4ca1264ede58703622a9ccdd\""+
-							"}";
-							StringEntity entity = new StringEntity(BodyString);
-							HttpClient httpClient = HttpClientBuilder.create().build();
-							HttpPost request = new HttpPost("http://137.226.232.75:32445/SBFManager/bots/textgrader/trigger/intent");
-							request.setEntity(entity);
-							request.setHeader("Content-type", "application/json");
-							HttpResponse res = httpClient.execute(request);
-							HttpEntity entity2 = res.getEntity();
-							String triggerresult = EntityUtils.toString(entity2);
-							System.out.println("triggerresults "+ triggerresult);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}	
-						
-						response.put("text", "Bewertung ist fertig");
-						response.put("closeContext", "false");
-						return response;
-					
+						else{
+							return null;
+						}
 					} else {
 						assessment.incrementCurrentQuestionNumber();
 						answer += assessment.getCurrentQuestion();        

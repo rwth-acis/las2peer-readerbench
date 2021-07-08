@@ -10,8 +10,8 @@ public class NLUAssessment extends Assessment {
 	private String type;
 	public NLUAssessment(String topicName,String topicId, String quitIntent, ArrayList<String> questions, ArrayList<String> intents, ArrayList<String> hints,
 	 String helpIntent, String type, ArrayList<String> textref, ArrayList<Double> numberOfPoints, String modelType,  ArrayList<Double> similarityScore, ArrayList<String> textlevel,
-	 ArrayList<String> refComplexity, ArrayList<String> answers, ArrayList<String> feedbackText) {
-		super(topicName, topicId, quitIntent, questions, type, textref, numberOfPoints, modelType, similarityScore, textlevel, refComplexity, answers, feedbackText);
+	 ArrayList<String> refComplexity, ArrayList<String> answers, ArrayList<String> feedbackText, ArrayList<String> cnaText) {
+		super(topicName, topicId, quitIntent, questions, type, textref, numberOfPoints, modelType, similarityScore, textlevel, refComplexity, answers, feedbackText, cnaText);
 		this.helpIntent = helpIntent;
 		this.intents = intents;
 		this.hints = hints;

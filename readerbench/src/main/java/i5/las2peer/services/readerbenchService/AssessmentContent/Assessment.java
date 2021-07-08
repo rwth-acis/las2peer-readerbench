@@ -19,6 +19,7 @@ public abstract class Assessment {
 	private ArrayList<String> answers;
 	private ArrayList<String> refComplexity;
 	private ArrayList<String> feedbackText;
+	private ArrayList<String> cnaText;
 	private int currentFeedback;
 	public Assessment(String quitIntent, ArrayList<String> questions) {
 		this.quitIntent = quitIntent;
@@ -28,7 +29,7 @@ public abstract class Assessment {
 		this.currentWrongQuestions = "";
 	}
 	public Assessment(String topicName, String topicId, String quitIntent, ArrayList<String> questions, String type, ArrayList<String> textrefref,  ArrayList<Double> numberOfPoints, 
-	String modelType, ArrayList<Double> similarityScore, ArrayList<String> textlevel, ArrayList<String> refComplexity, ArrayList<String> answers, ArrayList<String> feedbackText) {
+	String modelType, ArrayList<Double> similarityScore, ArrayList<String> textlevel, ArrayList<String> refComplexity, ArrayList<String> answers, ArrayList<String> feedbackText, ArrayList<String> cnaText) {
 		this.topicName = topicName;
 		this.quitIntent = quitIntent;
 		this.questions = questions;
@@ -46,6 +47,7 @@ public abstract class Assessment {
 		this.refComplexity = refComplexity;
 		this.feedbackText = feedbackText;
 		this.currentFeedback=0;
+		this.cnaText = cnaText;
 	}
 
 	
@@ -129,8 +131,14 @@ public abstract class Assessment {
 	public String getFeedbackText(int i){
 		return this.feedbackText.get(i);
 	}
+	public String getCnaText(int i){
+		return this.cnaText.get(i);
+	}
 	public void setFeedbackText(String feedback){
 		this.feedbackText.set(this.getCurrentQuestionNumber(), feedback);
+	}
+	public void setCnaText(String cna){
+		this.cnaText.set(this.getCurrentQuestionNumber(), cna);
 	}
 	public void setLevelByNumber(int number, String level){
 		this.textlevel.set(number, level);
@@ -147,6 +155,9 @@ public abstract class Assessment {
 
 	public void setFeedbackTextByNumber(int number, String feedback){
 		this.feedbackText.set(number, feedback);
+	}
+	public void setCnaTextByNumber(int number, String cna){
+		this.cnaText.set(number, cna);
 	}
 
 	
