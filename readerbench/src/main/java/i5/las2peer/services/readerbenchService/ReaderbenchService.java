@@ -170,6 +170,7 @@ public class ReaderbenchService extends RESTService {
 	private SQLDatabase database; // The database instance to write to.
 	private String readerbenchEndpoint="http://rb-controller.ma-zeufack:32446";
 	private String l2pEndpoint = "http://137.226.232.75:32445";
+	private String assessementHandlerEndpoint = "http://137.226.232.75:31000";
 
 
 	public ReaderbenchService(){
@@ -190,28 +191,6 @@ public class ReaderbenchService extends RESTService {
 
 	}
 	
-	/**
-	 * Template of a get function.
-	 * 
-	 * @return Returns an HTTP response with the username as string content.
-	 */
-	@GET
-	@Path("/get")
-	@Produces(MediaType.TEXT_PLAIN)
-	@ApiOperation(
-			value = "REPLACE THIS WITH AN APPROPRIATE FUNCTION NAME",
-			notes = "REPLACE THIS WITH YOUR NOTES TO THE FUNCTION")
-	@ApiResponses(
-			value = { @ApiResponse(
-					code = HttpURLConnection.HTTP_OK,
-					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
-	public Response getTemplate() {
-		UserAgent userAgent = (UserAgent) Context.getCurrent().getMainAgent();
-		String name = userAgent.getLoginName();
-		System.out.println("readerbenchEndpoint: " + this.readerbenchEndpoint);
-		return Response.ok().entity(name).build();
-	}
-
 
 	@GET
 	@Path("/getRbStatus")
@@ -249,6 +228,53 @@ public class ReaderbenchService extends RESTService {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+
+	@POST
+	@Path("/getReportJson")
+	@Produces(MediaType.APPLICATION_JSON+ ";charset=utf-8")
+	@ApiOperation(
+		value = "",
+		notes = "")
+	@ApiResponses(
+		value = {@ApiResponse(
+			code = HttpURLConnection.HTTP_OK,
+			message = "Assessement deleted"
+		)}
+	)
+	public Response getReportJson(){
+		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
+		Connection con = null;
+		PreparedStatement ps = null;
+		Response resp = null;
+
+		Connection con2 = null;
+		PreparedStatement ps2 = null;
+		Response resp2 = null;
+
+		JSONArray Topics = new JSONArray();
+
+		try {
+
+		}catch (SQLException e) {
+			e.printStackTrace();
+			resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+			} catch (Exception e) {
+			}
+			;
+			try {
+				if (con != null)
+					con.close();
+			} catch (Exception e) {
+			}
+			;
+		}
+	}
+
+	
 
 	@POST
 	@Path("/getAssessment")
@@ -506,6 +532,7 @@ public class ReaderbenchService extends RESTService {
 				botChannel.put(bodyJson.getAsString("botName"), channels);
 			}
 			if(this.assessmentStarted.get(channel) == null){
+					this.analysisStarted.remove(channel);
 					JSONObject contentJson;
 					if(this.topicsProposed.get(channel) == null) {
 						String topicNames="";
@@ -725,6 +752,8 @@ public class ReaderbenchService extends RESTService {
 					answer += "Das Assessment wurde verlassen, \n Du kannst wieder von vorne beginnen. " ;
 					this.currentNLUAssessment.remove(channel);
 					this.assessmentStarted.put(channel, null);
+					this.assessmentStarted.remove(channel);
+					this.analysisStarted.remove(channel);
 					response.put("closeContext", "true");
 				} else if(intent.equals(assessment.getHelpIntent())){
 					answer+= assessment.getQuestionHint() + "\n";
@@ -745,19 +774,21 @@ public class ReaderbenchService extends RESTService {
 							answer += "Frage " + (currentQuestion + 1) + ": Komplexitätstufe is " + assessment.getLevelList(i) +
 							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n ";
 							answer +="Empfehlungen: \n";
-							answer+= assessment.getFeedbackText(i);
+							answer+= assessment.getFeedbackText(i)+"\n";
 							answer+= assessment.getCnaText(i);
 							currentQuestion += 1;
 							System.out.println("feedback is............"+ assessment.getLevelList(i));
 							System.out.println("level is............"+ assessment.getLevelList(i));
 						}
+						this.currentNLUAssessment.remove(channel);
+						this.assessmentStarted.remove(channel);
 						response.put("closeContext", "true");
 					} catch (Exception e) {
 						e.printStackTrace();
 						answer+="Bewertungen werden berechnet...";
 						response.put("closeContext", "true");
 					}
-					this.analysisStarted.put(channel, null);
+					
 					
 				} else {
 					String msg = triggeredBody.getAsString("msg");
@@ -775,6 +806,7 @@ public class ReaderbenchService extends RESTService {
 					
 					
 					if(assessment.getCurrentQuestionNumber()+1 >= assessment.getAssessmentSize()){
+						System.out.println("analysisStarted: " + this.analysisStarted.get(channel) );
 						if(this.analysisStarted.get(channel) == null) {
 							this.analysisStarted.put(channel, true);
 
@@ -830,8 +862,9 @@ public class ReaderbenchService extends RESTService {
 									String cna_result = EntityUtils.toString(entity2);
 									context.put("cna_result", cna_result);
 									ContextInfo.put(email, context);
-									System.out.println("................result SIMILARITY computed from readerbench................");
-									System.out.println(context.getAsString("cna_result"));
+									System.out.println("................result cna computed from readerbench................");
+									assessment.setCnaTextByNumber(i,cna_result);
+									/*
 									JSONObject result = (JSONObject) p.parse(context.getAsString("cna_result")); 
 									String cnaString ="Ähnlichkeit unter CNA(Cohesion Network Graph):\n";
 									JSONObject data = (JSONObject) result.get("data");
@@ -842,13 +875,17 @@ public class ReaderbenchService extends RESTService {
 
 									for (Object item : edges) {
 										JSONObject obj = (JSONObject) item;
-										if(obj.getAsString("source")=="Document 1" && obj.getAsString("target")=="Document 2"  ){
-											JSONArray types = (JSONArray) p.parse(data.getAsString("types"));
+										System.out.println("Source: "+ obj.getAsString("source")+ "Target: "+ obj.getAsString("target"));
+										if(obj.getAsString("source").toLowerCase().contains("document") && obj.getAsString("target").toLowerCase().contains("document")  ){
+											System.out.println("Source: "+ obj.getAsString("types"));
+											JSONArray types = (JSONArray) p.parse(obj.getAsString("types"));
 											cnaString+="Überlappungstyp | Score\n";
-											double str1 = Double.parseDouble(obj.getAsString("weight")); 
+											
 											for (Object item1 : types) {
 												JSONObject obj1 = (JSONObject) item1;
-												if(obj1.getAsString("name")=="LEXICAL_OVERLAP: CONTENT_OVERLAP"){
+												double str1 = Double.parseDouble(obj1.getAsString("weight")); 
+												cnaString+=obj1.getAsString("name")+"| "+df.format(str1)+ "\n";
+												/*if(obj1.getAsString("name")=="LEXICAL_OVERLAP: CONTENT_OVERLAP"){
 													
 													cnaString+="Lexical: Content| "+df.format(str1);
 												}
@@ -860,13 +897,14 @@ public class ReaderbenchService extends RESTService {
 												}
 												if(obj1.getAsString("name")=="SEMANTIC: WORD2VEC(wiki)"){
 													cnaString+="SEMANTIC:  WORD2VEC(wiki)| "+df.format(str1);
-												}
+												}*//*
 												
 											}
 											break;
 										}                          
 									}
 									assessment.setCnaTextByNumber(i,cnaString);
+									*/
 								}  catch (Exception e) {
 									e.printStackTrace();
 									System.out.println("................Problem with cna................");
@@ -887,7 +925,8 @@ public class ReaderbenchService extends RESTService {
 									String similarity_result = EntityUtils.toString(entity2);
 									context.put("compare_result", similarity_result);
 									ContextInfo.put(email, context);
-									System.out.println("................result SIMILARITY computed from readerbench................");
+									System.out.println("................result compare computed from readerbench................");
+									/*
 									System.out.println(context.getAsString("compare_result"));
 									JSONObject result = (JSONObject) p.parse(context.getAsString("compare_result")); 
 									String feedbackString ="";
@@ -903,9 +942,9 @@ public class ReaderbenchService extends RESTService {
 
 									for (Object item : document) {
 										JSONObject obj = (JSONObject) item;
-										feedbackString  += obj.getAsString("name")+" | "+df.format(Double.parseDouble(obj.getAsString("metric")))+" | "+df.format(Double.parseDouble(obj.getAsString("expert_metric")))+" | "+obj.getAsString("description") +"\n \n";
+										feedbackString  += obj.getAsString("name")+" | "+df.format(Double.parseDouble(obj.getAsString("metric")))+" | "+df.format(Double.parseDouble(obj.getAsString("expert_metric")))+" | "+obj.getAsString("description") +"\n";
 									}
-									assessment.setFeedbackTextByNumber(i,feedbackString);
+									assessment.setFeedbackTextByNumber(i,feedbackString);*/
 								}  catch (Exception e) {
 									e.printStackTrace();
 									System.out.println("................Problem with Compare................");
@@ -1010,93 +1049,6 @@ public class ReaderbenchService extends RESTService {
         return response;
 	}
 
-	private String selectLevelMsg() {
-		// TODO Auto-generated method stub
-		Set<String> selection = new HashSet<String>();
-		selection.add("Dokument: Dokumentbezogene Indizes");
-		selection.add("Absatz:  Indizes bezogen auf den Absatz");
-		selection.add("Satz: Satzbezogene Indizes");
-
-
-		String response = "Welche textlevel würdest du erst überprüfen?\n"
-				+ "Du kannst dir eine aussuchen: \n";
-
-		Iterator<String> it = selection.iterator();
-		int i = 1;
-		while(it.hasNext()){
-			response += i + ". " + it.next() + "\n";
-			i++;
-		}
-
-		response += "Bitte level eingeben";
-		return response;
-	}
-	
-	private String selectLevel(JSONObject result)throws ParseException {
-		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		JSONObject data = (JSONObject) result.get("data");
-		return data.getAsString("level");
-	}
-	/**
-	 * Filter Indices on Category and level
-	 * @param category categoryname for the Indices function will match it to
-	 * @param level levelname for the Indices function will match it to
-	 * @return Indicevalue as jsonarray
-	 * @throws ParseException
-	 */
-	private JSONArray selectIndices(String category, String level, JSONObject result) throws ParseException {
-		
-		// TODO Auto-generated method stub
-		System.out.println("................in select indices................");
-		System.out.println("................................category = "+ category); 
-		System.out.println("................................level = "+ level); 
-		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		JSONObject data = (JSONObject) result.get("data");
-		JSONArray complexityIndices =(JSONArray) p.parse(data.getAsString("complexityIndices"));
-		JSONArray results = new JSONArray();
-		for (Object item : complexityIndices) {
-			JSONObject obj = (JSONObject) item;
-
-			if (obj.getAsString("category").matches("(?i).*" + category + ".*") ) {
-				JSONArray valencesIndices =(JSONArray) p.parse(obj.getAsString("valences"));
-				for(Object item2 : valencesIndices) {
-					JSONObject obj2 = (JSONObject) item2;
-					if(obj2.getAsString("type").matches("(?i).*" + level + ".*")) {
-						System.out.println("................................category obj1 = "+ obj.getAsString("category")); 
-						System.out.println("................................level obj2= "+ obj2.getAsString("type")); 
-						results.add(obj2);
-					}
-				}
-			}
-		}
-		return results;
-	}
-	
-	private String finalReturn(String category, String level, JSONObject result) throws ParseException {
-		JSONArray results= selectIndices( category,  level,  result);
-		IndiceDescription indice = new IndiceDescription();
-        JSONObject jsonObject = new JSONObject(result);
-        HashMap<String,Integer> hashMap = new HashMap<>();
-        String res="";
-        for (Map.Entry<String,String> entry : indice.getIndiceMap().entrySet()) {
-        	int i=0;
-        	double sum=0;
-	        for(Object item : results){
-	            JSONObject innerJsonObject = (JSONObject) item;
-	            if(innerJsonObject.getAsString("index").matches("(?i).*" + entry.getKey() + ".*")) {
-	                sum+=Double.parseDouble(innerJsonObject.getAsString("value")); 
-	                i+=1;
-	            }
-	        }
-	        if(i>=1) {
-	        	res+="\n Durchschnitt der "+ entry.getValue() + ": "+sum/i;
-	        }
-	        
-        	
-        }
-        return res;
-		
-	}
 
 	private JSONObject getContext(String email, JSONParser p)
 			throws ParseException{
