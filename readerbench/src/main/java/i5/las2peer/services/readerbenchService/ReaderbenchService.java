@@ -3,9 +3,11 @@ package i5.las2peer.services.readerbenchService;
 
 
 import java.io.IOException;
+import java.io.FileWriter;
 import java.net.HttpURLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.*;
 import java.util.Arrays;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
@@ -170,7 +172,8 @@ public class ReaderbenchService extends RESTService {
 	private SQLDatabase database; // The database instance to write to.
 	private String readerbenchEndpoint="http://rb-controller.ma-zeufack:32446";
 	private String l2pEndpoint = "http://137.226.232.75:32445";
-	private String assessementHandlerEndpoint = "http://137.226.232.75:31000";
+	//private String assessementHandlerEndpoint = "http://137.226.232.75:31000";
+	private String assessementHandlerEndpoint = "http://localhost:4200";
 
 
 	public ReaderbenchService(){
@@ -230,7 +233,7 @@ public class ReaderbenchService extends RESTService {
 	}
 
 	@POST
-	@Path("/getReportJson")
+	@Path("/getReportJson/{fileName}")
 	@Produces(MediaType.APPLICATION_JSON+ ";charset=utf-8")
 	@ApiOperation(
 		value = "",
@@ -241,37 +244,64 @@ public class ReaderbenchService extends RESTService {
 			message = "Assessement deleted"
 		)}
 	)
-	public Response getReportJson(){
+	public Response getReportJson(@PathParam("fileName") String fileName){
+		JSONObject response = new JSONObject();
 		JSONParser p = new JSONParser(JSONParser.MODE_PERMISSIVE);
-		Connection con = null;
-		PreparedStatement ps = null;
-		Response resp = null;
+		try{
+		
+			Connection con = null;
+			PreparedStatement ps = null;
+			Response resp = null;
 
-		Connection con2 = null;
-		PreparedStatement ps2 = null;
-		Response resp2 = null;
+			Connection con2 = null;
+			PreparedStatement ps2 = null;
+			Response resp2 = null;
 
-		JSONArray Topics = new JSONArray();
+			JSONArray Topics = new JSONArray();
 
-		try {
+			try {
+				con = database.getDataSource().getConnection();
+				ps = con.prepareStatement("SELECT * FROM results WHERE result_id=? ");
+				ps.setString(1, result_id);
+				ResultSet rs = ps.executeQuery();
+				JSONArray question = new JSONArray(); 
+				while(rs.next()) {
+					JSONObject obj = new JSONObject();
+					obj.put("topic", (JSONObject) p.parse(rs.getString("topic")));
+					obj.put("question", p.parse(rs.getString("question")));
+					obj.put("channel", p.parse(rs.getString("channel")));
+					obj.put("cna_result", p.parse(rs.getString("cna_result")));
+					obj.put("compare_result", p.parse(rs.getString("compare_result")));
+					obj.put("similarity_result", p.parse(rs.getString("similarity_result")));
+					obj.put("keyword_result", p.parse(rs.getString("keyword_result")));	
+					question.add(obj);
+				}
+				response.put("data", question);
+				
 
-		}catch (SQLException e) {
+			}catch (SQLException e) {
+				e.printStackTrace();
+				resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+			} finally {
+				try {
+					if (ps != null)
+						ps.close();
+				} catch (Exception e) {
+					return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+				}
+				;
+				try {
+					if (con != null)
+						con.close();
+				} catch (Exception e) {
+				}
+				;
+			}
+		} catch (ParseException e) {
 			e.printStackTrace();
-			resp = Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		} finally {
-			try {
-				if (ps != null)
-					ps.close();
-			} catch (Exception e) {
-			}
-			;
-			try {
-				if (con != null)
-					con.close();
-			} catch (Exception e) {
-			}
-			;
+			return Response.ok("Assessment not inserted").build();
 		}
+		return Response.ok().entity(response).build();
 	}
 
 	
@@ -302,7 +332,7 @@ public class ReaderbenchService extends RESTService {
 
 		try {
 			con = database.getDataSource().getConnection();
-			ps = con.prepareStatement("SELECT * FROM topic1");
+			ps = con.prepareStatement("SELECT * FROM topic");
 			ResultSet rs = ps.executeQuery();
 			while(rs.next()) {
 				String topic_id = rs.getString("topic_id");
@@ -698,27 +728,29 @@ public class ReaderbenchService extends RESTService {
 			ArrayList<String> questions = new ArrayList<String>();
 			ArrayList<String> lectureref = new ArrayList<String>();
 			ArrayList<Double> numberOfPoints = new  ArrayList<Double>();
-			ArrayList<Double> similarityScore = new  ArrayList<Double>();
+			ArrayList<String> similarityScore = new  ArrayList<String>();
 			ArrayList<String> textlevel = new ArrayList<String>();
 			ArrayList<String> answers = new ArrayList<String>();
 			ArrayList<String> refComplexity = new ArrayList<String>();
 			ArrayList<String> feedbackText = new ArrayList<String>();
 			ArrayList<String> cnaText = new ArrayList<String>();
+			ArrayList<String> keywordText = new ArrayList<String>();
 
 			for(int i = 0; i < length ; i++){
 				questions.add(assessmentContent[i][0]);
 				lectureref.add(replaceUmlaut(assessmentContent[i][1]));
 				//numberOfPoints.add(Double.parseDouble(assessmentContent[i][2]));
 				numberOfPoints.add(Double.parseDouble("1"));
-				similarityScore.add(0.0);
+				similarityScore.add("");
 				textlevel.add("");
 				answers.add("");
 				refComplexity.add("");
 				feedbackText.add("");
 				cnaText.add("");
+				keywordText.add("");
 			}
 			NLUAssessment assessment = new NLUAssessment(topicName, topicId, "stopAssessment", questions, null, null, "help", type, lectureref, numberOfPoints, modelType, 
-				similarityScore, textlevel, refComplexity, answers, feedbackText, cnaText);
+				similarityScore, textlevel, refComplexity, answers, feedbackText, cnaText, keywordText);
 			this.currentNLUAssessment.put(channel, assessment);	
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -761,25 +793,75 @@ public class ReaderbenchService extends RESTService {
 				} else if(triggeredBody.getAsString("msg").equals("status") & intent.equals("status")){
 					try {
 						
-						answer += "Ihre Ergebnisse:\n \n ";
-						int currentQuestion = 0;
+						try {
+							
+							JSONObject file = new JSONObject();
+							JSONArray uebung = new JSONArray(); 
+					
+							for(int i = 0; i < assessment.getAssessmentSize(); i++){
+									JSONObject obj = new JSONObject();
+									obj.put("topic", assessment.getTopicName());
+									obj.put("question", assessment.getQuestionByNumber(i));
+									obj.put("channel", channel);
+									obj.put("cna_result",  (JSONObject) p.parse(assessment.getCnaText(i)));
+									obj.put("compare_result",(JSONObject) p.parse(assessment.getFeedbackText(i)));
+									obj.put("similarity_result", (JSONObject) p.parse(assessment.getSimilarityScoreList().get(i)));
+									obj.put("keyword_result",(JSONObject) p.parse(assessment.getKeywordText(i)));	
+									uebung.add(obj);
+									
 
-						for(int i=0; i <  assessment.getAssessmentSize(); i++){
-							if(assessment.getLevelList(i)==""){
-								answer="Bewertungen werden berechnet...";
-								response.put("closeContext", "false");
-								response.put("text", answer);
-        						return response;
+									
+									
 							}
-							answer += "Frage " + (currentQuestion + 1) + ": Komplexitätstufe is " + assessment.getLevelList(i) +
-							", Ähnlichkeitsgrad mit der Korrektur	"+ Math.round(assessment.getSimilarityScoreList().get(i)*100.0)/100.0 + "\n ";
-							answer +="Empfehlungen: \n";
-							answer+= assessment.getFeedbackText(i)+"\n";
-							answer+= assessment.getCnaText(i);
-							currentQuestion += 1;
-							System.out.println("feedback is............"+ assessment.getLevelList(i));
-							System.out.println("level is............"+ assessment.getLevelList(i));
+							file.put("data", uebung); 
+							
+							/*con = database.getDataSource().getConnection();
+							Connection con = null;
+							PreparedStatement ps = null;
+							Response resp = null;
+							int resultId=-1;
+							ps = con.prepareStatement("INSERT INTO results(filename) VALUES ( ?)",
+							Statement.RETURN_GENERATED_KEYS);
+							ps.setString(1, assessment.getTopicName());
+							ps.executeUpdate();
+
+							ResultSet generatedKeys  = ps.getGeneratedKeys();
+							if (generatedKeys.next()) {
+								resultId= generatedKeys.getInt(1);
+							}*/
+
+							String time =""+ System.currentTimeMillis();
+							String fileName = "file_" +channel+"_"+time+".json";
+							
+							File f = new File("reports/" + fileName);
+							FileWriter writer = new FileWriter(f);
+							writer.write(file.toString());
+							writer.close();
+							answer += "Ihre Ergebnisse wurden berechnet bitte folgende Link folgen um die zu sehen:\n "
+							+ this.assessementHandlerEndpoint+"/report?fileName="+"file_" +channel+"_"+time;
+							ps.close();
+							System.out.println("................result data stored.................");
+							
+						} catch (SQLException e) {
+							e.printStackTrace();
+						} catch (Exception e) {
+							e.printStackTrace();
+						} finally {
+							try {
+								if (ps != null)
+									ps.close();
+							} catch (Exception e) {
+							}
+							;
+							try {
+								if (con != null)
+									con.close();
+							} catch (Exception e) {
+							}
+							;
 						}
+						
+						
 						this.currentNLUAssessment.remove(channel);
 						this.assessmentStarted.remove(channel);
 						response.put("closeContext", "true");
@@ -922,10 +1004,11 @@ public class ReaderbenchService extends RESTService {
 									request.setEntity(entity);
 									HttpResponse res = httpClient.execute(request);
 									HttpEntity entity2 = res.getEntity();
-									String similarity_result = EntityUtils.toString(entity2);
-									context.put("compare_result", similarity_result);
+									String compare_result = EntityUtils.toString(entity2);
+									context.put("compare_result", compare_result);
 									ContextInfo.put(email, context);
 									System.out.println("................result compare computed from readerbench................");
+									assessment.setFeedbackTextByNumber(i,compare_result);
 									/*
 									System.out.println(context.getAsString("compare_result"));
 									JSONObject result = (JSONObject) p.parse(context.getAsString("compare_result")); 
@@ -966,6 +1049,8 @@ public class ReaderbenchService extends RESTService {
 									context.put("similarity_result", similarity_result);
 									ContextInfo.put(email, context);
 									System.out.println("................result SIMILARITY computed from readerbench................");
+									assessment.setSimilarityByNumber(i,similarity_result);
+									/*
 									System.out.println(context.getAsString("similarity_result"));
 									JSONObject result = (JSONObject) p.parse(context.getAsString("similarity_result")); 
 									JSONObject data = (JSONObject) result.get("data");
@@ -977,6 +1062,7 @@ public class ReaderbenchService extends RESTService {
 									System.out.println("Score 0 is ...... "+ ((JSONObject) scores.get(0)).getAsString("score"));
 									System.out.println("Score is ...... "+ score);
 									assessment.setSimilarityByNumber(i,score);
+									*/
 									
 								} catch (Exception e) {
 									e.printStackTrace();

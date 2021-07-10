@@ -10,7 +10,7 @@ public abstract class Assessment {
 	private String currentWrongQuestions;
 	private ArrayList<String> questions; 
 	private ArrayList<String> textlevel;
-	private ArrayList<Double> similarityScore;
+	private ArrayList<String> similarityScore;
 	private ArrayList<String> textReference;
 	private String type;
 	private ArrayList<Double> numberOfPoints;
@@ -21,6 +21,7 @@ public abstract class Assessment {
 	private ArrayList<String> feedbackText;
 	private ArrayList<String> cnaText;
 	private int currentFeedback;
+	private ArrayList<String> keywordText;
 	public Assessment(String quitIntent, ArrayList<String> questions) {
 		this.quitIntent = quitIntent;
 		this.questions = questions;
@@ -29,7 +30,7 @@ public abstract class Assessment {
 		this.currentWrongQuestions = "";
 	}
 	public Assessment(String topicName, String topicId, String quitIntent, ArrayList<String> questions, String type, ArrayList<String> textrefref,  ArrayList<Double> numberOfPoints, 
-	String modelType, ArrayList<Double> similarityScore, ArrayList<String> textlevel, ArrayList<String> refComplexity, ArrayList<String> answers, ArrayList<String> feedbackText, ArrayList<String> cnaText) {
+	String modelType, ArrayList<String> similarityScore, ArrayList<String> textlevel, ArrayList<String> refComplexity, ArrayList<String> answers, ArrayList<String> feedbackText, ArrayList<String> cnaText, ArrayList<String> keywordText) {
 		this.topicName = topicName;
 		this.quitIntent = quitIntent;
 		this.questions = questions;
@@ -48,6 +49,7 @@ public abstract class Assessment {
 		this.feedbackText = feedbackText;
 		this.currentFeedback=0;
 		this.cnaText = cnaText;
+		this.keywordText = keywordText;
 	}
 
 	
@@ -128,41 +130,24 @@ public abstract class Assessment {
 		this.textlevel.set(this.getCurrentQuestionNumber(), level);
 	}
 
-	public String getFeedbackText(int i){
-		return this.feedbackText.get(i);
-	}
-	public String getCnaText(int i){
-		return this.cnaText.get(i);
-	}
-	public void setFeedbackText(String feedback){
-		this.feedbackText.set(this.getCurrentQuestionNumber(), feedback);
-	}
-	public void setCnaText(String cna){
-		this.cnaText.set(this.getCurrentQuestionNumber(), cna);
-	}
+	
+	
 	public void setLevelByNumber(int number, String level){
 		this.textlevel.set(number, level);
 	}
 
-	public void setSimilarity(double value){
-		System.out.println("This CurrentQuestionNumber is..........."+ this.getCurrentQuestionNumber());
-		System.out.println("This NumberOfPoints is..........."+ this.getCurrentQuestionNumber());
+	public void setSimilarity(String value){
 		this.similarityScore.set(this.getCurrentQuestionNumber(), value);
 	}
-	public void setSimilarityByNumber(int number,double value){
+	public void setSimilarityByNumber(int number,String value){
 		this.similarityScore.set(number, value);
-	}
-
-	public void setFeedbackTextByNumber(int number, String feedback){
-		this.feedbackText.set(number, feedback);
-	}
-	public void setCnaTextByNumber(int number, String cna){
-		this.cnaText.set(number, cna);
 	}
 
 	
 
-	public ArrayList<Double> getSimilarityScoreList(){
+	
+
+	public ArrayList<String> getSimilarityScoreList(){
 		return this.similarityScore;
 	}
 	public String getLevelList(int i){
@@ -176,6 +161,37 @@ public abstract class Assessment {
 	}
 	public String getModelType(){
 		return this.modelType;
+	}
+
+	public String getFeedbackText(int i){
+		return this.feedbackText.get(i);
+	}
+
+	public void setFeedbackText(String feedback){
+		this.feedbackText.set(this.getCurrentQuestionNumber(), feedback);
+	}
+	public void setFeedbackTextByNumber(int number, String feedback){
+		this.feedbackText.set(number, feedback);
+	}
+	
+	public String getCnaText(int i){
+		return this.cnaText.get(i);
+	}
+	public void setCnaText(String cna){
+		this.cnaText.set(this.getCurrentQuestionNumber(), cna);
+	}
+	public void setCnaTextByNumber(int number, String cna){
+		this.cnaText.set(number, cna);
+	}
+
+	public String getKeywordText(int i){
+		return this.cnaText.get(i);
+	}
+	public void setKeywordText(String cna){
+		this.cnaText.set(this.getCurrentQuestionNumber(), cna);
+	}
+	public void setKeywordTextByNumber(int number, String cna){
+		this.cnaText.set(number, cna);
 	}
 	
 	

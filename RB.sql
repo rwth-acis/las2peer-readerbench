@@ -55,13 +55,9 @@ ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dyna
 -- -----------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS  `results` (
-  `topic_id` VARCHAR(500) NOT NULL,
-  `questionid` INT NOT NULL,
-   `channel` TEXT NULL,
-  `complexity` TEXT NULL,
-  `numberOfPoints` TEXT NULL,
- 
-  PRIMARY KEY (`topic_id`, `questionid`) USING BTREE
+  `result_id` INT NOT NULL AUTO_INCREMENT,
+  `filename` TEXT NOT NULL,
+  PRIMARY KEY (`result_id`)
     )
 ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 

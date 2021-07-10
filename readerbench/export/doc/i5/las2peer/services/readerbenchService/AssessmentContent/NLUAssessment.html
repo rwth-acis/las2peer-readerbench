@@ -115,7 +115,7 @@ extends <a href="Assessment.html" title="class in i5.las2peer.services.readerben
 </thead>
 <tbody>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.lang.String,java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList)">NLUAssessment</a></span>&#8203;(java.lang.String&nbsp;topicName,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.lang.String,java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList)">NLUAssessment</a></span>&#8203;(java.lang.String&nbsp;topicName,
 java.lang.String&nbsp;topicId,
 java.lang.String&nbsp;quitIntent,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;questions,
@@ -126,12 +126,13 @@ java.lang.String&nbsp;type,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;textref,
 java.util.ArrayList&lt;java.lang.Double&gt;&nbsp;numberOfPoints,
 java.lang.String&nbsp;modelType,
-java.util.ArrayList&lt;java.lang.Double&gt;&nbsp;similarityScore,
+java.util.ArrayList&lt;java.lang.String&gt;&nbsp;similarityScore,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;textlevel,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;refComplexity,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;answers,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;feedbackText,
-java.util.ArrayList&lt;java.lang.String&gt;&nbsp;cnaText)</code></th>
+java.util.ArrayList&lt;java.lang.String&gt;&nbsp;cnaText,
+java.util.ArrayList&lt;java.lang.String&gt;&nbsp;keywordText)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </tbody>
@@ -180,7 +181,7 @@ java.util.ArrayList&lt;java.lang.String&gt;&nbsp;cnaText)</code></th>
 <h3>Methods inherited from class&nbsp;i5.las2peer.services.readerbenchService.AssessmentContent.<a href="Assessment.html" title="class in i5.las2peer.services.readerbenchService.AssessmentContent">Assessment</a></h3>
 <a id="methods.inherited.from.class.i5.las2peer.services.readerbenchService.AssessmentContent.Assessment">
 <!--   -->
-</a><code><a href="Assessment.html#addWrongQuestion()">addWrongQuestion</a>, <a href="Assessment.html#getAnswerByNumber(int)">getAnswerByNumber</a>, <a href="Assessment.html#getAssessmentSize()">getAssessmentSize</a>, <a href="Assessment.html#getCnaText(int)">getCnaText</a>, <a href="Assessment.html#getCurrentAnswer()">getCurrentAnswer</a>, <a href="Assessment.html#getCurrentFeedback()">getCurrentFeedback</a>, <a href="Assessment.html#getCurrentNumberOfPoints()">getCurrentNumberOfPoints</a>, <a href="Assessment.html#getCurrentQuestion()">getCurrentQuestion</a>, <a href="Assessment.html#getCurrentQuestionNumber()">getCurrentQuestionNumber</a>, <a href="Assessment.html#getFeedbackText(int)">getFeedbackText</a>, <a href="Assessment.html#getLevelList(int)">getLevelList</a>, <a href="Assessment.html#getMarks()">getMarks</a>, <a href="Assessment.html#getModelType()">getModelType</a>, <a href="Assessment.html#getQuestionByNumber(int)">getQuestionByNumber</a>, <a href="Assessment.html#getQuitIntent()">getQuitIntent</a>, <a href="Assessment.html#getrefComplexityByNumber(int)">getrefComplexityByNumber</a>, <a href="Assessment.html#getSimilarityScoreList()">getSimilarityScoreList</a>, <a href="Assessment.html#gettextReference()">gettextReference</a>, <a href="Assessment.html#gettextReferenceByNumber(int)">gettextReferenceByNumber</a>, <a href="Assessment.html#gettopicId()">gettopicId</a>, <a href="Assessment.html#getTopicName()">getTopicName</a>, <a href="Assessment.html#getType()">getType</a>, <a href="Assessment.html#getWrongQuestions()">getWrongQuestions</a>, <a href="Assessment.html#incrementCurrentQuestionNumber()">incrementCurrentQuestionNumber</a>, <a href="Assessment.html#incrementgetCurrentFeedback()">incrementgetCurrentFeedback</a>, <a href="Assessment.html#incrementMark(double)">incrementMark</a>, <a href="Assessment.html#setCnaText(java.lang.String)">setCnaText</a>, <a href="Assessment.html#setCnaTextByNumber(int,java.lang.String)">setCnaTextByNumber</a>, <a href="Assessment.html#setCurrentAnswer(java.lang.String)">setCurrentAnswer</a>, <a href="Assessment.html#setFeedbackText(java.lang.String)">setFeedbackText</a>, <a href="Assessment.html#setFeedbackTextByNumber(int,java.lang.String)">setFeedbackTextByNumber</a>, <a href="Assessment.html#setLevel(java.lang.String)">setLevel</a>, <a href="Assessment.html#setLevelByNumber(int,java.lang.String)">setLevelByNumber</a>, <a href="Assessment.html#setSimilarity(double)">setSimilarity</a>, <a href="Assessment.html#setSimilarityByNumber(int,double)">setSimilarityByNumber</a></code></div>
+</a><code><a href="Assessment.html#addWrongQuestion()">addWrongQuestion</a>, <a href="Assessment.html#getAnswerByNumber(int)">getAnswerByNumber</a>, <a href="Assessment.html#getAssessmentSize()">getAssessmentSize</a>, <a href="Assessment.html#getCnaText(int)">getCnaText</a>, <a href="Assessment.html#getCurrentAnswer()">getCurrentAnswer</a>, <a href="Assessment.html#getCurrentFeedback()">getCurrentFeedback</a>, <a href="Assessment.html#getCurrentNumberOfPoints()">getCurrentNumberOfPoints</a>, <a href="Assessment.html#getCurrentQuestion()">getCurrentQuestion</a>, <a href="Assessment.html#getCurrentQuestionNumber()">getCurrentQuestionNumber</a>, <a href="Assessment.html#getFeedbackText(int)">getFeedbackText</a>, <a href="Assessment.html#getKeywordText(int)">getKeywordText</a>, <a href="Assessment.html#getLevelList(int)">getLevelList</a>, <a href="Assessment.html#getMarks()">getMarks</a>, <a href="Assessment.html#getModelType()">getModelType</a>, <a href="Assessment.html#getQuestionByNumber(int)">getQuestionByNumber</a>, <a href="Assessment.html#getQuitIntent()">getQuitIntent</a>, <a href="Assessment.html#getrefComplexityByNumber(int)">getrefComplexityByNumber</a>, <a href="Assessment.html#getSimilarityScoreList()">getSimilarityScoreList</a>, <a href="Assessment.html#gettextReference()">gettextReference</a>, <a href="Assessment.html#gettextReferenceByNumber(int)">gettextReferenceByNumber</a>, <a href="Assessment.html#gettopicId()">gettopicId</a>, <a href="Assessment.html#getTopicName()">getTopicName</a>, <a href="Assessment.html#getType()">getType</a>, <a href="Assessment.html#getWrongQuestions()">getWrongQuestions</a>, <a href="Assessment.html#incrementCurrentQuestionNumber()">incrementCurrentQuestionNumber</a>, <a href="Assessment.html#incrementgetCurrentFeedback()">incrementgetCurrentFeedback</a>, <a href="Assessment.html#incrementMark(double)">incrementMark</a>, <a href="Assessment.html#setCnaText(java.lang.String)">setCnaText</a>, <a href="Assessment.html#setCnaTextByNumber(int,java.lang.String)">setCnaTextByNumber</a>, <a href="Assessment.html#setCurrentAnswer(java.lang.String)">setCurrentAnswer</a>, <a href="Assessment.html#setFeedbackText(java.lang.String)">setFeedbackText</a>, <a href="Assessment.html#setFeedbackTextByNumber(int,java.lang.String)">setFeedbackTextByNumber</a>, <a href="Assessment.html#setKeywordText(java.lang.String)">setKeywordText</a>, <a href="Assessment.html#setKeywordTextByNumber(int,java.lang.String)">setKeywordTextByNumber</a>, <a href="Assessment.html#setLevel(java.lang.String)">setLevel</a>, <a href="Assessment.html#setLevelByNumber(int,java.lang.String)">setLevelByNumber</a>, <a href="Assessment.html#setSimilarity(java.lang.String)">setSimilarity</a>, <a href="Assessment.html#setSimilarityByNumber(int,java.lang.String)">setSimilarityByNumber</a></code></div>
 <div class="inheritedList">
 <h3>Methods inherited from class&nbsp;java.lang.Object</h3>
 <a id="methods.inherited.from.class.java.lang.Object">
@@ -201,7 +202,7 @@ java.util.ArrayList&lt;java.lang.String&gt;&nbsp;cnaText)</code></th>
 <ul class="blockList">
 <li class="blockList">
 <section class="detail">
-<h3><a id="&lt;init&gt;(java.lang.String,java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList)">NLUAssessment</a></h3>
+<h3><a id="&lt;init&gt;(java.lang.String,java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList)">NLUAssessment</a></h3>
 <div class="memberSignature"><span class="modifiers">public</span>&nbsp;<span class="memberName">NLUAssessment</span>&#8203;(<span class="arguments">java.lang.String&nbsp;topicName,
 java.lang.String&nbsp;topicId,
 java.lang.String&nbsp;quitIntent,
@@ -213,12 +214,13 @@ java.lang.String&nbsp;type,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;textref,
 java.util.ArrayList&lt;java.lang.Double&gt;&nbsp;numberOfPoints,
 java.lang.String&nbsp;modelType,
-java.util.ArrayList&lt;java.lang.Double&gt;&nbsp;similarityScore,
+java.util.ArrayList&lt;java.lang.String&gt;&nbsp;similarityScore,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;textlevel,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;refComplexity,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;answers,
 java.util.ArrayList&lt;java.lang.String&gt;&nbsp;feedbackText,
-java.util.ArrayList&lt;java.lang.String&gt;&nbsp;cnaText)</span></div>
+java.util.ArrayList&lt;java.lang.String&gt;&nbsp;cnaText,
+java.util.ArrayList&lt;java.lang.String&gt;&nbsp;keywordText)</span></div>
 </section>
 </li>
 </ul>

@@ -91,6 +91,7 @@ public class ServiceTest {
 		 * Tests the validation method.
 		 * 
 		 */
+		/*
 		@Test
 		public void testGet() {
 			try {
