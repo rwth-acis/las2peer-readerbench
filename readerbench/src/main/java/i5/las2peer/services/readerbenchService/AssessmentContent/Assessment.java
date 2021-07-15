@@ -185,13 +185,13 @@ public abstract class Assessment {
 	}
 
 	public String getKeywordText(int i){
-		return this.cnaText.get(i);
+		return this.keywordText.get(i);
 	}
 	public void setKeywordText(String cna){
-		this.cnaText.set(this.getCurrentQuestionNumber(), cna);
+		this.keywordText.set(this.getCurrentQuestionNumber(), cna);
 	}
 	public void setKeywordTextByNumber(int number, String cna){
-		this.cnaText.set(number, cna);
+		this.keywordText.set(number, cna);
 	}
 	
 	
