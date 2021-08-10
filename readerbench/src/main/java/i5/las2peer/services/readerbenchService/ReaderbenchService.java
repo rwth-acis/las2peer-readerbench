@@ -791,11 +791,15 @@ public class ReaderbenchService extends RESTService {
 							pdf_Body.put("topicSize",  assessment.getAssessmentSize());
 							HttpClient httpClient = HttpClientBuilder.create().build();
 							HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/getPdf");
+							request.setHeader("Content-type", "application/pdf");
+
 							HttpResponse httpResponse = httpClient.execute(request);
-							byte[] entityBytes = EntityUtils.toByteArray(httpResponse.getEntity());
-							String fileBody = java.util.Base64.getEncoder().encodeToString(entityBytes);
-							System.out.println("................retriving the Pdf................");
-							response.put("fileBody", fileBody);
+
+							//yte[] entityBytes = EntityUtils.toByteArray(httpResponse.getEntity());
+							//Files.write(Paths.get("test.pdf"), entityBytes);
+							//String fileBody = java.util.Base64.getEncoder().encodeToString(entityBytes);
+							//System.out.println("................retriving the Pdf................");
+							response.put("fileBody", httpResponse.getEntity());
 							response.put("fileType", "pdf");
 							response.put("fileName", "Feedback zur "+ assessment.getTopicName());
 
