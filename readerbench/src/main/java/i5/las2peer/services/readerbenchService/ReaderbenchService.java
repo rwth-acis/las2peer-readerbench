@@ -18,6 +18,9 @@ import java.util.*;
 import java.lang.*;
 import java.io.*;
 import java.text.DecimalFormat;
+import java.nio.file.Files;
+import javax.ws.rs.Path;
+import java.nio.file.Paths;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -174,6 +177,8 @@ public class ReaderbenchService extends RESTService {
 	private String l2pEndpoint = "http://137.226.232.75:32445";
 	private String assessementHandlerEndpoint = "http://137.226.232.75:31000";
 	//private String assessementHandlerEndpoint = "http://localhost:4200";
+	private String chatDomain = "https://chat.tech4comp.dbis.rwth-aachen.de";
+	private String sbManagerEndpoint = "http://137.226.232.75:32445/SBFManager/bots/textgrader/trigger/intent";
 
 
 	public ReaderbenchService(){
@@ -206,26 +211,25 @@ public class ReaderbenchService extends RESTService {
 					code = HttpURLConnection.HTTP_OK,
 					message = "REPLACE THIS WITH YOUR OK MESSAGE") })
 	public Response getRbStatus() {
-		JSONObject j = new JSONObject();
+		JSONObject response = new JSONObject();
 		System.out.println("Breakpoint--------getRbStatus from Service--------------------------");
 		try {
-			//Creating a HttpClient object
-			CloseableHttpClient httpclient = HttpClients.createDefault();
-			//Creating a HttpGet object
-			HttpGet httpget = new HttpGet(this.readerbenchEndpoint+"/api/v1/isalive");
-
-			//Printing the method used
-			System.out.println("Request Type: "+ httpget.getMethod());
-
-			//Executing the Get request
-			HttpResponse response = httpclient.execute(httpget);
-			HttpEntity entity = response.getEntity();
-			String result = EntityUtils.toString(entity);
-			JSONObject j1 = new JSONObject();
-			j1.put("text", result);
-			j1.put("closeContext", true);
-			return Response.ok().entity(j1).build();
-		}catch (IOException e) {
+			//System.out.println("converging pdf to base64");
+			try {
+				byte[] pdfByte = Files.readAllBytes(
+						Paths.get("reports/Vorabevaluierung.pdf"));
+				String fileBody = java.util.Base64.getEncoder().encodeToString(pdfByte);
+				response.put("fileBody", fileBody);
+				response.put("fileType", "pdf");
+				response.put("fileName", "Feedback");
+				System.out.println("finished conversion from pdf to base64");
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("failed conversion from pdf to base64");
+			}
+			response.put("closeContext", true);
+			return Response.ok().entity(response).build();
+		}catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -781,35 +785,26 @@ public class ReaderbenchService extends RESTService {
 						writer.write(file.toString());
 						writer.close();
 						answer += "Ihre Ergebnisse wurden berechnet bitte folgende Link folgen um die zu sehen:\n "
-						+ this.assessementHandlerEndpoint+"/report?fileName="+"file_" +channel+"_"+time;		
+						+ this.assessementHandlerEndpoint+"/report?fileName="+"file_" +channel+"_"+time;	
+
+						answer += "\nDu findest die Bewertung auch in der folgenden pdf-Datei ";
 						
 						
-						try{
-							answer += "\nDu findest die Bewertung auch in der folgenden pdf-Datei ";
-							JSONObject pdf_Body = new JSONObject();
-							pdf_Body.put("topicName", assessment.getTopicName());
-							pdf_Body.put("topicSize",  assessment.getAssessmentSize());
-							HttpClient httpClient = HttpClientBuilder.create().build();
-							HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/getPdf");
-							request.setHeader("Content-type", "application/pdf");
+						
+						System.out.println("................here +++++++++++++++++++++................");
+						try {
+							byte[] pdfByte = Files.readAllBytes(Paths.get("reports/"+assessment.getTopicName()+".pdf"));
+							String fileBody = java.util.Base64.getEncoder().encodeToString(pdfByte);
 
-							HttpResponse httpResponse = httpClient.execute(request);
+							System.out.println("................retriving the Pdf................");
 
-							//yte[] entityBytes = EntityUtils.toByteArray(httpResponse.getEntity());
-							//Files.write(Paths.get("test.pdf"), entityBytes);
-							//String fileBody = java.util.Base64.getEncoder().encodeToString(entityBytes);
-							//System.out.println("................retriving the Pdf................");
-							response.put("fileBody", httpResponse.getEntity());
+							response.put("fileBody", fileBody);
 							response.put("fileType", "pdf");
 							response.put("fileName", "Feedback zur "+ assessment.getTopicName());
-
-						}
-						catch (Exception e) {
+							System.out.println("finished conversion from pdf to base64");
+						} catch (Exception e) {
 							e.printStackTrace();
-							System.out.println("................Problem while retriving the Pdf................");
-							error.put("text", "Readerbench scheint ein Problem zu haben, und kann nicht das pdf generieren\n Bitte wendest dich an deinem Tutor");
-							error.put("closeContext", true);
-							return error;
+							System.out.println("failed conversion from pdf to base64");
 						}
 						this.currentNLUAssessment.remove(channel);
 						this.assessmentStarted.remove(channel);
@@ -819,7 +814,9 @@ public class ReaderbenchService extends RESTService {
         				return response;
 					} catch (Exception e) {
 						e.printStackTrace();
-						answer+=" Fehler beim Ermittlung der Ergebnisse...";
+						answer+=" Fehler beim Ermittlung der Ergebnisse...\n Bitte wendest dich an deinem Tutor";
+						this.currentNLUAssessment.remove(channel);
+						this.assessmentStarted.remove(channel);
 						response.put("closeContext", "true");
 					}
 					
@@ -907,7 +904,7 @@ public class ReaderbenchService extends RESTService {
 								keyword_Body.put("topicSize",  assessment.getAssessmentSize());
 								JSONObject keyword_Body_exprt = new JSONObject();
 								keyword_Body_exprt.put("text", ref);
-								keyword_Body.put("type", "expert");
+								keyword_Body_exprt.put("type", "expert");
 								keyword_Body_exprt.put("language", "de");
 								keyword_Body_exprt.put("saveAs", assessment.getTopicName()+ (i+1)+"_expert_keyword");
 								keyword_Body_exprt.put("topicName", assessment.getTopicName());
@@ -1094,6 +1091,31 @@ public class ReaderbenchService extends RESTService {
 									error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
 									error.put("closeContext", true);
 									return error;
+								}
+								try {
+									JSONObject pdf_Body = new JSONObject();
+									pdf_Body.put("topicName", assessment.getTopicName());
+									pdf_Body.put("topicSize",  assessment.getAssessmentSize());
+									StringEntity entityString = new StringEntity(pdf_Body.toString());
+									HttpClient httpClient = HttpClientBuilder.create().build();
+									HttpPost request = new HttpPost(this.readerbenchEndpoint+"/api/v1/getPdf");
+									request.setEntity(entityString);
+									request.setHeader("Content-type", "application/pdf");
+
+									HttpResponse httpResponse = httpClient.execute(request);
+									HttpEntity entity = httpResponse.getEntity();
+									//byte[] entityBytes = EntityUtils.toByteArray(httpResponse.getEntity());
+									//Files.write(Paths.get("test.pdf"), entityBytes);
+									//String fileBody = java.util.Base64.getEncoder().encodeToString(entityBytes);
+									String filePath = "reports/"+assessment.getTopicName()+".pdf";
+									FileOutputStream outstream  = new FileOutputStream(new File(filePath));
+									entity.writeTo(outstream);
+								} catch (Exception e) {
+									e.printStackTrace();
+									System.out.println("................Problem while retriving the Pdf................");
+									error.put("text", "Readerbench scheint ein Problem zu haben, und kann nicht das pdf generieren\n Bitte wendest dich an deinem Tutor");
+									error.put("closeContext", true);
+									return error;
 								}	
 									
 							}
@@ -1101,12 +1123,12 @@ public class ReaderbenchService extends RESTService {
 							try {
 								String BodyString= "{"+
 								"\"message\": {"+
-										"\"channel\": \"QHendCGJyceGXLwkWdaCrpvTktAQeZi4Ap\","+
-										"\"user\": \"karl252073\","+
+										"\"channel\": \""+channel+"\","+
+										"\"user\": \""+triggeredBody.getAsString("user")+"\","+
 										"\"role\": 0,"+
-										"\"email\": \"karl.zeufack@rwth-aachen.de\","+
+										"\"email\": \""+triggeredBody.getAsString("email")+"\","+
 										"\"text\": \"status\","+
-										"\"domain\": \"https://chat.tech4comp.dbis.rwth-aachen.de\" "+
+										"\"domain\": \""+chatDomain+"\" "+
 									"},"+
 									" \"intent\": {"+
 										"\"intentKeyword\": \"status\","+
@@ -1127,7 +1149,7 @@ public class ReaderbenchService extends RESTService {
 								"}";
 								StringEntity entity = new StringEntity(BodyString);
 								HttpClient httpClient = HttpClientBuilder.create().build();
-								HttpPost request = new HttpPost("http://137.226.232.75:32445/SBFManager/bots/textgrader/trigger/intent");
+								HttpPost request = new HttpPost(sbManagerEndpoint);
 								request.setEntity(entity);
 								request.setHeader("Content-type", "application/json");
 								HttpResponse res = httpClient.execute(request);
@@ -1146,7 +1168,9 @@ public class ReaderbenchService extends RESTService {
 					
 						}
 						else{
-							return null;
+							response.put("text", "Dein Text wird gerade analysiert. Du bekommst dein Feedback in Kürze "+triggeredBody.getAsString("user"));
+							response.put("closeContext", "false");
+							return response;
 						}
 					} else {
 						assessment.incrementCurrentQuestionNumber();

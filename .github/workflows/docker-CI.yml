@@ -13,10 +13,6 @@ jobs:
       shell: bash
       run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
       id: extract_branch
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
     - name: Build the Docker image
       run: | 
         docker build . -t registry.tech4comp.dbis.rwth-aachen.de/rwthacis/las2peer-readerbench:${{ steps.extract_branch.outputs.branch }}
