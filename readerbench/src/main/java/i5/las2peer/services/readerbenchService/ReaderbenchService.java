@@ -175,7 +175,7 @@ public class ReaderbenchService extends RESTService {
 	private SQLDatabase database; // The database instance to write to.
 	private String readerbenchEndpoint="http://rb-controller.ma-zeufack:32446";
 	private String l2pEndpoint = "http://137.226.232.75:32445";
-	private String assessementHandlerEndpoint = "http://137.226.232.75:31000";
+	private String assessementHandlerEndpoint = "https://mentoring.tech4comp.dbis.rwth-aachen.de";
 	//private String assessementHandlerEndpoint = "http://localhost:4200";
 	private String chatDomain = "https://chat.tech4comp.dbis.rwth-aachen.de";
 	private String sbManagerEndpoint = "http://137.226.232.75:32445/SBFManager/bots/textgrader/trigger/intent";
@@ -259,11 +259,11 @@ public class ReaderbenchService extends RESTService {
 			catch (FileNotFoundException ex)  
 			{
 				ex.printStackTrace();
-				return Response.ok("Assessment not inserted because File Not found").build();
+				return Response.ok("Error: File Not found").build();
 			}
 		} catch (ParseException e) {
 			e.printStackTrace();
-			return Response.ok("Assessment not inserted").build();
+			return Response.ok("Error: Unknow").build();
 		}
 		return Response.ok().entity(response).build();
 	}
@@ -544,7 +544,7 @@ public class ReaderbenchService extends RESTService {
 							
 							int index=0;
 							while(rs.next()) {
-								topicNames += " • " + topicNumber + ". " + rs.getString("topic_name") + "\n";
+								topicNames += " • " + rs.getString("topic_name") + "\n";
 								topicNumber++;
 								index++;
 								System.out.println("................Topic"+" founded.................");
@@ -620,7 +620,7 @@ public class ReaderbenchService extends RESTService {
 								topicCount++;
 							}
 								response.put("text", "Assessment mit der name " + bodyJson.getAsString("msg")+ " wurde nicht gefunden");
-								response.put("closeContext", "true");
+								response.put("closeContext", "false");
 							
 							return Response.ok().entity(response).build();
 							
@@ -784,10 +784,10 @@ public class ReaderbenchService extends RESTService {
 						FileWriter writer = new FileWriter("reports/" + fileName);
 						writer.write(file.toString());
 						writer.close();
-						answer += "Ihre Ergebnisse wurden berechnet bitte folgende Link folgen um die zu sehen:\n "
+						answer += " Öffne den Link um das Feedback zu deinem Text zu sehen. Die enthält Darstellungen von Schlüsselwörter und auch eine kurze Erklärung dazu. Das Feedback kann dir helfen, deine Bearbeitung der Schreibaufgabe zu reflektieren.:\n "
 						+ this.assessementHandlerEndpoint+"/report?fileName="+"file_" +channel+"_"+time;	
 
-						answer += "\nDu findest die Bewertung auch in der folgenden pdf-Datei ";
+						answer += "\n Das Feedback bekommst du auch in dieser PDF-Datei.";
 						
 						
 						
@@ -844,6 +844,8 @@ public class ReaderbenchService extends RESTService {
 							for(int i=0; i <  assessment.getAssessmentSize(); i++){		
 								String ref = replaceUmlaut(assessment.gettextReferenceByNumber(i));
 								String ans = replaceUmlaut(assessment.getAnswerByNumber(i));
+								ref = replaceChar(ref);
+								ans = replaceChar(ans);
 								String refComplexity = assessment.getrefComplexityByNumber(i) ;
 								System.out.println("................ref................");
 								System.out.println(ref);
@@ -858,21 +860,21 @@ public class ReaderbenchService extends RESTService {
 								similarity_Body.put("texts", texts);
 								similarity_Body.put("language", "de");
 								similarity_Body.put("corpus", "wiki");
-								similarity_Body.put("saveAs", assessment.getTopicName()+ (i+1));
-								similarity_Body.put("topicName", assessment.getTopicName());
+								similarity_Body.put("saveAs", assessment.getTopicName().replaceAll(" ", "_")+ (i+1));
+								similarity_Body.put("topicName", assessment.getTopicName().replaceAll(" ", "_"));
 								similarity_Body.put("topicSize",  assessment.getAssessmentSize());
 								JSONObject complexity_Body = new JSONObject();
 								complexity_Body.put("language", "de");
 								complexity_Body.put("text", ans);
-								complexity_Body.put("saveAs", assessment.getTopicName()+ (i+1));
-								complexity_Body.put("topicName", assessment.getTopicName());
+								complexity_Body.put("saveAs", assessment.getTopicName().replaceAll(" ", "_")+ (i+1));
+								complexity_Body.put("topicName", assessment.getTopicName().replaceAll(" ", "_"));
 								complexity_Body.put("topicSize",  assessment.getAssessmentSize());
 								JSONObject compare_Body = new JSONObject();
 								compare_Body.put("language", "de");
 								compare_Body.put("text", ans);
 								compare_Body.put("expert", replaceUmlaut(ref));
-								compare_Body.put("saveAs", assessment.getTopicName()+ (i+1));
-								compare_Body.put("topicName", assessment.getTopicName());
+								compare_Body.put("saveAs", assessment.getTopicName().replaceAll(" ", "_")+ (i+1));
+								compare_Body.put("topicName", assessment.getTopicName().replaceAll(" ", "_"));
 								compare_Body.put("topicSize",  assessment.getAssessmentSize());
 								JSONObject cna_Body = new JSONObject();
 								JSONObject doc1 = new JSONObject();
@@ -884,8 +886,8 @@ public class ReaderbenchService extends RESTService {
 								docs.add(doc2);
 								cna_Body.put("texts", docs);
 								cna_Body.put("lang", "de");
-								cna_Body.put("saveAs", assessment.getTopicName()+ (i+1)+"_cna");
-								cna_Body.put("topicName", assessment.getTopicName());
+								cna_Body.put("saveAs", assessment.getTopicName().replaceAll(" ", "_")+ (i+1)+"_cna");
+								cna_Body.put("topicName", assessment.getTopicName().replaceAll(" ", "_"));
 								cna_Body.put("topicSize",  assessment.getAssessmentSize());
 								JSONArray models = new JSONArray();
 								JSONObject w2v = new JSONObject();
@@ -899,15 +901,15 @@ public class ReaderbenchService extends RESTService {
 								keyword_Body.put("text", ans);
 								keyword_Body.put("type", "student");
 								keyword_Body.put("language", "de");
-								keyword_Body.put("saveAs", assessment.getTopicName()+ (i+1)+"_keyword");
-								keyword_Body.put("topicName", assessment.getTopicName());
+								keyword_Body.put("saveAs", assessment.getTopicName().replaceAll(" ", "_")+ (i+1)+"_keyword");
+								keyword_Body.put("topicName", assessment.getTopicName().replaceAll(" ", "_"));
 								keyword_Body.put("topicSize",  assessment.getAssessmentSize());
 								JSONObject keyword_Body_exprt = new JSONObject();
 								keyword_Body_exprt.put("text", ref);
 								keyword_Body_exprt.put("type", "expert");
 								keyword_Body_exprt.put("language", "de");
-								keyword_Body_exprt.put("saveAs", assessment.getTopicName()+ (i+1)+"_expert_keyword");
-								keyword_Body_exprt.put("topicName", assessment.getTopicName());
+								keyword_Body_exprt.put("saveAs", assessment.getTopicName().replaceAll(" ", "_")+ (i+1)+"_expert_keyword");
+								keyword_Body_exprt.put("topicName", assessment.getTopicName().replaceAll(" ", "_"));
 								keyword_Body_exprt.put("topicSize",  assessment.getAssessmentSize());
 	
 	
@@ -988,6 +990,7 @@ public class ReaderbenchService extends RESTService {
 									context.put("compare_result", compare_result);
 									ContextInfo.put(email, context);
 									System.out.println("................result compare computed from readerbench................");
+									System.out.println(compare_result);
 									assessment.setFeedbackTextByNumber(i,compare_result);
 									/*
 									System.out.println(context.getAsString("compare_result"));
@@ -1094,7 +1097,7 @@ public class ReaderbenchService extends RESTService {
 								}
 								try {
 									JSONObject pdf_Body = new JSONObject();
-									pdf_Body.put("topicName", assessment.getTopicName());
+									pdf_Body.put("topicName", assessment.getTopicName().replaceAll(" ", "_"));
 									pdf_Body.put("topicSize",  assessment.getAssessmentSize());
 									StringEntity entityString = new StringEntity(pdf_Body.toString());
 									HttpClient httpClient = HttpClientBuilder.create().build();
@@ -1120,47 +1123,51 @@ public class ReaderbenchService extends RESTService {
 									
 							}
 							
-							try {
-								String BodyString= "{"+
-								"\"message\": {"+
-										"\"channel\": \""+channel+"\","+
-										"\"user\": \""+triggeredBody.getAsString("user")+"\","+
-										"\"role\": 0,"+
-										"\"email\": \""+triggeredBody.getAsString("email")+"\","+
-										"\"text\": \"status\","+
-										"\"domain\": \""+chatDomain+"\" "+
-									"},"+
-									" \"intent\": {"+
-										"\"intentKeyword\": \"status\","+
-										"\"confidence\": 1.0,"+
-										"\"entities\": {"+
-											"\"status\": {"+
-												"\"entityName\": \"status\","+
-												"\"value\": \"status\","+
-												"\"confidence\": 1.0"+
-											"}"+
-										"}"+
-									"},"+
-									"\"botName\": \"textgrader\","+
-									"\"serviceAlias\": \"Gruppe1\","+
-									"\"contextWithService\": true,"+
-									"\"recognizedEntities\": [],"+
-									"\"triggeredFunctionId\": \"4ca1264ede58703622a9ccdd\""+
-								"}";
-								StringEntity entity = new StringEntity(BodyString);
-								HttpClient httpClient = HttpClientBuilder.create().build();
-								HttpPost request = new HttpPost(sbManagerEndpoint);
-								request.setEntity(entity);
-								request.setHeader("Content-type", "application/json");
-								HttpResponse res = httpClient.execute(request);
-								HttpEntity entity2 = res.getEntity();
-								String triggerresult = EntityUtils.toString(entity2);
-								System.out.println("triggerresults "+ triggerresult);
-							} catch (Exception e) {
-								e.printStackTrace();
+							if(this.analysisStarted.get(channel) == null) {
+								return null;
 							}
+							else{								
+								try {
+									String BodyString= "{"+
+									"\"message\": {"+
+											"\"channel\": \""+channel+"\","+
+											"\"user\": \""+triggeredBody.getAsString("user")+"\","+
+											"\"role\": 0,"+
+											"\"email\": \""+triggeredBody.getAsString("email")+"\","+
+											"\"text\": \"status\","+
+											"\"domain\": \""+chatDomain+"\" "+
+										"},"+
+										" \"intent\": {"+
+											"\"intentKeyword\": \"status\","+
+											"\"confidence\": 1.0,"+
+											"\"entities\": {"+
+												"\"status\": {"+
+													"\"entityName\": \"status\","+
+													"\"value\": \"status\","+
+													"\"confidence\": 1.0"+
+												"}"+
+											"}"+
+										"},"+
+										"\"botName\": \"textgrader\","+
+										"\"serviceAlias\": \"Gruppe1\","+
+										"\"contextWithService\": true,"+
+										"\"recognizedEntities\": [],"+
+										"\"triggeredFunctionId\": \"4ca1264ede58703622a9ccdd\""+
+									"}";
+									StringEntity entity = new StringEntity(BodyString);
+									HttpClient httpClient = HttpClientBuilder.create().build();
+									HttpPost request = new HttpPost(sbManagerEndpoint);
+									request.setEntity(entity);
+									request.setHeader("Content-type", "application/json");
+									HttpResponse res = httpClient.execute(request);
+									HttpEntity entity2 = res.getEntity();
+									String triggerresult = EntityUtils.toString(entity2);
+									System.out.println("triggerresults "+ triggerresult);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
 							
-		
+							}
 							
 							response.put("text", "Bewertung ist fertig");
 							response.put("closeContext", "false");
@@ -1168,7 +1175,7 @@ public class ReaderbenchService extends RESTService {
 					
 						}
 						else{
-							response.put("text", "Dein Text wird gerade analysiert. Du bekommst dein Feedback in Kürze "+triggeredBody.getAsString("user"));
+							response.put("text", "Danke für deine Abgabe "+ triggeredBody.getAsString("user") +". Ich leite sie an das Analysesystem \"Readerbench\" weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Minuten dauern.");
 							response.put("closeContext", "false");
 							return response;
 						}
@@ -1215,6 +1222,17 @@ public class ReaderbenchService extends RESTService {
 					   .replace("Ö", "OE")
 					   .replace("Ä", "AE")
 					   .replace("ß", "ss");
+	
+		return output;
+	}
+
+	private static String replaceChar(String input) {
+ 
+		//replace all lower Umlauts
+		String output = input.replace(" _ ", " ")
+							.replace("„", "\"")
+							.replace("“", "\"");
+	
 	
 		return output;
 	}
