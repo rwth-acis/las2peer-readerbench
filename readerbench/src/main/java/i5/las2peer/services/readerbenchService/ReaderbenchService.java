@@ -837,9 +837,8 @@ public class ReaderbenchService extends RESTService {
 					
 					
 					if(assessment.getCurrentQuestionNumber()+1 >= assessment.getAssessmentSize()){
-						System.out.println("analysisStarted: " + this.analysisStarted.get(channel) );
-						if(this.analysisStarted.get(channel) == null) {
-							this.analysisStarted.put(channel, true);
+						new Thread( () ->{
+							// this will be run in a separate thread
 							DecimalFormat df = new DecimalFormat("#.##");
 							for(int i=0; i <  assessment.getAssessmentSize(); i++){		
 								String ref = replaceUmlaut(assessment.gettextReferenceByNumber(i));
@@ -854,7 +853,7 @@ public class ReaderbenchService extends RESTService {
 								JSONArray texts = new JSONArray(); 
 								texts.add(ref);
 								texts.add(ans);
-	
+
 								//Body for the similarity
 								JSONObject similarity_Body = new JSONObject();
 								similarity_Body.put("texts", texts);
@@ -895,7 +894,7 @@ public class ReaderbenchService extends RESTService {
 								w2v.put("corpus", "wiki"); 
 								models.add(w2v);
 								cna_Body.put("models", models);
-	
+
 								//Body Object for the Keyword
 								JSONObject keyword_Body = new JSONObject();
 								keyword_Body.put("text", ans);
@@ -911,8 +910,8 @@ public class ReaderbenchService extends RESTService {
 								keyword_Body_exprt.put("saveAs", assessment.getTopicName().replaceAll(" ", "_")+ (i+1)+"_expert_keyword");
 								keyword_Body_exprt.put("topicName", assessment.getTopicName().replaceAll(" ", "_"));
 								keyword_Body_exprt.put("topicSize",  assessment.getAssessmentSize());
-	
-	
+
+
 								try{
 									String email = triggeredBody.getAsString("email");
 									JSONObject context = getContext(email, p);	
@@ -972,11 +971,8 @@ public class ReaderbenchService extends RESTService {
 								}  catch (Exception e) {
 									e.printStackTrace();
 									System.out.println("................Problem with cna................");
-									error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
-									error.put("closeContext", true);
-									return error;
 								}
-	
+
 								try{
 									String email = triggeredBody.getAsString("email");
 									JSONObject context = getContext(email, p);	
@@ -1014,9 +1010,6 @@ public class ReaderbenchService extends RESTService {
 								}  catch (Exception e) {
 									e.printStackTrace();
 									System.out.println("................Problem with Compare................");
-									error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
-									error.put("closeContext", true);
-									return error;
 								}
 									
 								try {
@@ -1050,9 +1043,6 @@ public class ReaderbenchService extends RESTService {
 								} catch (Exception e) {
 									e.printStackTrace();
 									System.out.println("................Problem with Similarity................");
-									error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
-									error.put("closeContext", true);
-									return error;
 								}
 								try {
 									String email = triggeredBody.getAsString("email");
@@ -1087,13 +1077,10 @@ public class ReaderbenchService extends RESTService {
 									result.put("student", result_std);
 									result.put("expert", result_exprt);
 									assessment.setKeywordTextByNumber(i,result.toString());
-	
+
 								} catch (Exception e) {
 									e.printStackTrace();
 									System.out.println("................Problem with keyword_result_exprt................");
-									error.put("text", "Readerbench scheint ein Problem zu haben\n Bitte wendest dich an deinem Tutor");
-									error.put("closeContext", true);
-									return error;
 								}
 								try {
 									JSONObject pdf_Body = new JSONObject();
@@ -1116,69 +1103,54 @@ public class ReaderbenchService extends RESTService {
 								} catch (Exception e) {
 									e.printStackTrace();
 									System.out.println("................Problem while retriving the Pdf................");
-									error.put("text", "Readerbench scheint ein Problem zu haben, und kann nicht das pdf generieren\n Bitte wendest dich an deinem Tutor");
-									error.put("closeContext", true);
-									return error;
 								}	
 									
 							}
-							
-							if(this.analysisStarted.get(channel) == null) {
-								return null;
-							}
-							else{								
-								try {
-									String BodyString= "{"+
-									"\"message\": {"+
-											"\"channel\": \""+channel+"\","+
-											"\"user\": \""+triggeredBody.getAsString("user")+"\","+
-											"\"role\": 0,"+
-											"\"email\": \""+triggeredBody.getAsString("email")+"\","+
-											"\"text\": \"status\","+
-											"\"domain\": \""+chatDomain+"\" "+
-										"},"+
-										" \"intent\": {"+
-											"\"intentKeyword\": \"status\","+
-											"\"confidence\": 1.0,"+
-											"\"entities\": {"+
-												"\"status\": {"+
-													"\"entityName\": \"status\","+
-													"\"value\": \"status\","+
-													"\"confidence\": 1.0"+
-												"}"+
+														
+							try {
+								String BodyString= "{"+
+								"\"message\": {"+
+										"\"channel\": \""+channel+"\","+
+										"\"user\": \""+triggeredBody.getAsString("user")+"\","+
+										"\"role\": 0,"+
+										"\"email\": \""+triggeredBody.getAsString("email")+"\","+
+										"\"text\": \"status\","+
+										"\"domain\": \""+chatDomain+"\" "+
+									"},"+
+									" \"intent\": {"+
+										"\"intentKeyword\": \"status\","+
+										"\"confidence\": 1.0,"+
+										"\"entities\": {"+
+											"\"status\": {"+
+												"\"entityName\": \"status\","+
+												"\"value\": \"status\","+
+												"\"confidence\": 1.0"+
 											"}"+
-										"},"+
-										"\"botName\": \"textgrader\","+
-										"\"serviceAlias\": \"Gruppe1\","+
-										"\"contextWithService\": true,"+
-										"\"recognizedEntities\": [],"+
-										"\"triggeredFunctionId\": \"4ca1264ede58703622a9ccdd\""+
-									"}";
-									StringEntity entity = new StringEntity(BodyString);
-									HttpClient httpClient = HttpClientBuilder.create().build();
-									HttpPost request = new HttpPost(sbManagerEndpoint);
-									request.setEntity(entity);
-									request.setHeader("Content-type", "application/json");
-									HttpResponse res = httpClient.execute(request);
-									HttpEntity entity2 = res.getEntity();
-									String triggerresult = EntityUtils.toString(entity2);
-									System.out.println("triggerresults "+ triggerresult);
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-							
+										"}"+
+									"},"+
+									"\"botName\": \"textgrader\","+
+									"\"serviceAlias\": \"Gruppe1\","+
+									"\"contextWithService\": true,"+
+									"\"recognizedEntities\": [],"+
+									"\"triggeredFunctionId\": \"4ca1264ede58703622a9ccdd\""+
+								"}";
+								StringEntity entity = new StringEntity(BodyString);
+								HttpClient httpClient = HttpClientBuilder.create().build();
+								HttpPost request = new HttpPost(sbManagerEndpoint);
+								request.setEntity(entity);
+								request.setHeader("Content-type", "application/json");
+								HttpResponse res = httpClient.execute(request);
+								HttpEntity entity2 = res.getEntity();
+								String triggerresult = EntityUtils.toString(entity2);
+								System.out.println("triggerresults "+ triggerresult);
+							} catch (Exception e) {
+								e.printStackTrace();
 							}
+						}).start();
+						response.put("text", "Danke für deine Abgabe "+ triggeredBody.getAsString("user") +". Ich leite sie an das Analysesystem \"Readerbench\" weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Minuten dauern.");
+						response.put("closeContext", "false");
+						return response;
 							
-							response.put("text", "Bewertung ist fertig");
-							response.put("closeContext", "false");
-							return response;
-					
-						}
-						else{
-							response.put("text", "Danke für deine Abgabe "+ triggeredBody.getAsString("user") +". Ich leite sie an das Analysesystem \"Readerbench\" weiter und gebe dir gleich deine Rückmeldung. Das dürfte nur ein paar Minuten dauern.");
-							response.put("closeContext", "false");
-							return response;
-						}
 					} else {
 						assessment.incrementCurrentQuestionNumber();
 						answer += assessment.getCurrentQuestion();        
